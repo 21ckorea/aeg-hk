@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>(주)그룹환경종합건축사사무소 홈페이지 & 인트라넷 통합 프로토타입</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Outfit and Inter Fonts for Premium Architectural Feel -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- Lucide Icons for beautiful layout elements -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+  <!-- Floating Developer Control Bar -->
+  <div class="dev-control-bar" id="dev-control-bar">
+    <div class="dev-logo">
+      <span class="pulse-indicator"></span>
+      <strong>PROTOTYPE VIEW CONSOLE</strong>
+    </div>
+    <div class="dev-actions">
+      <button class="dev-btn active" id="btn-toggle-public" onclick="switchMainView('public')">
+        <i data-lucide="globe"></i> 공개 홈페이지
+      </button>
+      <button class="dev-btn" id="btn-toggle-intranet" onclick="switchMainView('intranet')">
+        <i data-lucide="layout-dashboard"></i> 사내 인트라넷
+      </button>
+      <span class="dev-divider">|</span>
+      <button class="dev-btn secondary" id="btn-view-blueprint" onclick="toggleBlueprintDrawer()">
+        <i data-lucide="file-text"></i> 와이어프레임 원본 보기
+      </button>
+    </div>
+  </div>
+
+  <!-- Main View Container -->
+  <main id="app-container">
+
+    <!-- ==================== VIEW 1: PUBLIC HOMEPAGE ==================== -->
+    <section id="view-public" class="main-view active">
+      <!-- Public Header -->
+      <header class="pub-header">
+        <div class="pub-header-container">
+          <div class="pub-logo" onclick="switchMainView('public')">
+            <span class="logo-bold">(주)그룹환경종합건축사사무소</span>
+          </div>
+          <nav class="pub-nav">
+            <a href="#hero-section">About</a>
+            <a href="#categories-section">Works</a>
+            <a href="#news-section">News</a>
+            <a href="#contact-section">Contact</a>
+            <button class="btn-intranet-login" onclick="switchMainView('intranet')">
+              <i data-lucide="log-in"></i> 인트라넷 로그인
+            </button>
+          </nav>
+          <button class="pub-mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i data-lucide="menu"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Mobile Nav Drawer -->
+      <div class="pub-mobile-nav" id="pub-mobile-nav">
+        <div class="mobile-nav-header">
+          <div class="pub-logo">
+            <span class="logo-bold">(주)그룹환경종합건축사사무소</span>
+          </div>
+          <button class="close-btn" onclick="toggleMobileMenu()">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="mobile-nav-links">
+          <a href="#hero-section" onclick="toggleMobileMenu()">About</a>
+          <a href="#categories-section" onclick="toggleMobileMenu()">Works</a>
+          <a href="#news-section" onclick="toggleMobileMenu()">News</a>
+          <a href="#contact-section" onclick="toggleMobileMenu()">Contact</a>
+          <button class="btn-intranet-login w-full" onclick="toggleMobileMenu(); switchMainView('intranet')">
+            <i data-lucide="log-in"></i> 인트라넷 로그인
+          </button>
+        </div>
+      </div>
+
+      <!-- ① Hero Slider Section -->
+      <section id="hero-section" class="hero-slider">
+        <div class="slider-wrapper" id="slider-wrapper">
+          <!-- Slide 1 -->
+          <div class="slide active"
+            style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80');">
+            <div class="slide-content">
+              <span class="slide-tag">RECONSTRUCTION</span>
+              <h1>도시의 가치를 재창조하는<br>재건축 정비사업</h1>
+              <p>우수한 기술력과 신뢰를 바탕으로 고품격 주거 문화를 선도합니다.</p>
+              <a href="#categories-section" class="btn-primary">프로젝트 전체보기 <i data-lucide="arrow-right"></i></a>
+            </div>
+          </div>
+          <!-- Slide 2 -->
+          <div class="slide"
+            style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=80');">
+            <div class="slide-content">
+              <span class="slide-tag">LOCAL HOUSING</span>
+              <h1>성공적인 협력을 위한<br>지역주택조합 사업모델</h1>
+              <p>합리적이고 체계적인 프로세스로 조합원들의 꿈을 현실로 만듭니다.</p>
+              <a href="#categories-section" class="btn-primary">사업 실적 보기 <i data-lucide="arrow-right"></i></a>
+            </div>
+          </div>
+          <!-- Slide 3 -->
+          <div class="slide"
+            style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1600&q=80');">
+            <div class="slide-content">
+              <span class="slide-tag">PRIVATE DEVELOPMENT</span>
+              <h1>미래형 랜드마크 구축을 향한<br>민간개발 기획 및 설계</h1>
+              <p>부동산 개발 기획부터 완공까지, 차별화된 비즈니스 솔루션을 제안합니다.</p>
+              <a href="#categories-section" class="btn-primary">개발 프로젝트 문의 <i data-lucide="arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slider Controls -->
+        <button class="slider-arrow prev" onclick="moveSlide(-1)">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <button class="slider-arrow next" onclick="moveSlide(1)">
+          <i data-lucide="chevron-right"></i>
+        </button>
+
+        <div class="slider-dots" id="slider-dots">
+          <span class="dot active" onclick="setSlide(0)"></span>
+          <span class="dot" onclick="setSlide(1)"></span>
+          <span class="dot" onclick="setSlide(2)"></span>
+        </div>
+      </section>
+
+      <!-- ② Works Categories Section -->
+      <section id="categories-section" class="works-categories">
+        <div class="section-container">
+          <div class="section-header">
+            <h2>Our Works & Capabilities</h2>
+            <p>㈜그룹환경종합건축사사무소의 핵심 비즈니스 포트폴리오 분야입니다.</p>
+          </div>
+          <div class="categories-grid">
+            <!-- Card 1 -->
+            <div class="category-card" onclick="filterFeatured('reconstruct')">
+              <div class="card-icon"><i data-lucide="building-2"></i></div>
+              <h3>재건축·재개발 정비사업</h3>
+              <p>노후 주거단지의 분석부터 인허가, 설계, 분양 기획까지 총괄하며 최고의 미래 가치를 제안합니다.</p>
+              <div class="card-meta">
+                <span class="badge">42건 진행완료</span>
+                <span class="arrow"><i data-lucide="chevron-right"></i></span>
+              </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="category-card" onclick="filterFeatured('housing')">
+              <div class="card-icon"><i data-lucide="users"></i></div>
+              <h3>지역주택조합사업</h3>
+              <p>투명하고 정직한 운영 지원과 다년간 쌓아온 조합 사업 설계 노하우로 리스크를 완벽 제어합니다.</p>
+              <div class="card-meta">
+                <span class="badge">28건 진행완료</span>
+                <span class="arrow"><i data-lucide="chevron-right"></i></span>
+              </div>
+            </div>
+            <!-- Card 3 -->
+            <div class="category-card" onclick="filterFeatured('private')">
+              <div class="card-icon"><i data-lucide="trending-up"></i></div>
+              <h3>민간개발사업</h3>
+              <p>상업시설, 복합 업무단지, 지식산업센터 등 고수익성 개발 기획 및 건축 설계 표준을 구축합니다.</p>
+              <div class="card-meta">
+                <span class="badge">35건 진행완료</span>
+                <span class="arrow"><i data-lucide="chevron-right"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ Featured Projects Grid Section -->
+      <section class="featured-projects">
+        <div class="section-container">
+          <div class="section-header-flex">
+            <div>
+              <h2>Featured Projects</h2>
+              <p>진행 중인 랜드마크 프로젝트 현장 및 성과 목록입니다.</p>
+            </div>
+            <div class="filter-buttons">
+              <button class="filter-btn active" id="f-all" onclick="filterFeatured('all')">전체</button>
+              <button class="filter-btn" id="f-reconstruct" onclick="filterFeatured('reconstruct')">정비사업</button>
+              <button class="filter-btn" id="f-housing" onclick="filterFeatured('housing')">지역조합</button>
+              <button class="filter-btn" id="f-private" onclick="filterFeatured('private')">민간개발</button>
+            </div>
+          </div>
+
+          <div class="projects-grid" id="projects-grid-container">
+            <!-- Project 1 -->
+            <div class="project-card" data-cat="reconstruct">
+              <div class="project-image"
+                style="background-image: url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80');">
+              </div>
+              <div class="project-info">
+                <span class="project-cat">재건축 정비사업</span>
+                <h4>서초 포레스트 하이츠 재건축</h4>
+                <p>친환경 복합 조경 설계 및 750세대 대단지 아파트 신축 설계안</p>
+              </div>
+            </div>
+            <!-- Project 2 -->
+            <div class="project-card" data-cat="housing">
+              <div class="project-image"
+                style="background-image: url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80');">
+              </div>
+              <div class="project-info">
+                <span class="project-cat">지역주택조합</span>
+                <h4>용인 센트럴 파크빌 조합주택</h4>
+                <p>24만㎡ 부지 조합원 모집 및 사업 승인 완료 현장</p>
+              </div>
+            </div>
+            <!-- Project 3 -->
+            <div class="project-card" data-cat="private">
+              <div class="project-image"
+                style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80');">
+              </div>
+              <div class="project-info">
+                <span class="project-cat">민간개발사업</span>
+                <h4>판교 H-Tower 지식산업센터</h4>
+                <p>IT 기업 밀집지역을 위한 하이테크 하이브리드 워크플레이스 설계</p>
+              </div>
+            </div>
+            <!-- Project 4 -->
+            <div class="project-card" data-cat="reconstruct">
+              <div class="project-image"
+                style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80');">
+              </div>
+              <div class="project-info">
+                <span class="project-cat">재개발 정비사업</span>
+                <h4>성수 스마트 벨리 뉴타운 기획</h4>
+                <p>낙후된 성수동 공장지대를 디자인 혁신 콤플렉스로 전환</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ④ About Teaser Section (Dark Backdrop) -->
+      <section class="about-teaser">
+        <div class="teaser-bg"></div>
+        <div class="section-container teaser-content">
+          <div class="teaser-left">
+            <h2>건축과 사람, 그리고 환경의<br>지속가능한 가치를 짓습니다.</h2>
+            <p>㈜그룹환경종합건축사사무소는 1999년 설립 이래 인간 중심의 거주 편의성과 자연 친화적인 건축 미학을 융합해 왔습니다. 30여 명의 정예 임직원이 투명한 프로세스를 바탕으로 성공을 돕는
+              파트너가 되어 드립니다.</p>
+            <div class="teaser-stats">
+              <div class="stat-item">
+                <h3>30+</h3>
+                <p>건축 및 기술 전문가</p>
+              </div>
+              <div class="stat-item">
+                <h3>100+</h3>
+                <p>완료 프로젝트 수</p>
+              </div>
+              <div class="stat-item">
+                <h3>25년</h3>
+                <p>축적된 업력</p>
+              </div>
+            </div>
+          </div>
+          <div class="teaser-right">
+            <div class="teaser-card">
+              <div class="card-quote">“</div>
+              <p>우수한 기술과 혁신 설계를 갖추어 단순한 하우징을 넘어 삶의 질을 고양시키는 공간 브랜드를 만들어 냅니다.</p>
+              <div class="profile-info">
+                <strong>홍길동</strong>
+                <span>대표이사 / 대표 건축사</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑤ News Section -->
+      <section id="news-section" class="news-section">
+        <div class="section-container">
+          <div class="section-header">
+            <h2>News & PR</h2>
+            <p>㈜그룹환경종합건축사사무소의 실적 공시, 최신 뉴스 및 언론 보도 정보입니다.</p>
+          </div>
+          <div class="news-grid">
+            <!-- News 1 -->
+            <div class="news-card">
+              <div class="news-thumb"
+                style="background-image: url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80');">
+              </div>
+              <div class="news-content">
+                <span class="news-date">2026.05.28</span>
+                <h4>서초 포레스트 하이츠 사업 시행계획 인가 고시</h4>
+                <p>서초구 주민동의율 92.5%를 달성하여 정비계획 고시 후 본격 설계 인가 승인...</p>
+              </div>
+            </div>
+            <!-- News 2 -->
+            <div class="news-card">
+              <div class="news-thumb"
+                style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80');">
+              </div>
+              <div class="news-content">
+                <span class="news-date">2026.04.15</span>
+                <h4>2026 대한민국 친환경 건축 디자인 대상 은상 수상</h4>
+                <p>자연 환기와 빗물 순환 정화 시스템을 결합한 당사의 민간 상업 빌딩 설계 모델이...</p>
+              </div>
+            </div>
+            <!-- News 3 -->
+            <div class="news-card">
+              <div class="news-thumb"
+                style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80');">
+              </div>
+              <div class="news-content">
+                <span class="news-date">2026.03.11</span>
+                <h4>인력 자원 및 참여율 자동 추적 인트라넷 시스템 구축 개시</h4>
+                <p>임직원들의 다중 프로젝트 참여도를 효율적으로 트래킹하기 위해 자체 타임시트 솔루션을...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑥ Contact & Map Section -->
+      <section id="contact-section" class="contact-section">
+        <div class="section-container">
+          <div class="section-header">
+            <h2>Contact Us</h2>
+            <p>방문 및 사업 협력 요청은 언제든 환영합니다.</p>
+          </div>
+          <div class="contact-layout">
+            <div class="contact-info-panel">
+              <h3>(주)그룹환경종합건축사사무소 서울 본사</h3>
+              <p class="desc">편리한 공간 디자인과 지속 가능한 환경 정비를 선도하는 최고의 건축 파트너입니다.</p>
+
+              <ul class="contact-details">
+                <li>
+                  <i data-lucide="map-pin"></i>
+                  <span>서울특별시 서초구 반포대로 123 (반포동, 건축회관빌딩 8층)</span>
+                </li>
+                <li>
+                  <i data-lucide="phone"></i>
+                  <span>02-123-4567</span>
+                </li>
+                <li>
+                  <i data-lucide="printer"></i>
+                  <span>02-123-4568</span>
+                </li>
+                <li>
+                  <i data-lucide="mail"></i>
+                  <span>contact@aeg-hk.com</span>
+                </li>
+              </ul>
+
+              <div class="social-icons">
+                <a href="#"><i data-lucide="instagram"></i></a>
+                <a href="#"><i data-lucide="facebook"></i></a>
+                <a href="#"><i data-lucide="youtube"></i></a>
+              </div>
+            </div>
+
+            <!-- Custom Premium Mock Map -->
+            <div class="map-panel">
+              <div class="mock-map">
+                <!-- SVG map graphic for visual wow -->
+                <svg viewBox="0 0 400 250" class="map-grid">
+                  <path d="M 0,50 L 400,90" stroke="rgba(148, 163, 184, 0.4)" stroke-width="8" />
+                  <path d="M 120,0 L 200,250" stroke="rgba(148, 163, 184, 0.4)" stroke-width="12" />
+                  <path d="M 0,180 L 400,160" stroke="rgba(148, 163, 184, 0.3)" stroke-width="6" />
+                  <circle cx="170" cy="150" r="10" class="pulse-marker" />
+                  <circle cx="170" cy="150" r="4" fill="#10b981" />
+                </svg>
+                <div class="map-overlay">
+                  <h4>㈜그룹환경종합건축사사무소</h4>
+                  <p>지하철 3호선 남부터미널역 6번 출구 도보 5분</p>
+                  <a href="https://map.kakao.com" target="_blank" class="map-link">지도 크게 보기 <i
+                      data-lucide="external-link"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="pub-footer">
+        <div class="section-container">
+          <div class="footer-top">
+            <div class="footer-brand">
+              <span class="logo-bold">(주)그룹환경종합건축사사무소</span>
+              <p>Architecture & Environment Group</p>
+            </div>
+            <div class="footer-links">
+              <a href="#">개인정보처리방침</a>
+              <a href="#">이용약관</a>
+              <a href="#" onclick="switchMainView('intranet')">사내 인트라넷</a>
+            </div>
+          </div>
+          <hr class="footer-divider">
+          <div class="footer-bottom">
+            <p>© 2026 (주)그룹환경종합건축사사무소 Co., Ltd. All Rights Reserved. 대표이사: 홍길동 | 사업자등록번호: 123-45-67890</p>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+
+    <!-- ==================== VIEW 2: INTERNAL INTRANET ==================== -->
+    <section id="view-intranet" class="main-view">
+      <div class="intra-wrapper">
+
+        <!-- Sidebar Navigation -->
+        <aside class="intra-sidebar">
+          <div class="sidebar-header">
+            <div class="pub-logo" onclick="switchMainView('public')">
+              <span class="logo-bold">(주)그룹환경종합건축사사무소</span>
+              <span class="sub-tag">INTRANET</span>
+            </div>
+          </div>
+
+          <!-- User Profile Card -->
+          <div class="profile-card">
+            <div class="avatar">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                alt="프로필 사진">
+              <span class="status-indicator online"></span>
+            </div>
+            <div class="user-info">
+              <h4 id="current-user-name">홍길동</h4>
+              <p id="current-user-role">AA부서 / 과장</p>
+            </div>
+          </div>
+
+          <!-- Navigation Menus -->
+          <nav class="sidebar-menu">
+            <ul>
+              <li class="menu-item active" id="menu-dashboard" onclick="switchSubView('dashboard')">
+                <i data-lucide="layout-dashboard"></i> <span>인트라넷 대시보드</span>
+              </li>
+              <li class="menu-item" id="menu-timesheet" onclick="switchSubView('timesheet')">
+                <i data-lucide="calendar-range"></i> <span>투입시간 관리 (Timesheet)</span>
+                <span class="badge badge-accent">A</span>
+              </li>
+              <li class="menu-item" id="menu-manpower" onclick="switchSubView('manpower')">
+                <i data-lucide="bar-chart-3"></i> <span>인력 투입 분석 (Manpower)</span>
+                <span class="badge badge-accent">B</span>
+              </li>
+              <li class="menu-item" id="menu-approval" onclick="switchSubView('approval')">
+                <i data-lucide="file-check"></i> <span>전자결재</span>
+                <span class="badge-count" id="pending-approval-count">3</span>
+              </li>
+              <li class="menu-item" id="menu-attendance" onclick="switchSubView('attendance')">
+                <i data-lucide="clock"></i> <span>근태 관리</span>
+              </li>
+              <li class="menu-item" id="menu-diary" onclick="switchSubView('diary')">
+                <i data-lucide="book-open"></i> <span>업무일지</span>
+              </li>
+              <li class="menu-divider"></li>
+              <li class="menu-item logout" onclick="switchMainView('public')">
+                <i data-lucide="log-out"></i> <span>로그아웃 (GNB 복귀)</span>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+
+        <!-- Main Content Workspace -->
+        <div class="intra-container">
+
+          <!-- Workspace Header -->
+          <header class="intra-header">
+            <div class="header-left">
+              <h2 id="intra-page-title">대시보드</h2>
+            </div>
+            <div class="header-right">
+              <!-- Real-time clock for premium detail -->
+              <div class="clock-display">
+                <i data-lucide="calendar"></i>
+                <span id="live-date">2026년 06월 06일</span>
+                <span class="divider">|</span>
+                <i data-lucide="clock-alarm"></i>
+                <span id="live-time">09:00 AM</span>
+              </div>
+              <div class="notification-bell">
+                <i data-lucide="bell"></i>
+                <span class="bell-badge"></span>
+              </div>
+            </div>
+          </header>
+
+          <!-- Workspace Body -->
+          <div class="intra-content">
+
+            <!-- SUB-VIEW 1: DASHBOARD -->
+            <div id="sub-dashboard" class="sub-view active">
+              <!-- Top Row Stats Card -->
+              <div class="stats-row">
+                <div class="stat-card">
+                  <div class="card-icon blue"><i data-lucide="users"></i></div>
+                  <div class="card-data">
+                    <span class="num">26 / 30</span>
+                    <span class="lbl">오늘 출근자 수</span>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="card-icon green"><i data-lucide="briefcase"></i></div>
+                  <div class="card-data">
+                    <span class="num">12개</span>
+                    <span class="lbl">진행 중 프로젝트</span>
+                  </div>
+                </div>
+                <div class="stat-card urgent">
+                  <div class="card-icon red"><i data-lucide="file-warning"></i></div>
+                  <div class="card-data">
+                    <span class="num" id="dashboard-pending-approvals">3건</span>
+                    <span class="lbl">미결재 결재대기문서</span>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="card-icon purple"><i data-lucide="edit-3"></i></div>
+                  <div class="card-data">
+                    <span class="num">18개</span>
+                    <span class="lbl">이번 달 작성 업무일지</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Middle Row Dashboard Grid -->
+              <div class="dashboard-grid">
+
+                <!-- Recent Projects List -->
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>최근 프로젝트 현황</h3>
+                    <button class="panel-action-btn" onclick="switchSubView('manpower')">인력배정 상세보기</button>
+                  </div>
+                  <div class="panel-body">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>프로젝트명</th>
+                          <th>담당 PM</th>
+                          <th>진행상태</th>
+                          <th>인력기여도 (M/M)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><strong>서초 포레스트 하이츠 재건축</strong></td>
+                          <td>정종우 실장</td>
+                          <td><span class="status-pill active">설계 진행</span></td>
+                          <td>4.2 M/M</td>
+                        </tr>
+                        <tr>
+                          <td><strong>용인 센트럴 파크빌 조합주택</strong></td>
+                          <td>김민수 본부장</td>
+                          <td><span class="status-pill active">기획 단계</span></td>
+                          <td>2.8 M/M</td>
+                        </tr>
+                        <tr>
+                          <td><strong>판교 H-Tower 지식산업센터</strong></td>
+                          <td>정종우 실장</td>
+                          <td><span class="status-pill active">인허가 진행</span></td>
+                          <td>3.5 M/M</td>
+                        </tr>
+                        <tr>
+                          <td><strong>성수 스마트 벨리 뉴타운 기획</strong></td>
+                          <td>박형섭 부장</td>
+                          <td><span class="status-pill pending">대기중</span></td>
+                          <td>0.8 M/M</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Approval Waiting Queue -->
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>전자결재 결재 대기함</h3>
+                    <button class="panel-action-btn" onclick="switchSubView('approval')">결재관리 바로가기</button>
+                  </div>
+                  <div class="panel-body">
+                    <div class="approval-waiting-list" id="dashboard-approvals-container">
+                      <!-- Rendered by JS -->
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Bottom Row Dashboard Grid -->
+              <div class="dashboard-grid mt-6">
+                <!-- Today Attendance Stats Widget -->
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>근태 빠른 체크인</h3>
+                  </div>
+                  <div class="panel-body flex-col justify-between align-center p-6">
+                    <div class="quick-attendance-status">
+                      <span class="status-label">현재 상태:</span>
+                      <span class="status-badge" id="quick-check-status">출근 전</span>
+                    </div>
+                    <div class="time-stamp-display" id="quick-time-stamp">--:--:--</div>
+                    <div class="attendance-button-group">
+                      <button class="att-btn check-in" id="btn-quick-check-in" onclick="performCheckIn()">
+                        <i data-lucide="check-circle-2"></i> 출근하기
+                      </button>
+                      <button class="att-btn check-out disabled" id="btn-quick-check-out" onclick="performCheckOut()">
+                        <i data-lucide="log-out"></i> 퇴근하기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Notice Board widget -->
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>공지사항</h3>
+                  </div>
+                  <div class="panel-body">
+                    <ul class="notice-list">
+                      <li>
+                        <span class="badge-notice urgent">긴급</span>
+                        <a href="#">[인사] 2026년 상반기 다중 프로젝트 참여 M/M 마감일 변경 공지 (~06/10)</a>
+                        <span class="date">06-05</span>
+                      </li>
+                      <li>
+                        <span class="badge-notice">공지</span>
+                        <a href="#">Synology NAS 인트라넷 접근 보안 인증 패치 안내 (aeghk.quickconnect.to)</a>
+                        <span class="date">06-03</span>
+                      </li>
+                      <li>
+                        <span class="badge-notice">교육</span>
+                        <a href="#">건축인허가 개정 프로세스 세미나 참관 지원 공지</a>
+                        <span class="date">05-28</span>
+                      </li>
+                      <li>
+                        <span class="badge-notice">이벤트</span>
+                        <a href="#">창립 25주년 기념 워크샵 사진 배포 및 정산 요청</a>
+                        <span class="date">05-24</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUB-VIEW 2: TIMESHEET INPUT (SECTION A) -->
+            <div id="sub-timesheet" class="sub-view">
+              <div class="timesheet-header-area">
+                <div class="timesheet-filters">
+                  <div class="form-group inline">
+                    <label for="ts-year-month">조회 월 선택:</label>
+                    <select id="ts-year-month" onchange="renderTimesheet()">
+                      <option value="2026-06" selected>2026년 06월</option>
+                      <option value="2026-05">2026년 05월</option>
+                    </select>
+                  </div>
+                  <div class="total-hours-summary">
+                    <span>월 총 근무시간 기준: <strong id="ts-target-hours">176H</strong></span>
+                    <span class="divider">|</span>
+                    <span>현재 입력 합계: <strong id="ts-total-input-hours">0H</strong></span>
+                  </div>
+                </div>
+                <div class="timesheet-actions">
+                  <button class="btn-action secondary" onclick="addProjectRowPopup()"><i data-lucide="plus"></i> 프로젝트
+                    추가</button>
+                  <button class="btn-action" onclick="saveTimesheet()"><i data-lucide="save"></i> 임시 저장</button>
+                  <button class="btn-action primary" onclick="submitTimesheet()"><i data-lucide="send"></i> 월 마감
+                    제출</button>
+                </div>
+              </div>
+
+              <!-- Main Timesheet Spreadsheet Grid -->
+              <div class="timesheet-container-wrapper">
+                <div class="timesheet-scroll-pane">
+                  <table class="timesheet-grid" id="timesheet-grid-table">
+                    <!-- Rendered Dynamically by JS -->
+                  </table>
+                </div>
+              </div>
+
+              <!-- Timesheet Instructions and Warning Alerts -->
+              <div class="help-box mt-6">
+                <h4><i data-lucide="info"></i> 투입시간 입력 가이드 및 마감 규칙</h4>
+                <ul>
+                  <li>하루 투입시간 합계는 **8시간을 초과할 수 없습니다.** (초과 시 해당 열이 붉게 강조되고 경고가 출력됩니다.)</li>
+                  <li>1달 투입시간의 총 합계는 **1 M/M (176시간)을 초과할 수 없습니다.** (초과 시 합계 셀이 붉게 강조되고 경고가 출력됩니다.)</li>
+                  <li>개인 휴가(연차, 반차 등)는 하단의 휴가 행에 시간을 분배하여 입력하십시오 (연차: 8H, 반차: 4H).</li>
+                  <li>월 마감 단추를 누르면 이후에는 자가 수정이 잠금 처리되며, PM 승인을 통해서만 수정할 수 있습니다.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- SUB-VIEW 3: MANPOWER ANALYSIS (SECTION B) -->
+            <div id="sub-manpower" class="sub-view">
+              <div class="manpower-view-layout">
+
+                <!-- Left panel: Employee list -->
+                <div class="manpower-left-panel">
+                  <div class="search-box">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="emp-search" placeholder="직원명/부서 검색" oninput="filterEmployees()">
+                  </div>
+                  <div class="employee-list" id="manpower-employee-list">
+                    <!-- Rendered by JS -->
+                  </div>
+                </div>
+
+                <!-- Right panel: Analytical detailed dashboard -->
+                <div class="manpower-right-panel">
+                  <div class="manpower-detail-card">
+
+                    <!-- Detail Header Area -->
+                    <div class="detail-header">
+                      <div class="emp-profile-detail">
+                        <div class="emp-avatar" id="detail-emp-avatar">H</div>
+                        <div class="emp-meta">
+                          <h3 id="detail-emp-name">홍길동 과장</h3>
+                          <p id="detail-emp-dept">AA부서 | 입사일: 2021.03.11</p>
+                        </div>
+                      </div>
+                      <div class="view-mode-toggle">
+                        <button class="toggle-btn active" id="btn-view-by-emp"
+                          onclick="setManpowerViewMode('employee')">직원별 보기</button>
+                        <button class="toggle-btn" id="btn-view-by-proj" onclick="setManpowerViewMode('project')">프로젝트별
+                          보기</button>
+                      </div>
+                    </div>
+
+                    <!-- Analytical Widgets -->
+                    <div class="detail-analytics-grid">
+
+                      <!-- Cumulative Bar Chart Widget -->
+                      <div class="analytic-panel">
+                        <h4><i data-lucide="bar-chart-2"></i> 프로젝트별 투입 비율 (M/M)</h4>
+                        <div class="bar-chart-container" id="manpower-bar-chart">
+                          <!-- Dynamic Progress bars -->
+                        </div>
+                      </div>
+
+                      <!-- Calendar Heatmap Grid Widget -->
+                      <div class="analytic-panel">
+                        <h4><i data-lucide="grid-3x3"></i> 일자별 투입 강도 (Heatmap)</h4>
+                        <div class="calendar-heatmap-wrapper">
+                          <div class="heatmap-days-header">
+                            <span>월</span><span>화</span><span>수</span><span>목</span><span>금</span>
+                          </div>
+                          <div class="heatmap-grid" id="manpower-heatmap-grid">
+                            <!-- Dynamic Heatmap grid elements -->
+                          </div>
+                          <div class="heatmap-legend">
+                            <span>낮음</span>
+                            <span class="level level-0"></span>
+                            <span class="level level-1"></span>
+                            <span class="level level-2"></span>
+                            <span class="level level-3"></span>
+                            <span>높음 (8H)</span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <!-- Allocation Details Table -->
+                    <div class="manpower-table-section mt-6">
+                      <h4><i data-lucide="table-properties"></i> 투입 프로젝트 세부 명세</h4>
+                      <table class="data-table mt-3" id="manpower-allocation-table">
+                        <thead>
+                          <tr>
+                            <th>프로젝트명</th>
+                            <th>역할</th>
+                            <th>총 투입시간</th>
+                            <th>계산 M/M</th>
+                            <th>확정 M/M</th>
+                            <th>비율 (%)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Rendered Dynamically -->
+                        </tbody>
+                      </table>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- SUB-VIEW 4: ELECTRONIC APPROVAL (전자결재) -->
+            <div id="sub-approval" class="sub-view">
+              <div class="timesheet-header-area">
+                <div class="timesheet-filters">
+                  <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchApprovalTab('waiting')">결재 대기함</button>
+                    <button class="tab-btn" onclick="switchApprovalTab('sent')">상신함</button>
+                    <button class="tab-btn" onclick="switchApprovalTab('completed')">결재 완료함</button>
+                  </div>
+                </div>
+                <div class="timesheet-actions">
+                  <button class="btn-action primary" onclick="openApprovalModal()"><i data-lucide="pen-tool"></i> 새 문서
+                    기안하기</button>
+                </div>
+              </div>
+
+              <!-- Approvals Listing -->
+              <div class="dash-panel mt-6">
+                <div class="panel-body">
+                  <table class="data-table" id="approval-list-table">
+                    <thead>
+                      <tr>
+                        <th>문서번호</th>
+                        <th>문서유형</th>
+                        <th>제목</th>
+                        <th>기안자</th>
+                        <th>기안일자</th>
+                        <th>결재상태</th>
+                        <th>작업</th>
+                      </tr>
+                    </thead>
+                    <tbody id="approval-list-tbody">
+                      <!-- Rendered by JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUB-VIEW 5: ATTENDANCE (근태관리) -->
+            <div id="sub-attendance" class="sub-view">
+              <div class="dashboard-grid">
+
+                <!-- Time clock attendance logger card -->
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>오늘의 근태 체크인/아웃</h3>
+                  </div>
+                  <div class="panel-body flex-col justify-center align-center p-8">
+                    <div class="clock-icon-large"><i data-lucide="clock"></i></div>
+                    <div class="time-stamp-display" id="attendance-page-time">09:00 AM</div>
+                    <div class="attendance-button-group mt-6">
+                      <button class="att-btn check-in-large" id="btn-check-in-large" onclick="performCheckIn()">
+                        <i data-lucide="log-in"></i> 출근 등록
+                      </button>
+                      <button class="att-btn check-out-large disabled" id="btn-check-out-large"
+                        onclick="performCheckOut()">
+                        <i data-lucide="log-out"></i> 퇴근 등록
+                      </button>
+                    </div>
+                    <div class="attendance-history-short mt-6 w-full" id="attendance-log-today">
+                      <!-- Status descriptions -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Monthly Attendance statistics -->
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>이번 달 누적 근무 현황</h3>
+                  </div>
+                  <div class="panel-body">
+                    <div class="attendance-stat-box">
+                      <div class="stat-bubble">
+                        <h4>출근 일수</h4>
+                        <span class="num" id="stat-attendance-days">16일</span>
+                      </div>
+                      <div class="stat-bubble">
+                        <h4>지각 일수</h4>
+                        <span class="num text-yellow" id="stat-late-days">0일</span>
+                      </div>
+                      <div class="stat-bubble">
+                        <h4>휴가 사용</h4>
+                        <span class="num text-blue" id="stat-vacation-days">1.5일</span>
+                      </div>
+                    </div>
+                    <hr class="divider">
+                    <h4 class="mt-4">주간 누적 초과근무 분석</h4>
+                    <div class="overtime-bar-chart mt-3">
+                      <div class="bar-row">
+                        <span class="week-lbl">1주차</span>
+                        <div class="bar-track">
+                          <div class="bar-fill" style="width: 10%;"></div>
+                        </div>
+                        <span class="hours">1.5H</span>
+                      </div>
+                      <div class="bar-row">
+                        <span class="week-lbl">2주차</span>
+                        <div class="bar-track">
+                          <div class="bar-fill" style="width: 45%;"></div>
+                        </div>
+                        <span class="hours">4.0H</span>
+                      </div>
+                      <div class="bar-row">
+                        <span class="week-lbl">3주차</span>
+                        <div class="bar-track">
+                          <div class="bar-fill" style="width: 80%;"></div>
+                        </div>
+                        <span class="hours">8.5H</span>
+                      </div>
+                      <div class="bar-row">
+                        <span class="week-lbl">4주차</span>
+                        <div class="bar-track">
+                          <div class="bar-fill" style="width: 5%;"></div>
+                        </div>
+                        <span class="hours">0.0H</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- SUB-VIEW 6: WORK DIARY (업무일지) -->
+            <div id="sub-diary" class="sub-view">
+              <div class="timesheet-header-area">
+                <div class="timesheet-filters">
+                  <div class="diary-week-navigator">
+                    <button class="arrow-btn"><i data-lucide="chevron-left"></i></button>
+                    <strong>2026년 6월 1주차 (06/01 ~ 06/05)</strong>
+                    <button class="arrow-btn"><i data-lucide="chevron-right"></i></button>
+                  </div>
+                </div>
+                <div class="timesheet-actions">
+                  <button class="btn-action primary" onclick="openDiaryModal()"><i data-lucide="book-plus"></i> 업무일지
+                    작성하기</button>
+                </div>
+              </div>
+
+              <!-- Week-view Daily Diaries Grid -->
+              <div class="diary-week-view mt-6" id="diary-list-container">
+                <!-- Dynamically filled by JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ==================== DRAWER: WIREFRAME BLUEPRINT DRAWER ==================== -->
+  <div class="blueprint-drawer" id="blueprint-drawer">
+    <div class="drawer-header">
+      <h3><i data-lucide="image"></i> 와이어프레임 기획안 원본</h3>
+      <button class="close-btn" onclick="toggleBlueprintDrawer()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <p class="desc">현재 화면이 기획안 마크다운 문서 및 피그마 디자인 시안과 부합하는지 비교해보실 수 있습니다.</p>
+
+      <div class="blueprint-selector-row">
+        <label for="blueprint-select">기획 화면 선택:</label>
+        <select id="blueprint-select" onchange="changeBlueprintImage()">
+          <option value="timesheet">Section A. 투입시간 일일마감입력</option>
+          <option value="manpower">Section B. 인력 투입 현황 분석</option>
+          <option value="homepage">Section 1. 공개 홈페이지 (PC)</option>
+          <option value="intranet">Section 2. 사내 인트라넷 대시보드</option>
+          <option value="subpages">Section 3. 인트라넷 서브 페이지</option>
+          <option value="mobile">Section 4. 모바일 반응형 (375px)</option>
+        </select>
+      </div>
+
+      <div class="blueprint-image-container">
+        <!-- Renders the actual wireframe images from docs/images/ -->
+        <img id="blueprint-img-viewer" src="./docs/images/timesheet_input_wireframe_1780702852142.png" alt="와이어프레임 원본">
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Add Project Row Modal -->
+  <div class="modal-backdrop" id="modal-add-project">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>투입 프로젝트 추가</h3>
+        <button class="close-btn" onclick="closeModal('modal-add-project')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="desc">현재 본인이 배정되어 있는 활성 프로젝트 목록입니다. 투입 내역을 작성할 프로젝트를 타임시트에 행으로 추가합니다.</p>
+        <div class="project-selection-list" id="modal-project-choices">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Create Approval Draft Modal -->
+  <div class="modal-backdrop" id="modal-create-approval">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>전자결재 새 기안 작성</h3>
+        <button class="close-btn" onclick="closeModal('modal-create-approval')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="approval-form" onsubmit="submitApprovalForm(event)">
+          <div class="form-group">
+            <label for="ap-type">결재 종류</label>
+            <select id="ap-type" required>
+              <option value="연차신청서">연차휴가 신청서</option>
+              <option value="업무보고서">업무 기획 승인원</option>
+              <option value="출장신청서">출장보고 및 경비 승인원</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ap-title">기안 제목</label>
+            <input type="text" id="ap-title" placeholder="기안서 제목을 입력해주세요" required>
+          </div>
+          <div class="form-group">
+            <label for="ap-content">상세 기안 사유 및 내용</label>
+            <textarea id="ap-content" rows="6" placeholder="기안 상세 규격과 일정을 기재하십시오" required></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-action secondary" onclick="closeModal('modal-create-approval')">취소</button>
+            <button type="submit" class="btn-action primary">결재 상신</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Create Diary Log Modal -->
+  <div class="modal-backdrop" id="modal-create-diary">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>업무일지 기록 작성</h3>
+        <button class="close-btn" onclick="closeModal('modal-create-diary')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="diary-form" onsubmit="submitDiaryForm(event)">
+          <div class="form-group">
+            <label for="dy-date">작성일자</label>
+            <input type="date" id="dy-date" required>
+          </div>
+          <div class="form-group">
+            <label for="dy-project">관련 프로젝트</label>
+            <select id="dy-project" required>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dy-hours">소요시간 (Hour)</label>
+            <input type="number" id="dy-hours" min="1" max="8" value="4" required>
+          </div>
+          <div class="form-group">
+            <label for="dy-content">업무 수행 상세 내역</label>
+            <textarea id="dy-content" rows="4" placeholder="작성일 기준 수행한 작업 내용을 구체적으로 기재해주세요" required></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-action secondary" onclick="closeModal('modal-create-diary')">취소</button>
+            <button type="submit" class="btn-action primary">일지 저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Core Script File -->
+  <script src="app.js"></script>
+</body>
+
+</html>
