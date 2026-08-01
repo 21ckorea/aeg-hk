@@ -1,5 +1,26 @@
+function getTimesheetMonth() {
+  return document.getElementById('ts-year-month')?.value || new Date().toISOString().slice(0, 7);
+}
+
+function getTimesheetDays() {
+  const [year, month] = getTimesheetMonth().split('-').map(Number);
+  return new Date(year, month, 0).getDate();
+}
+
+function populateTimesheetMonths() {
+  const select = document.getElementById('ts-year-month');
+  if (!select || select.options.length) return;
+  const now = new Date();
+  for (let offset = 0; offset >= -11; offset--) {
+    const date = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    select.add(new Option(`${date.getFullYear()}년 ${String(date.getMonth() + 1).padStart(2, '0')}월`, value));
+  }
+}
+
 function initTimesheets() {
-  const daysInMonth = 30;
+  populateTimesheetMonths();
+  const daysInMonth = getTimesheetDays();
   ensureStateShape();
 
   MOCK_DB.employees.forEach(emp => {
@@ -11,11 +32,13 @@ function initTimesheets() {
       if (!MOCK_DB.timesheets[emp.id][p.id]) {
         MOCK_DB.timesheets[emp.id][p.id] = new Array(daysInMonth).fill(0);
       }
+      while (MOCK_DB.timesheets[emp.id][p.id].length < daysInMonth) MOCK_DB.timesheets[emp.id][p.id].push(0);
     });
 
     if (!MOCK_DB.timesheets[emp.id]['vacation']) {
       MOCK_DB.timesheets[emp.id]['vacation'] = new Array(daysInMonth).fill(0);
     }
+    while (MOCK_DB.timesheets[emp.id].vacation.length < daysInMonth) MOCK_DB.timesheets[emp.id].vacation.push(0);
   });
 
   saveAppState();
@@ -25,7 +48,7 @@ function renderTimesheet() {
   const table = document.getElementById('timesheet-grid-table');
   if (!table) return;
 
-  const daysInMonth = 30;
+  const daysInMonth = getTimesheetDays();
   const activeUserId = MOCK_DB.currentUser.id;
   const ts = MOCK_DB.timesheets[activeUserId] || {};
   initTimesheets();
@@ -130,7 +153,7 @@ function updateCellHours(empId, projId, dayIdx, value) {
   MOCK_DB.timesheets[empId][projId][dayIdx] = parsedVal;
 
   let projTotal = 0;
-  const daysInMonth = 30;
+  const daysInMonth = getTimesheetDays();
   for (let d = 0; d < daysInMonth; d++) {
     projTotal += MOCK_DB.timesheets[empId][projId][d] || 0;
   }
@@ -154,7 +177,7 @@ function updateCellHours(empId, projId, dayIdx, value) {
 }
 
 function updateTimesheetSummaries() {
-  const daysInMonth = 30;
+  const daysInMonth = getTimesheetDays();
   let grandTotal = 0;
 
   for (let d = 0; d < daysInMonth; d++) {
@@ -212,7 +235,8 @@ function addProjectRowPopup() {
 
   const inactiveProjects = MOCK_DB.projects.filter(p => !p.active);
   if (inactiveProjects.length === 0) {
-    listContainer.innerHTML = '<p style="font-size:13px; color:var(--text-muted);">더 이상 추가 가능한 프로젝트가 없습니다.</p>';
+    closeModal('modal-add-project');
+    createProjectFromPrompt();
     return;
   }
 
@@ -277,8 +301,9 @@ function activateProjectRow(projId) {
 async function saveTimesheet() {
   const current = MOCK_DB.timesheets[MOCK_DB.currentUser.id] || MOCK_DB.timesheets.emp01 || {};
   const requests = [];
+  const month = getTimesheetMonth();
   Object.entries(current).forEach(([projectId, hours]) => hours.forEach((value, day) => {
-    if (Number(value) > 0) requests.push(fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate: `2026-06-${String(day + 1).padStart(2, '0')}`, hours: Number(value) }) }));
+    if (Number(value) > 0) requests.push(fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate: `${month}-${String(day + 1).padStart(2, '0')}`, hours: Number(value) }) }));
   }));
   const results = await Promise.all(requests);
   if (results.some(response => !response.ok)) return alert('일부 타임시트 저장에 실패했습니다.');
