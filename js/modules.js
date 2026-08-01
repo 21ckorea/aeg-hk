@@ -534,7 +534,7 @@ function openApprovalModal() {
   document.getElementById('modal-create-approval').classList.add('active');
 }
 
-function submitApprovalForm(e) {
+async function submitApprovalForm(e) {
   e.preventDefault();
   const type = document.getElementById('ap-type').value;
   const title = document.getElementById('ap-title').value;
@@ -550,6 +550,10 @@ function submitApprovalForm(e) {
     content
   };
 
+  const response = await fetch('/api/intranet-data?resource=approvals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentType: type, title, content }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '기안 저장에 실패했습니다.');
+  newAp.id = result.record.id;
   MOCK_DB.approvals.unshift(newAp);
   saveAppState();
   closeModal('modal-create-approval');
@@ -669,7 +673,7 @@ function openNoticeModal() {
   document.getElementById('modal-create-notice').classList.add('active');
 }
 
-function submitNoticeForm(e) {
+async function submitNoticeForm(e) {
   e.preventDefault();
   const title = document.getElementById('notice-title').value.trim();
   const category = document.getElementById('notice-category').value;
@@ -677,6 +681,9 @@ function submitNoticeForm(e) {
 
   if (!title || !content) return;
 
+  const response = await fetch('/api/intranet-data?resource=notices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, category, content }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '공지 등록에 실패했습니다.');
   MOCK_DB.notices.unshift({
     id: `N${Date.now()}`,
     title,
@@ -691,8 +698,11 @@ function submitNoticeForm(e) {
   renderDashboardApprovals();
 }
 
-function performCheckIn() {
+async function performCheckIn() {
   const now = new Date();
+  const response = await fetch('/api/intranet-data?resource=attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: now.toISOString().slice(0, 10), checkedInAt: now.toISOString() }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '출근 등록에 실패했습니다.');
   MOCK_DB.attendance.status = 'in';
   MOCK_DB.attendance.checkInTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   MOCK_DB.attendance.checkOutTime = null;
@@ -704,8 +714,11 @@ function performCheckIn() {
   renderDashboardApprovals();
 }
 
-function performCheckOut() {
+async function performCheckOut() {
   const now = new Date();
+  const response = await fetch('/api/intranet-data?resource=attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: now.toISOString().slice(0, 10), checkedOutAt: now.toISOString() }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '퇴근 등록에 실패했습니다.');
   MOCK_DB.attendance.status = 'out';
   MOCK_DB.attendance.checkOutTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   MOCK_DB.attendance.log.push({
@@ -891,15 +904,18 @@ function openDiaryModal() {
   document.getElementById('dy-date').value = '2026-06-05';
 }
 
-function submitDiaryForm(e) {
+async function submitDiaryForm(e) {
   e.preventDefault();
   const date = document.getElementById('dy-date').value;
   const projectId = document.getElementById('dy-project').value;
   const hours = parseInt(document.getElementById('dy-hours').value);
   const content = document.getElementById('dy-content').value;
 
+  const response = await fetch('/api/intranet-data?resource=diaries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: date, projectId, hours, content }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '업무일지 등록에 실패했습니다.');
   const newDiary = {
-    id: `d${Date.now()}`,
+    id: result.record.id,
     date,
     projectId,
     hours,
