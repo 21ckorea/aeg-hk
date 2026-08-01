@@ -71,7 +71,7 @@ module.exports = async (request, response) => {
       if (!configuredAdmin && user.status !== 'active') return response.status(202).json({ pending: true, message: '회원가입이 접수되었습니다. 관리자 승인 후 로그인할 수 있습니다.' });
     } else {
       const rows = await sql.query(
-        'SELECT id, email, name, job_rank, job_title, role, avatar_url FROM public.app_users WHERE email = $1 AND status = $2',
+        'SELECT id, email, name, job_rank, job_title, role, status, avatar_url FROM public.app_users WHERE email = $1 AND status = $2',
         [email, 'active']
       );
       user = rows[0];
