@@ -1,6 +1,5 @@
 const { OAuth2Client } = require('google-auth-library');
-const { SignJWT } = require('jose');
-const { COOKIE_NAME, getSessionSecret } = require('./_session');
+const { COOKIE_NAME, createSessionToken } = require('./_session');
 
 function getBody(request) {
   if (typeof request.body === 'string') return JSON.parse(request.body);
@@ -19,8 +18,7 @@ module.exports = async (request, response) => {
     const email = payload?.email?.toLowerCase();
     const allowed = (process.env.INTRANET_ALLOWED_EMAILS || '').split(',').map(v => v.trim().toLowerCase()).filter(Boolean);
     if (!email || !payload.email_verified || !allowed.includes(email)) return response.status(403).json({ error: 'This Google account is not approved for the intranet.' });
-    const token = await new SignJWT({ email, name: payload.name || email, picture: payload.picture || '' })
-      .setProtectedHeader({ alg: 'HS256' }).setSubject(payload.sub).setIssuedAt().setExpirationTime('8h').sign(getSessionSecret());
+    const token = createSessionToken({ id: payload.sub, email, name: payload.name || email, picture: payload.picture || '' });
     response.setHeader('Set-Cookie', `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800`);
     response.status(200).json({ user: { id: payload.sub, email, name: payload.name || email, picture: payload.picture || '' } });
   } catch (error) {

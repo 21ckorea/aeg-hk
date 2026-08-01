@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
-    "google-auth-library": "^11.0.0",
-    "jose": "^6.2.6"
+    "google-auth-library": "^11.0.0"
   }
 }
