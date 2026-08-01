@@ -1,7 +1,3 @@
-const APP_STATE_STORAGE_KEY = 'aeg-hk-app-state-v2';
-const AUTH_USERS_KEY = 'aeg-hk-auth-users';
-const AUTH_SESSION_KEY = 'aeg-hk-auth-session';
-
 let authMode = 'login';
 let isAuthenticated = false;
 let MOCK_DB = createDefaultAppState();
@@ -58,25 +54,9 @@ function normalizeAppState(state) {
   return normalized;
 }
 
-function loadAppState() {
-  try {
-    const stored = localStorage.getItem(APP_STATE_STORAGE_KEY);
-    return normalizeAppState(stored ? JSON.parse(stored) : null);
-  } catch (error) {
-    return createDefaultAppState();
-  }
-}
-
 function saveAppState() {
-  try {
-    localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(MOCK_DB));
-  } catch (error) {
-    console.warn('State save skipped', error);
-  }
-
-  if (dbMode === 'remote') {
-    void saveStateToRemote();
-  }
+  // UI rendering state is refreshed from the relational Neon APIs after login.
+  // There is intentionally no localStorage or legacy app-state persistence.
 }
 
 function ensureStateShape() {
@@ -97,60 +77,11 @@ function ensureStateShape() {
   }
 }
 
-function getStoredUsers() {
-  try {
-    const stored = localStorage.getItem(AUTH_USERS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    return [];
-  }
-}
-
-function saveStoredUsers(users) {
-  localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
-}
-
-function getStoredSession() {
-  try {
-    const stored = localStorage.getItem(AUTH_SESSION_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch (error) {
-    return null;
-  }
-}
-
-function saveStoredSession(user) {
-  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
-}
-
-function clearStoredSession() {
-  localStorage.removeItem(AUTH_SESSION_KEY);
-}
-
-function ensureDemoAccounts() {
-  const users = getStoredUsers();
-  const hasAdmin = users.some(user => user.email === 'ingyo98@gmail.com');
-  if (!hasAdmin) {
-    users.push({
-      id: 'admin-ingyo',
-      name: '관리자',
-      email: 'ingyo98@gmail.com',
-      password: 'Admin1234!',
-      role: 'admin'
-    });
-  }
-  saveStoredUsers(users);
-}
+function clearStoredSession() {}
 
 async function initState() {
-  MOCK_DB = loadAppState();
+  MOCK_DB = createDefaultAppState();
   ensureStateShape();
-  ensureDemoAccounts();
-
-  const remoteLoaded = await hydrateFromRemoteIfAvailable();
-  if (!remoteLoaded) {
-    saveAppState();
-  }
 }
 
 // Other modules wait for this before rendering, so a Vercel/Neon load

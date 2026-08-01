@@ -1,5 +1,3 @@
-let dbMode = 'local';
-let remoteSaveQueue = Promise.resolve();
 
 function showDataStatus(message, type = 'info') {
   let target = document.getElementById('data-status-message');
@@ -41,52 +39,6 @@ async function runWithButtonLock(button, task) {
   }
 }
 
-async function loadStateFromRemote() {
-  const response = await fetch('/api/app-state', { cache: 'no-store' });
-  if (!response.ok) throw new Error(`Database load failed (${response.status})`);
-  const data = await response.json();
-  dbMode = 'remote';
-  return data.payload || null;
-}
-
-function saveStateToRemote() {
-  // Preserve write order so rapid UI changes cannot overwrite newer state.
-  const payload = JSON.stringify(MOCK_DB);
-  remoteSaveQueue = remoteSaveQueue
-    .catch(() => undefined)
-    .then(async () => {
-      const response = await fetch('/api/app-state', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: JSON.parse(payload) })
-      });
-      if (!response.ok) throw new Error(`Database save failed (${response.status})`);
-      return response.json();
-    })
-    .catch((error) => {
-      console.warn('Neon remote save failed; local storage remains available.', error);
-      dbMode = 'local';
-      showDataStatus('서버 저장에 실패했습니다. 연결을 확인한 뒤 다시 시도해 주세요.', 'error');
-      return null;
-    });
-  return remoteSaveQueue;
-}
-
-async function hydrateFromRemoteIfAvailable() {
-  try {
-    const remoteState = await loadStateFromRemote();
-    if (!remoteState) return false;
-    MOCK_DB = normalizeAppState(remoteState);
-    ensureStateShape();
-    saveAppState();
-    return true;
-  } catch (error) {
-    console.info('Neon database is unavailable; using local storage.', error);
-    dbMode = 'local';
-    showDataStatus('서버 데이터를 불러오지 못해 현재 기기의 임시 데이터를 표시합니다.', 'error');
-    return false;
-  }
-}
 
 async function loadWorkflowResource(resource) {
   const response = await fetch(`/api/intranet-data?resource=${resource}`, { cache: 'no-store' });

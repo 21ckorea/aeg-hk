@@ -81,7 +81,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initializeAuth();
   if (isAuthenticated) {
     await verifyDatabaseHealth();
-    await hydrateFromRemoteIfAvailable();
     await hydrateWorkflowsFromNeon();
   }
   switchMainView('public');
