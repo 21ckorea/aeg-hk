@@ -980,28 +980,11 @@ async function openDiaryAttachments(diaryId) {
   const response = await fetch(`/api/attachments?diaryId=${encodeURIComponent(diaryId)}`, { cache: 'no-store' });
   const data = await response.json();
   if (!response.ok) return alert(data.error || '첨부파일을 불러오지 못했습니다.');
-  if (!data.attachments.length) return attachNextcloudFile(diaryId);
+  if (!data.attachments.length) return alert('첨부파일이 없습니다.');
   const selected = window.prompt(`열 첨부파일 번호를 입력하세요.\n${data.attachments.map((file, index) => `${index + 1}. ${file.file_name}`).join('\n')}`);
   const file = data.attachments[Number(selected) - 1];
   if (!file) return;
-  const link = await fetch('/api/attachments', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: file.id }) });
-  const result = await link.json();
-  if (!link.ok) return alert(result.error || '첨부파일 링크를 만들지 못했습니다.');
-  window.open(result.url, '_blank', 'noopener');
-}
-
-async function attachNextcloudFile(diaryId) {
-  const response = await fetch('/api/attachment-library', { cache: 'no-store' });
-  const data = await response.json();
-  if (!response.ok) return alert(data.error || 'Nextcloud 파일 목록을 불러오지 못했습니다.');
-  if (!data.files.length) return alert('연결할 파일이 없습니다. 먼저 Nextcloud 파일 요청 페이지에서 파일을 업로드해 주세요.');
-  const choice = window.prompt(`이 업무일지에 연결할 파일 번호를 입력하세요.\n${data.files.map((file, index) => `${index + 1}. ${file.fileName}`).join('\n')}`);
-  const file = data.files[Number(choice) - 1];
-  if (!file) return;
-  const linked = await fetch('/api/attachments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diaryId, fileName: file.fileName, storagePath: file.storagePath, byteSize: 0 }) });
-  const result = await linked.json();
-  if (!linked.ok) return alert(result.error || '첨부파일 연결에 실패했습니다.');
-  alert('첨부파일이 업무일지에 연결되었습니다. 다시 첨부파일 버튼을 누르면 열 수 있습니다.');
+  window.open(`/api/attachment-file?id=${encodeURIComponent(file.id)}`, '_blank', 'noopener');
 }
 
 
@@ -1026,31 +1009,52 @@ async function submitDiaryForm(e) {
   const projectId = document.getElementById('dy-project').value;
   const hours = parseInt(document.getElementById('dy-hours').value);
   const content = document.getElementById('dy-content').value;
+  const attachments = Array.from(document.getElementById('dy-attachments').files || []);
+  const tooLarge = attachments.find(file => file.size > 50 * 1024 * 1024);
+  if (tooLarge) return alert(`'${tooLarge.name}' 파일은 50MB를 초과해 첨부할 수 없습니다.`);
+  if (attachments.length && typeof window.uploadDiaryBlob !== 'function') {
+    return alert('파일 업로드 기능을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+  }
+  const submitButton = document.querySelector('#diary-form button[type="submit"]');
+  const submitLabel = submitButton?.textContent;
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = attachments.length ? '일지 저장 및 파일 업로드 중…' : '저장 중…';
+  }
 
-  const response = await fetch('/api/intranet-data?resource=diaries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: date, projectId, hours, content }) });
-  const result = await response.json();
-  if (!response.ok) return alert(result.error || '업무일지 등록에 실패했습니다.');
-  const newDiary = {
-    id: result.record.id,
-    date,
-    projectId,
-    hours,
-    content
-  };
+  try {
+    const response = await fetch('/api/intranet-data?resource=diaries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: date, projectId, hours, content }) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || '업무일지 등록에 실패했습니다.');
+    for (let index = 0; index < attachments.length; index += 1) {
+      const file = attachments[index];
+      await window.uploadDiaryBlob(result.record.id, file, ({ percentage }) => {
+        const rounded = Math.round(percentage || 0);
+        if (submitButton) submitButton.textContent = `파일 업로드 중 (${index + 1}/${attachments.length}, ${rounded}%)`;
+      });
+    }
+    const newDiary = {
+      id: result.record.id,
+      date,
+      projectId,
+      hours,
+      content
+    };
 
-  MOCK_DB.diaries.push(newDiary);
-  saveAppState();
-  closeModal('modal-create-diary');
-  document.getElementById('diary-form').reset();
+    MOCK_DB.diaries.push(newDiary);
+    saveAppState();
+    closeModal('modal-create-diary');
+    document.getElementById('diary-form').reset();
+    alert(attachments.length ? '업무일지와 첨부파일이 저장되었습니다.' : '업무일지가 성공적으로 등록되었습니다.');
 
-  alert('업무일지가 성공적으로 등록되었습니다.');
-
-  if (activeSubView === 'diary') renderDiaryWeekView();
-}
-
-async function openNextcloudUpload() {
-  const response = await fetch('/api/attachment-config', { cache: 'no-store' });
-  const data = await response.json();
-  if (!response.ok) return alert(data.error || 'Nextcloud 업로드 페이지를 열 수 없습니다.');
-  window.open(data.uploadUrl, '_blank', 'noopener');
+    if (activeSubView === 'diary') renderDiaryWeekView();
+  } catch (error) {
+    console.error('Diary attachment upload failed:', error);
+    alert(error.message || '업무일지 또는 첨부파일 저장에 실패했습니다.');
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = submitLabel;
+    }
+  }
 }
