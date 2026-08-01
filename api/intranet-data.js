@@ -37,6 +37,15 @@ module.exports = async (request, response) => {
       const rows = await sql.query(`SELECT * FROM public.${config.table}${where} ORDER BY created_at DESC`, config.owner && !isPrivileged ? [user.id] : []);
       return response.status(200).json({ resource, records: rows });
     }
+    if (request.method === 'PATCH' && resource === 'approvals') {
+      if (!isPrivileged) return response.status(403).json({ error: 'PM 또는 관리자만 결재를 처리할 수 있습니다.' });
+      const input = body(request);
+      if (!input.id || !['approved', 'rejected'].includes(input.status)) return response.status(400).json({ error: '유효한 결재 상태가 필요합니다.' });
+      const rows = await sql.query('UPDATE public.approval_documents SET status = $2, updated_at = now() WHERE id = $1 AND status = $3 RETURNING *', [input.id, input.status, 'waiting']);
+      if (!rows[0]) return response.status(409).json({ error: '이미 처리되었거나 찾을 수 없는 결재입니다.' });
+      await sql.query('INSERT INTO public.approval_actions (document_id, actor_id, action) VALUES ($1, $2, $3)', [input.id, user.id, input.status]);
+      return response.status(200).json({ resource, record: rows[0] });
+    }
     if (request.method !== 'POST') return response.status(405).json({ error: 'Method not allowed.' });
 
     const input = body(request);

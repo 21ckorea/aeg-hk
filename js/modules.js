@@ -232,13 +232,16 @@ function addProjectRowPopup() {
   lucide.createIcons();
 }
 
-function createProjectFromPrompt() {
+async function createProjectFromPrompt() {
   const name = window.prompt('새 프로젝트명을 입력해 주세요.', '신규 프로젝트');
   if (!name) return;
 
   const role = window.prompt('담당 역할을 입력해 주세요.', '설계지원');
+  const response = await fetch('/api/intranet-data?resource=projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim(), workRole: role?.trim() || '설계지원' }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '프로젝트 등록에 실패했습니다.');
   const newProject = {
-    id: `p${Date.now()}`,
+    id: result.record.id,
     name: name.trim(),
     role: role?.trim() || '설계지원',
     active: true
@@ -270,9 +273,16 @@ function activateProjectRow(projId) {
   }
 }
 
-function saveTimesheet() {
+async function saveTimesheet() {
+  const current = MOCK_DB.timesheets[MOCK_DB.currentUser.id] || MOCK_DB.timesheets.emp01 || {};
+  const requests = [];
+  Object.entries(current).forEach(([projectId, hours]) => hours.forEach((value, day) => {
+    if (Number(value) > 0) requests.push(fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate: `2026-06-${String(day + 1).padStart(2, '0')}`, hours: Number(value) }) }));
+  }));
+  const results = await Promise.all(requests);
+  if (results.some(response => !response.ok)) return alert('일부 타임시트 저장에 실패했습니다.');
   saveAppState();
-  alert('타임시트 진행 내역이 로컬 저장소에 임시저장되었습니다.');
+  alert('타임시트가 Neon DB에 저장되었습니다.');
 }
 
 function submitTimesheet() {
@@ -519,7 +529,10 @@ function renderApprovalsTable() {
   });
 }
 
-function processApproval(apId, action) {
+async function processApproval(apId, action) {
+  const response = await fetch('/api/intranet-data?resource=approvals', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: apId, status: action }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '결재 처리에 실패했습니다.');
   const ap = MOCK_DB.approvals.find(a => a.id === apId);
   if (ap) {
     ap.status = action;
