@@ -31,7 +31,7 @@ function switchAuthMode(mode) {
   openAuthModal(mode);
 }
 
-function applyAuthenticatedUser(user) {
+function applyAuthenticatedUser(user, { navigateToIntranet = true } = {}) {
   isAuthenticated = true;
   MOCK_DB.currentUser.id = user.id || user.email;
   MOCK_DB.currentUser.name = user.name;
@@ -62,10 +62,12 @@ function applyAuthenticatedUser(user) {
   if (userRole) userRole.textContent = MOCK_DB.currentUser.role;
 
   updateRoleAwareUI(user.role || 'staff');
-  hideAuthModal();
-  switchMainView('intranet');
-  if (activeSubView === 'dashboard') {
-    renderDashboardApprovals();
+  if (navigateToIntranet) {
+    hideAuthModal();
+    switchMainView('intranet');
+    if (activeSubView === 'dashboard') {
+      renderDashboardApprovals();
+    }
   }
 }
 
@@ -91,11 +93,9 @@ function initializeAuth() {
   ensureDemoAccounts();
   const sessionUser = getStoredSession();
   if (sessionUser) {
-    applyAuthenticatedUser(sessionUser);
-    return;
+    // Restore the session without interrupting a public-site visit.
+    applyAuthenticatedUser(sessionUser, { navigateToIntranet: false });
   }
-
-  openAuthModal('login');
 }
 
 function handleEmailLogin(event) {
