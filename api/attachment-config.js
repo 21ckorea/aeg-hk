@@ -9,7 +9,7 @@ module.exports = async (request, response) => {
     const parsed = new URL(shareUrl);
     const token = parsed.pathname.split('/').filter(Boolean).pop();
     if (!token) return response.status(500).json({ error: 'Invalid Nextcloud public upload URL.' });
-    response.status(200).json({ webdavUrl: `${parsed.origin}/public.php/webdav`, token });
+    response.status(200).json({ webdavUrl: `${parsed.origin}/public.php/dav/files/${encodeURIComponent(token)}` });
   } catch (error) {
     response.status(error.status || 500).json({ error: error.message || '첨부 설정을 불러오지 못했습니다.' });
   }

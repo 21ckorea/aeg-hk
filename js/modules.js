@@ -1024,7 +1024,7 @@ async function submitDiaryForm(e) {
       if (file.size > 50 * 1024 * 1024) return alert(`업무일지는 저장됐지만 ${file.name}은 50MB를 초과해 첨부하지 못했습니다.`);
       const safeName = file.name.replace(/[^a-zA-Z0-9._-가-힣]/g, '_');
       const path = `${result.record.id}-${crypto.randomUUID()}-${safeName}`;
-      const direct = await fetch(`${config.webdavUrl}/${path.split('/').map(encodeURIComponent).join('/')}`, { method: 'PUT', headers: { Authorization: `Basic ${btoa(`${config.token}:`)}`, 'Content-Type': file.type || 'application/octet-stream' }, body: file });
+      const direct = await fetch(`${config.webdavUrl}/${path.split('/').map(encodeURIComponent).join('/')}`, { method: 'PUT', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': file.type || 'application/octet-stream' }, body: file });
       if (!direct.ok) return alert(`업무일지는 저장됐지만 ${file.name} 업로드에 실패했습니다. (${direct.status})`);
       const metadata = await fetch('/api/attachments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diaryId: result.record.id, fileName: file.name, contentType: file.type, byteSize: file.size, storagePath: path }) });
       const saved = await metadata.json();
