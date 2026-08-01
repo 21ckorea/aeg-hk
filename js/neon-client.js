@@ -100,6 +100,13 @@ async function hydrateWorkflowsFromNeon() {
       ['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets'].map(loadWorkflowResource)
     );
     MOCK_DB.projects = projects.map(item => ({ id: item.id, name: item.name, role: item.work_role || '', active: item.is_active }));
+    MOCK_DB.projectsSummary = MOCK_DB.projects.map(project => ({
+      name: project.name,
+      pm: MOCK_DB.currentUser.name,
+      status: project.active ? '진행 중' : '대기 중',
+      mm: '0.0 M/M',
+      state: project.active ? 'active' : 'pending'
+    }));
     MOCK_DB.approvals = approvals.map(item => ({ id: item.id, type: item.document_type, title: item.title, drafter: item.requester_id, date: String(item.created_at).slice(0, 10), status: item.status, content: item.content }));
     MOCK_DB.notices = notices.map(item => ({ id: item.id, title: item.title, category: item.category, date: String(item.created_at).slice(0, 10), content: item.content }));
     MOCK_DB.diaries = diaries.map(item => ({ id: item.id, date: String(item.work_date).slice(0, 10), projectId: item.project_id, hours: Number(item.hours), content: item.content }));

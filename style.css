@@ -135,6 +135,7 @@ ul {
   font-family: var(--font-title);
   letter-spacing: 0.5px;
 }
+.brand-short { display: none; }
 
 .pulse-indicator {
   display: inline-block;
@@ -2766,6 +2767,14 @@ ul {
 }
 
 @media(max-width: 768px) {
+  .dev-control-bar { padding: 0 10px; }
+  .dev-logo { gap: 6px; font-size: 13px; max-width: 112px; }
+  .brand-full { display: none; }
+  .brand-short { display: inline; }
+  .dev-actions { display: flex; align-items: stretch; height: 100%; }
+  .dev-actions .dev-btn { padding: 0 9px; border-radius: 0; font-size: 11px; line-height: 1.15; max-width: 68px; white-space: normal; }
+  #btn-toggle-public, #btn-view-blueprint, .dev-divider { display: none; }
+  #btn-toggle-intranet { max-width: 78px; }
   .pub-nav {
     display: none;
   }
