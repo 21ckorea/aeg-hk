@@ -1015,22 +1015,6 @@ async function submitDiaryForm(e) {
   const response = await fetch('/api/intranet-data?resource=diaries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: date, projectId, hours, content }) });
   const result = await response.json();
   if (!response.ok) return alert(result.error || '업무일지 등록에 실패했습니다.');
-  const files = Array.from(document.getElementById('dy-attachments')?.files || []);
-  if (files.length) {
-    const configResponse = await fetch('/api/attachment-config', { cache: 'no-store' });
-    const config = await configResponse.json();
-    if (!configResponse.ok) return alert(`업무일지는 저장됐지만 ${config.error || '첨부 설정을 불러오지 못했습니다.'}`);
-    for (const file of files) {
-      if (file.size > 50 * 1024 * 1024) return alert(`업무일지는 저장됐지만 ${file.name}은 50MB를 초과해 첨부하지 못했습니다.`);
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-가-힣]/g, '_');
-      const path = `${result.record.id}-${crypto.randomUUID()}-${safeName}`;
-      const direct = await fetch(`${config.webdavUrl}/${path.split('/').map(encodeURIComponent).join('/')}`, { method: 'PUT', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': file.type || 'application/octet-stream' }, body: file });
-      if (!direct.ok) return alert(`업무일지는 저장됐지만 ${file.name} 업로드에 실패했습니다. (${direct.status})`);
-      const metadata = await fetch('/api/attachments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diaryId: result.record.id, fileName: file.name, contentType: file.type, byteSize: file.size, storagePath: path }) });
-      const saved = await metadata.json();
-      if (!metadata.ok) return alert(`파일은 업로드됐지만 기록 저장에 실패했습니다: ${saved.error || file.name}`);
-    }
-  }
   const newDiary = {
     id: result.record.id,
     date,
@@ -1047,4 +1031,11 @@ async function submitDiaryForm(e) {
   alert('업무일지가 성공적으로 등록되었습니다.');
 
   if (activeSubView === 'diary') renderDiaryWeekView();
+}
+
+async function openNextcloudUpload() {
+  const response = await fetch('/api/attachment-config', { cache: 'no-store' });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || 'Nextcloud 업로드 페이지를 열 수 없습니다.');
+  window.open(data.uploadUrl, '_blank', 'noopener');
 }
