@@ -93,6 +93,10 @@ function updateRoleAwareUI(role) {
 
   const blueprintButton = document.getElementById('btn-view-blueprint');
   if (blueprintButton) blueprintButton.hidden = role !== 'admin';
+  if (role !== 'admin') {
+    const blueprintDrawer = document.getElementById('blueprint-drawer');
+    if (blueprintDrawer) blueprintDrawer.classList.remove('active');
+  }
 }
 
 async function initializeAuth() {

@@ -43,6 +43,11 @@
   padding: 0;
 }
 
+/* Prevent component display rules from overriding the HTML hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }
