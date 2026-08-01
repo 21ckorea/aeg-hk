@@ -7,6 +7,21 @@ function getTimesheetDays() {
   return new Date(year, month, 0).getDate();
 }
 
+const KOREAN_HOLIDAYS = new Set([
+  '2026-01-01', '2026-02-16', '2026-02-17', '2026-02-18', '2026-03-01', '2026-03-02',
+  '2026-05-05', '2026-05-24', '2026-05-25', '2026-06-06', '2026-08-15', '2026-08-17',
+  '2026-10-03', '2026-10-05', '2026-10-09', '2026-12-25'
+]);
+
+function getTimesheetDayClass(dayNumber) {
+  const [year, month] = getTimesheetMonth().split('-').map(Number);
+  const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+  const weekDay = new Date(year, month - 1, dayNumber).getDay();
+  if (KOREAN_HOLIDAYS.has(dateKey) || weekDay === 0) return 'holiday-red';
+  if (weekDay === 6) return 'saturday-blue';
+  return '';
+}
+
 function populateTimesheetMonths() {
   const select = document.getElementById('ts-year-month');
   if (!select || select.options.length) return;
@@ -64,9 +79,7 @@ function renderTimesheet() {
       <tr>
   `;
   for (let d = 1; d <= daysInMonth; d++) {
-    const dayOfWeek = (d - 1) % 7;
-    const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
-    headHtml += `<th class="day-col day-header ${isWeekend ? 'weekend' : ''}">${d}</th>`;
+    headHtml += `<th class="day-col day-header ${getTimesheetDayClass(d)}">${d}</th>`;
   }
   headHtml += `</tr></thead>`;
 
@@ -82,12 +95,11 @@ function renderTimesheet() {
 
       let projTotal = 0;
       for (let d = 0; d < daysInMonth; d++) {
-        const dayOfWeek = d % 7;
-        const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
+        const dateClass = getTimesheetDayClass(d + 1);
         const val = ts[p.id]?.[d] || 0;
         projTotal += val;
         bodyHtml += `
-          <td class="day-cell ${isWeekend ? 'weekend' : ''}">
+          <td class="day-cell ${dateClass}">
             <input type="number" min="0" max="8" value="${val}" class="input-cell"
                    onchange="updateCellHours('${activeUserId}', '${p.id}', ${d}, this.value)">
           </td>
@@ -105,12 +117,11 @@ function renderTimesheet() {
   bodyHtml += '<td><strong>개인휴가 행</strong><br><span style="font-size:10px; color:#64748b;">연차/반차 반출</span></td>';
   let vacTotal = 0;
   for (let d = 0; d < daysInMonth; d++) {
-    const dayOfWeek = d % 7;
-    const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
+    const dateClass = getTimesheetDayClass(d + 1);
     const val = ts['vacation']?.[d] || 0;
     vacTotal += val;
     bodyHtml += `
-      <td class="day-cell ${isWeekend ? 'weekend' : ''}">
+      <td class="day-cell ${dateClass}">
         <input type="number" min="0" max="8" step="4" value="${val}" class="input-cell" style="color:var(--primary); font-weight:700;"
                onchange="updateCellHours('${activeUserId}', 'vacation', ${d}, this.value)">
       </td>

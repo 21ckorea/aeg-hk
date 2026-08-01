@@ -69,6 +69,9 @@
 .data-status-message.visible { opacity: 1; transform: translateY(0); }
 button:disabled, button[data-loading="true"] { cursor: wait; opacity: 0.65; }
 
+.day-header.saturday-blue, .day-cell.saturday-blue { color: #2563eb; background: #eff6ff; }
+.day-header.holiday-red, .day-cell.holiday-red { color: #ef4444; background: #fff1f2; }
+
 html {
   scroll-behavior: smooth;
 }
