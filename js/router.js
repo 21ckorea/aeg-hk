@@ -79,6 +79,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   initTimesheets();
   startHeroSlider();
   await initializeAuth();
+  if (isAuthenticated) {
+    await hydrateFromRemoteIfAvailable();
+  }
   switchMainView('public');
   lucide.createIcons();
 });

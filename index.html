@@ -462,14 +462,7 @@
             </div>
           </div>
 
-          <div class="quick-role-switcher">
-            <label for="role-select">권한 시뮬레이션</label>
-            <select id="role-select" onchange="switchUserRole(this.value)">
-              <option value="manager">과장 / PM 역할</option>
-              <option value="staff">사원 역할</option>
-              <option value="admin">관리자 역할</option>
-            </select>
-          </div>
+          <button class="profile-edit-button" type="button" onclick="openProfileModal()">내 프로필 수정</button>
 
           <!-- Navigation Menus -->
           <nav class="sidebar-menu">
@@ -1021,6 +1014,21 @@
 
 
   <!-- ==================== MODALS ==================== -->
+
+  <div class="modal-backdrop" id="modal-profile">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>내 프로필 수정</h3>
+        <button class="close-btn" type="button" onclick="closeModal('modal-profile')"><i data-lucide="x"></i></button>
+      </div>
+      <form class="modal-body" onsubmit="saveProfile(event)">
+        <div class="form-group"><label for="profile-name">이름 *</label><input id="profile-name" required maxlength="80"></div>
+        <div class="form-group"><label for="profile-rank">직급 <small>예: 사원 · 대리 · 과장</small></label><input id="profile-rank" maxlength="80"></div>
+        <div class="form-group"><label for="profile-title">직책 <small>예: 팀장 · PM · 본부장</small></label><input id="profile-title" maxlength="120"></div>
+        <div class="modal-actions"><button class="btn-action primary" type="submit">저장</button></div>
+      </form>
+    </div>
+  </div>
 
   <!-- 1. Add Project Row Modal -->
   <div class="modal-backdrop" id="modal-add-project">

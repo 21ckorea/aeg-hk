@@ -132,3 +132,34 @@ function requestIntranetAccess() {
   }
   openAuthModal('login');
 }
+
+async function openProfileModal() {
+  const response = await fetch('/api/profile', { cache: 'no-store' });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '프로필을 불러올 수 없습니다.');
+  document.getElementById('profile-name').value = data.user.name || '';
+  document.getElementById('profile-rank').value = data.user.job_rank || '';
+  document.getElementById('profile-title').value = data.user.job_title || '';
+  openModal('modal-profile');
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  const response = await fetch('/api/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: document.getElementById('profile-name').value,
+      jobRank: document.getElementById('profile-rank').value,
+      jobTitle: document.getElementById('profile-title').value
+    })
+  });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '프로필 저장에 실패했습니다.');
+  applyAuthenticatedUser({
+    id: data.user.id, email: data.user.email, name: data.user.name,
+    jobRank: data.user.job_rank, jobTitle: data.user.job_title,
+    role: data.user.role, avatar: data.user.avatar_url
+  }, { navigateToIntranet: false });
+  closeModal('modal-profile');
+}

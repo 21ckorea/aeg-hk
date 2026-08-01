@@ -1342,6 +1342,18 @@ ul {
   color: var(--accent-red);
 }
 
+.profile-edit-button {
+  margin: 0 16px 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 12px;
+  text-align: left;
+}
+
+.profile-edit-button:hover { background: rgba(255, 255, 255, 0.08); }
+
 /* Intranet Main Container */
 .intra-container {
   flex: 1;
