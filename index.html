@@ -952,9 +952,9 @@
               <div class="timesheet-header-area">
                 <div class="timesheet-filters">
                   <div class="diary-week-navigator">
-                    <button class="arrow-btn"><i data-lucide="chevron-left"></i></button>
-                    <strong>2026년 6월 1주차 (06/01 ~ 06/05)</strong>
-                    <button class="arrow-btn"><i data-lucide="chevron-right"></i></button>
+                    <button class="arrow-btn" type="button" onclick="moveDiaryWeek(-1)"><i data-lucide="chevron-left"></i></button>
+                    <strong id="diary-week-label"></strong>
+                    <button class="arrow-btn" type="button" onclick="moveDiaryWeek(1)"><i data-lucide="chevron-right"></i></button>
                   </div>
                 </div>
                 <div class="timesheet-actions">

@@ -890,19 +890,54 @@ async function renderAdminPanel() {
   });
 }
 
+let diaryWeekStart = null;
+
+function getMonday(date) {
+  const result = new Date(date);
+  const offset = (result.getDay() + 6) % 7;
+  result.setDate(result.getDate() - offset);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function getCurrentWorkweekStart() {
+  const today = new Date();
+  if (today.getDay() === 0) today.setDate(today.getDate() + 1);
+  if (today.getDay() === 6) today.setDate(today.getDate() + 2);
+  return getMonday(today);
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function moveDiaryWeek(offset) {
+  if (!diaryWeekStart) diaryWeekStart = getCurrentWorkweekStart();
+  diaryWeekStart.setDate(diaryWeekStart.getDate() + offset * 7);
+  renderDiaryWeekView();
+}
+
 function renderDiaryWeekView() {
   const container = document.getElementById('diary-list-container');
   if (!container) return;
 
   container.innerHTML = '';
 
-  const weekdays = [
-    { label: '월요일', date: '2026-06-01' },
-    { label: '화요일', date: '2026-06-02' },
-    { label: '수요일', date: '2026-06-03' },
-    { label: '목요일', date: '2026-06-04' },
-    { label: '금요일', date: '2026-06-05' }
-  ];
+  if (!diaryWeekStart) diaryWeekStart = getCurrentWorkweekStart();
+  const labels = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+  const weekdays = labels.map((label, index) => {
+    const date = new Date(diaryWeekStart);
+    date.setDate(date.getDate() + index);
+    return { label, date: formatLocalDate(date) };
+  });
+  const label = document.getElementById('diary-week-label');
+  if (label) {
+    const friday = new Date(diaryWeekStart); friday.setDate(friday.getDate() + 4);
+    label.textContent = `${diaryWeekStart.getFullYear()}년 ${diaryWeekStart.getMonth() + 1}월 ${Math.ceil((diaryWeekStart.getDate() + new Date(diaryWeekStart.getFullYear(), diaryWeekStart.getMonth(), 1).getDay()) / 7)}주차 (${formatLocalDate(diaryWeekStart).slice(5)} ~ ${formatLocalDate(friday).slice(5)})`;
+  }
 
   weekdays.forEach(day => {
     const dayDiaries = MOCK_DB.diaries.filter(d => d.date === day.date);
@@ -951,7 +986,7 @@ function openDiaryModal() {
     select.appendChild(opt);
   });
 
-  document.getElementById('dy-date').value = '2026-06-05';
+  document.getElementById('dy-date').value = formatLocalDate(diaryWeekStart || getCurrentWorkweekStart());
 }
 
 async function submitDiaryForm(e) {
