@@ -1,0 +1,16 @@
+{
+  "name": "aeg-hk-intranet-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Homepage and intranet prototype for AEG HK",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  }
+}

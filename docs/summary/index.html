@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>홈페이지 리뉴얼 & 사내 인트라넷 통합 구축 제안 요약</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      margin: 0;
+      background: #f5f7fb;
+      color: #1f2937;
+      line-height: 1.7;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    h1, h2, h3 { color: #0f172a; }
+    h1 { font-size: 2rem; margin-bottom: 12px; }
+    h2 { font-size: 1.25rem; margin-top: 24px; }
+    ul { padding-left: 20px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .box {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      background: #fafafa;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>홈페이지 리뉴얼 & 사내 인트라넷 통합 구축 제안 요약</h1>
+      <p>이 문서는 홈페이지 리뉴얼과 사내 인트라넷 통합 구축을 위한 개발 계획, 실행 전략, 제안 흐름을 한 번에 확인할 수 있도록 정리한 발표용 자료입니다.</p>
+    </div>
+
+    <div class="card">
+      <h2>문서 목록</h2>
+      <div class="grid">
+        <div class="box">
+          <h3>대표 발표용 요약본</h3>
+          <p>1페이지 내외로 정리된 발표용 요약 문서입니다.</p>
+          <a href="01_executive_summary.md">01_executive_summary.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>고객사 제출용 제안서</h3>
+          <p>고객사 제출용으로 사용할 수 있는 제안서 스타일 문서입니다.</p>
+          <a href="02_proposal_document.md">02_proposal_document.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>바로 보기 좋은 마크다운 정리본</h3>
+          <p>빠르게 읽기 좋은 핵심 정리 문서입니다.</p>
+          <a href="03_readable_markdown.md">03_readable_markdown.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>발표용 문장 다듬은 버전</h3>
+          <p>발표 시 바로 사용할 수 있도록 다듬은 문장입니다.</p>
+          <a href="04_presentation_ready.md">04_presentation_ready.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>PPT 슬라이드 8장 구성안</h3>
+          <p>발표 자료로 바로 쓰기 좋은 슬라이드 흐름입니다.</p>
+          <a href="05_ppt_slide_outline.md">05_ppt_slide_outline.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>발표용 대본형 문장</h3>
+          <p>발표하면서 읽기 좋은 대본형 문장입니다.</p>
+          <a href="06_presentation_script.md">06_presentation_script.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>브랜드 톤 정제 문체</h3>
+          <p>회사 브랜드 톤에 맞춰 다듬은 제안 문장입니다.</p>
+          <a href="07_brand_tone_refined.md">07_brand_tone_refined.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>2~3분 짧은 발표 대본</h3>
+          <p>발표 시간에 맞춘 압축형 대본입니다.</p>
+          <a href="08_short_speaking_script.md">08_short_speaking_script.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>실제 발표용 슬라이드 문구</h3>
+          <p>슬라이드 1장씩 바로 넣기 좋은 문구입니다.</p>
+          <a href="09_slide_by_slide_content.md">09_slide_by_slide_content.md 열기</a>
+        </div>
+        <div class="box">
+          <h3>회사명 반영형 최종본</h3>
+          <p>회사명까지 반영한 정식 제안 문장입니다.</p>
+          <a href="10_company_name_final_draft.md">10_company_name_final_draft.md 열기</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>핵심 포인트</h2>
+      <ul>
+        <li>반응형 웹으로 PC, 태블릿, 모바일 모두 지원</li>
+        <li>다양한 OS와 브라우저 환경 대응</li>
+        <li>PWA 및 앱 확장까지 고려한 구조 설계</li>
+        <li>SSO와 권한 기반 보안 구조 적용</li>
+        <li>MVP 우선 개발 후 단계적 확장</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>개발 범위</h2>
+      <ul>
+        <li>로그인 및 권한 관리</li>
+        <li>대시보드</li>
+        <li>타임시트</li>
+        <li>근태 관리</li>
+        <li>전자결재</li>
+        <li>사내 게시판</li>
+        <li>관리자 기능</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

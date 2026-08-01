@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4f46e5">
   <title>(주)그룹환경종합건축사사무소 홈페이지 & 인트라넷 통합 프로토타입</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +16,12 @@
     rel="stylesheet">
   <!-- Lucide Icons for beautiful layout elements -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="./js/state.js"></script>
+  <script src="./js/neon-client.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/modules.js"></script>
+  <script src="./js/router.js"></script>
 </head>
 
 <body>
@@ -41,6 +49,34 @@
   <!-- Main View Container -->
   <main id="app-container">
 
+    <div class="auth-backdrop active" id="auth-backdrop">
+      <div class="auth-modal">
+        <div class="auth-header">
+          <h3>AEG HK 인트라넷 인증</h3>
+          <p>Google 로그인 또는 이메일 회원가입으로 바로 시작하세요.</p>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login" type="button" onclick="switchAuthMode('login')">로그인</button>
+          <button class="auth-tab" id="tab-signup" type="button" onclick="switchAuthMode('signup')">회원가입</button>
+        </div>
+        <div class="auth-message" id="auth-message"></div>
+        <button class="auth-google-btn" type="button" onclick="handleGoogleSignIn()">
+          <i data-lucide="chrome"></i> Google 계정으로 계속하기
+        </button>
+        <form id="login-form" class="auth-form active" onsubmit="handleEmailLogin(event)">
+          <input id="login-email" type="email" placeholder="이메일 주소" required>
+          <input id="login-password" type="password" placeholder="비밀번호" required>
+          <button type="submit">로그인</button>
+        </form>
+        <form id="signup-form" class="auth-form" onsubmit="handleEmailSignup(event)">
+          <input id="signup-name" type="text" placeholder="이름" required>
+          <input id="signup-email" type="email" placeholder="이메일 주소" required>
+          <input id="signup-password" type="password" placeholder="비밀번호" required>
+          <button type="submit">회원가입</button>
+        </form>
+      </div>
+    </div>
+
     <!-- ==================== VIEW 1: PUBLIC HOMEPAGE ==================== -->
     <section id="view-public" class="main-view active">
       <!-- Public Header -->
@@ -54,7 +90,7 @@
             <a href="#categories-section">Works</a>
             <a href="#news-section">News</a>
             <a href="#contact-section">Contact</a>
-            <button class="btn-intranet-login" onclick="switchMainView('intranet')">
+            <button class="btn-intranet-login" onclick="requestIntranetAccess()">
               <i data-lucide="log-in"></i> 인트라넷 로그인
             </button>
           </nav>
@@ -79,7 +115,7 @@
           <a href="#categories-section" onclick="toggleMobileMenu()">Works</a>
           <a href="#news-section" onclick="toggleMobileMenu()">News</a>
           <a href="#contact-section" onclick="toggleMobileMenu()">Contact</a>
-          <button class="btn-intranet-login w-full" onclick="toggleMobileMenu(); switchMainView('intranet')">
+          <button class="btn-intranet-login w-full" onclick="toggleMobileMenu(); requestIntranetAccess()">
             <i data-lucide="log-in"></i> 인트라넷 로그인
           </button>
         </div>
@@ -395,7 +431,7 @@
             <div class="footer-links">
               <a href="#">개인정보처리방침</a>
               <a href="#">이용약관</a>
-              <a href="#" onclick="switchMainView('intranet')">사내 인트라넷</a>
+              <a href="#" onclick="requestIntranetAccess()">사내 인트라넷</a>
             </div>
           </div>
           <hr class="footer-divider">
@@ -430,7 +466,17 @@
             <div class="user-info">
               <h4 id="current-user-name">홍길동</h4>
               <p id="current-user-role">AA부서 / 과장</p>
+              <span class="role-badge" id="role-badge">과장</span>
             </div>
+          </div>
+
+          <div class="quick-role-switcher">
+            <label for="role-select">권한 시뮬레이션</label>
+            <select id="role-select" onchange="switchUserRole(this.value)">
+              <option value="manager">과장 / PM 역할</option>
+              <option value="staff">사원 역할</option>
+              <option value="admin">관리자 역할</option>
+            </select>
           </div>
 
           <!-- Navigation Menus -->
@@ -458,7 +504,7 @@
                 <i data-lucide="book-open"></i> <span>업무일지</span>
               </li>
               <li class="menu-divider"></li>
-              <li class="menu-item logout" onclick="switchMainView('public')">
+              <li class="menu-item logout" onclick="logout()">
                 <i data-lucide="log-out"></i> <span>로그아웃 (GNB 복귀)</span>
               </li>
             </ul>
@@ -536,7 +582,7 @@
                     <button class="panel-action-btn" onclick="switchSubView('manpower')">인력배정 상세보기</button>
                   </div>
                   <div class="panel-body">
-                    <table class="data-table">
+                    <table class="data-table" id="dashboard-projects-table">
                       <thead>
                         <tr>
                           <th>프로젝트명</th>
@@ -545,32 +591,7 @@
                           <th>인력기여도 (M/M)</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        <tr>
-                          <td><strong>서초 포레스트 하이츠 재건축</strong></td>
-                          <td>정종우 실장</td>
-                          <td><span class="status-pill active">설계 진행</span></td>
-                          <td>4.2 M/M</td>
-                        </tr>
-                        <tr>
-                          <td><strong>용인 센트럴 파크빌 조합주택</strong></td>
-                          <td>김민수 본부장</td>
-                          <td><span class="status-pill active">기획 단계</span></td>
-                          <td>2.8 M/M</td>
-                        </tr>
-                        <tr>
-                          <td><strong>판교 H-Tower 지식산업센터</strong></td>
-                          <td>정종우 실장</td>
-                          <td><span class="status-pill active">인허가 진행</span></td>
-                          <td>3.5 M/M</td>
-                        </tr>
-                        <tr>
-                          <td><strong>성수 스마트 벨리 뉴타운 기획</strong></td>
-                          <td>박형섭 부장</td>
-                          <td><span class="status-pill pending">대기중</span></td>
-                          <td>0.8 M/M</td>
-                        </tr>
-                      </tbody>
+                      <tbody></tbody>
                     </table>
                   </div>
                 </div>
@@ -618,30 +639,10 @@
                 <div class="dash-panel">
                   <div class="panel-header">
                     <h3>공지사항</h3>
+                    <button class="panel-action-btn" onclick="openNoticeModal()">공지 등록</button>
                   </div>
                   <div class="panel-body">
-                    <ul class="notice-list">
-                      <li>
-                        <span class="badge-notice urgent">긴급</span>
-                        <a href="#">[인사] 2026년 상반기 다중 프로젝트 참여 M/M 마감일 변경 공지 (~06/10)</a>
-                        <span class="date">06-05</span>
-                      </li>
-                      <li>
-                        <span class="badge-notice">공지</span>
-                        <a href="#">Synology NAS 인트라넷 접근 보안 인증 패치 안내 (aeghk.quickconnect.to)</a>
-                        <span class="date">06-03</span>
-                      </li>
-                      <li>
-                        <span class="badge-notice">교육</span>
-                        <a href="#">건축인허가 개정 프로세스 세미나 참관 지원 공지</a>
-                        <span class="date">05-28</span>
-                      </li>
-                      <li>
-                        <span class="badge-notice">이벤트</span>
-                        <a href="#">창립 25주년 기념 워크샵 사진 배포 및 정산 요청</a>
-                        <span class="date">05-24</span>
-                      </li>
-                    </ul>
+                    <ul class="notice-list" id="dashboard-notice-list"></ul>
                   </div>
                 </div>
               </div>
@@ -914,7 +915,56 @@
               </div>
             </div>
 
-            <!-- SUB-VIEW 6: WORK DIARY (업무일지) -->
+            <!-- SUB-VIEW 6: ADMIN SETTINGS (관리자 설정) -->
+            <div id="sub-admin" class="sub-view">
+              <div class="dashboard-grid">
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>관리자 운영 패널</h3>
+                  </div>
+                  <div class="panel-body">
+                    <div class="stats-row">
+                      <div class="stat-card">
+                        <div class="card-icon blue"><i data-lucide="users"></i></div>
+                        <div class="card-data">
+                          <span class="num" id="admin-user-count">0명</span>
+                          <span class="lbl">등록 사용자 수</span>
+                        </div>
+                      </div>
+                      <div class="stat-card">
+                        <div class="card-icon green"><i data-lucide="clipboard-check"></i></div>
+                        <div class="card-data">
+                          <span class="num" id="admin-approval-count">0건</span>
+                          <span class="lbl">대기 결재 수</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p style="margin-top:14px; color:var(--text-muted); font-size:13px;">관리자 계정으로 로그인된 상태라면 이 패널에서 운영 현황을 확인하고 사용자 계정을 관리할 수 있습니다.</p>
+                  </div>
+                </div>
+
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>사용자 계정 목록</h3>
+                  </div>
+                  <div class="panel-body">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>이름</th>
+                          <th>이메일</th>
+                          <th>권한</th>
+                          <th>상태</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-user-list"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUB-VIEW 7: WORK DIARY (업무일지) -->
             <div id="sub-diary" class="sub-view">
               <div class="timesheet-header-area">
                 <div class="timesheet-filters">
@@ -1029,7 +1079,41 @@
     </div>
   </div>
 
-  <!-- 3. Create Diary Log Modal -->
+  <!-- 3. Create Notice Modal -->
+  <div class="modal-backdrop" id="modal-create-notice">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>공지사항 등록</h3>
+        <button class="close-btn" onclick="closeModal('modal-create-notice')"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="notice-form" onsubmit="submitNoticeForm(event)">
+          <div class="form-group">
+            <label for="notice-title">공지 제목</label>
+            <input type="text" id="notice-title" placeholder="예: 주간 공지 및 일정 안내" required>
+          </div>
+          <div class="form-group">
+            <label for="notice-category">구분</label>
+            <select id="notice-category" required>
+              <option value="공지">공지</option>
+              <option value="긴급">긴급</option>
+              <option value="교육">교육</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="notice-content">상세 내용</label>
+            <textarea id="notice-content" rows="4" placeholder="공지 내용을 입력하세요" required></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-action secondary" onclick="closeModal('modal-create-notice')">취소</button>
+            <button type="submit" class="btn-action primary">공지 저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Create Diary Log Modal -->
   <div class="modal-backdrop" id="modal-create-diary">
     <div class="modal-card">
       <div class="modal-header">
@@ -1065,9 +1149,6 @@
     </div>
   </div>
 
-
-  <!-- Core Script File -->
-  <script src="app.js"></script>
 </body>
 
 </html>

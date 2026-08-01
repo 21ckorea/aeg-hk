@@ -1,0 +1,21 @@
+gantt
+    title 홈페이지 리뉴얼 & ERP 구축 일정
+    dateFormat  YYYY-MM-DD
+    axisFormat  %m/%d
+    
+    section 1. 기획 및 디자인 (5주)
+    UI/UX 디자인 (Figma)          :active, ds1, 2026-06-15, 20d
+    기획 및 화면 설계 (Figma)          :ds2, 2026-06-22, 20d
+    
+    section 2. 시스템 개발 및 마케팅 (7주)
+    개발 환경 세팅 및 DB 테이블 모델링 :dev1, after ds2, 14d
+    홈페이지/ERP 퍼블리싱              :dev2, after ds2, 20d
+    CMS 연동                           :dev2_1, after dev2, 7d
+    ERP API 개발 & 소셜 SSO 승인 연동  :dev3, after dev1, 25d
+    보안 취약점 및 랜섬웨어 대책 구축  :dev4, after dev3, 5d
+    SEO/AEO 데이터 수집 및 구조화 셋팅 :dev5, after dev2, 10d
+    
+    section 3. 테스트 및 배포 (2주)
+    통합 QA 및 시범 운영 테스트        :test1, after dev3, 5d
+    최종 Vercel/Supabase 상용 런칭   :test2, after test1, 4d
+
