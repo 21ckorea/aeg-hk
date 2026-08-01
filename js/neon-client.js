@@ -1,6 +1,21 @@
 let dbMode = 'local';
 let remoteSaveQueue = Promise.resolve();
 
+function showDataStatus(message, type = 'info') {
+  let target = document.getElementById('data-status-message');
+  if (!target) {
+    target = document.createElement('div');
+    target.id = 'data-status-message';
+    target.className = 'data-status-message';
+    document.body.appendChild(target);
+  }
+  target.textContent = message;
+  target.dataset.type = type;
+  target.classList.add('visible');
+  window.clearTimeout(window.dataStatusTimer);
+  window.dataStatusTimer = window.setTimeout(() => target.classList.remove('visible'), 4000);
+}
+
 async function loadStateFromRemote() {
   const response = await fetch('/api/app-state', { cache: 'no-store' });
   if (!response.ok) throw new Error(`Database load failed (${response.status})`);
@@ -26,6 +41,7 @@ function saveStateToRemote() {
     .catch((error) => {
       console.warn('Neon remote save failed; local storage remains available.', error);
       dbMode = 'local';
+      showDataStatus('서버 저장에 실패했습니다. 연결을 확인한 뒤 다시 시도해 주세요.', 'error');
       return null;
     });
   return remoteSaveQueue;
@@ -42,6 +58,7 @@ async function hydrateFromRemoteIfAvailable() {
   } catch (error) {
     console.info('Neon database is unavailable; using local storage.', error);
     dbMode = 'local';
+    showDataStatus('서버 데이터를 불러오지 못해 현재 기기의 임시 데이터를 표시합니다.', 'error');
     return false;
   }
 }

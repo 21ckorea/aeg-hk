@@ -48,6 +48,26 @@
   display: none !important;
 }
 
+.data-status-message {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20000;
+  max-width: min(360px, calc(100vw - 40px));
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg-primary);
+  color: var(--text-white);
+  box-shadow: var(--shadow-lg);
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: var(--transition-fast);
+}
+.data-status-message[data-type="error"] { background: #b91c1c; }
+.data-status-message.visible { opacity: 1; transform: translateY(0); }
+
 html {
   scroll-behavior: smooth;
 }
