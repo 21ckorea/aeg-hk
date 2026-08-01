@@ -81,6 +81,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initializeAuth();
   if (isAuthenticated) {
     await hydrateFromRemoteIfAvailable();
+    await hydrateWorkflowsFromNeon();
   }
   switchMainView('public');
   lucide.createIcons();
