@@ -78,7 +78,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   await window.appStateReady;
   initTimesheets();
   startHeroSlider();
-  initializeAuth();
+  await initializeAuth();
   switchMainView('public');
   lucide.createIcons();
 });

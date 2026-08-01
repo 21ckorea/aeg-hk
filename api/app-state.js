@@ -1,4 +1,5 @@
 const { neon } = require('@neondatabase/serverless');
+const { requireSession } = require('./_session');
 
 const STATE_ID = 'global';
 const MAX_PAYLOAD_BYTES = 1_000_000;
@@ -32,6 +33,7 @@ module.exports = async (request, response) => {
 
   const sql = neon(process.env.DATABASE_URL);
   try {
+    await requireSession(request);
     if (request.method === 'GET') {
       const rows = await sql.query('SELECT payload, updated_at FROM intranet_app_state WHERE id = $1', [STATE_ID]);
       sendJson(response, 200, rows[0]
@@ -57,8 +59,8 @@ module.exports = async (request, response) => {
   } catch (error) {
     const invalidPayload = error instanceof SyntaxError || /payload/i.test(error.message);
     console.error('App state database request failed:', error);
-    sendJson(response, invalidPayload ? 400 : 500, {
-      error: invalidPayload ? error.message : 'Database request failed.'
+    sendJson(response, error.status || (invalidPayload ? 400 : 500), {
+      error: error.status || invalidPayload ? error.message : 'Database request failed.'
     });
   }
 };

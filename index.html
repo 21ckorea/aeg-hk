@@ -16,6 +16,8 @@
     rel="stylesheet">
   <!-- Lucide Icons for beautiful layout elements -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="./js/google-auth.js"></script>
   <script src="./js/state.js"></script>
   <script src="./js/neon-client.js"></script>
   <script src="./js/auth.js"></script>
@@ -60,9 +62,7 @@
           <button class="auth-tab" id="tab-signup" type="button" onclick="switchAuthMode('signup')">회원가입</button>
         </div>
         <div class="auth-message" id="auth-message"></div>
-        <button class="auth-google-btn" type="button" onclick="handleGoogleSignIn()">
-          <i data-lucide="chrome"></i> Google 계정으로 계속하기
-        </button>
+        <div id="google-signin-button" class="auth-google-btn"></div>
         <form id="login-form" class="auth-form active" onsubmit="handleEmailLogin(event)">
           <input id="login-email" type="email" placeholder="이메일 주소" required>
           <input id="login-password" type="password" placeholder="비밀번호" required>

@@ -89,30 +89,16 @@ function updateRoleAwareUI(role) {
   }
 }
 
-function initializeAuth() {
-  ensureDemoAccounts();
-  const sessionUser = getStoredSession();
-  if (sessionUser) {
-    // Restore the session without interrupting a public-site visit.
-    applyAuthenticatedUser(sessionUser, { navigateToIntranet: false });
-  }
+async function initializeAuth() {
+  const session = await window.getGoogleSession?.();
+  if (session?.user) applyAuthenticatedUser({ ...session.user, role: 'staff', avatar: session.user.picture }, { navigateToIntranet: false });
 }
 
 function handleEmailLogin(event) {
   event.preventDefault();
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
-  const users = getStoredUsers();
-  const foundUser = users.find(user => user.email === email && user.password === password);
-
-  if (!foundUser) {
-    setAuthMessage('이메일 또는 비밀번호가 일치하지 않습니다.', 'error');
-    return;
-  }
-
-  saveStoredSession(foundUser);
-  setAuthMessage('로그인되었습니다. 인트라넷으로 이동합니다.', 'success');
-  applyAuthenticatedUser(foundUser);
+  setAuthMessage('Google 계정으로 로그인해 주세요.', 'info');
 }
 
 function handleEmailSignup(event) {
@@ -126,25 +112,7 @@ function handleEmailSignup(event) {
     return;
   }
 
-  const users = getStoredUsers();
-  if (users.some(user => user.email === email)) {
-    setAuthMessage('이미 가입된 이메일입니다. 로그인해 주세요.', 'error');
-    return;
-  }
-
-  const newUser = {
-    id: `user-${Date.now()}`,
-    name,
-    email,
-    password,
-    role: 'staff'
-  };
-
-  users.push(newUser);
-  saveStoredUsers(users);
-  saveStoredSession(newUser);
-  setAuthMessage('회원가입이 완료되었습니다. 바로 인트라넷에 진입합니다.', 'success');
-  applyAuthenticatedUser(newUser);
+  setAuthMessage('사내 승인된 Google 계정으로 로그인해 주세요.', 'info');
 }
 
 function handleGoogleSignIn() {
@@ -152,6 +120,7 @@ function handleGoogleSignIn() {
 }
 
 function logout() {
+  void fetch('/api/auth-logout', { method: 'POST' });
   clearStoredSession();
   isAuthenticated = false;
   switchMainView('public');
