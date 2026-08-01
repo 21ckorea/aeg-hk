@@ -16,9 +16,29 @@ window.renderGoogleButton = async () => {
   target.replaceChildren();
   const width = Math.max(220, Math.min(320, target.getBoundingClientRect().width || 320));
   window.google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', width: Math.floor(width), text: 'continue_with' });
+  window.setTimeout(() => {
+    const help = document.getElementById('mobile-login-help');
+    if (help && /KAKAOTALK|NAVER|Instagram|FBAN|FBAV/i.test(navigator.userAgent) && !target.querySelector('iframe')) help.hidden = false;
+  }, 1200);
 };
 
-window.addEventListener('DOMContentLoaded', () => { void window.renderGoogleButton(); });
+window.addEventListener('DOMContentLoaded', () => {
+  void window.renderGoogleButton();
+  window.setTimeout(() => {
+    const target = document.getElementById('google-signin-button');
+    const help = document.getElementById('mobile-login-help');
+    if (help && /KAKAOTALK|NAVER|Instagram|FBAN|FBAV/i.test(navigator.userAgent) && !target?.querySelector('iframe')) help.hidden = false;
+  }, 1500);
+});
+
+function openInMobileBrowser() {
+  const url = window.location.href.replace(/^https?:\/\//, '');
+  if (/Android/i.test(navigator.userAgent)) {
+    window.location.href = `intent://${url}#Intent;scheme=https;package=com.android.chrome;end`;
+    return;
+  }
+  window.open(window.location.href, '_blank', 'noopener');
+}
 
 async function handleGoogleCredential(response) {
   const isSignup = authMode === 'signup';

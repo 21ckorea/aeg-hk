@@ -1137,6 +1137,16 @@ ul {
 .auth-google-btn > div,
 .auth-google-btn iframe { max-width: 100% !important; }
 
+.mobile-login-help {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  font-weight: 600;
+}
+
 .auth-form {
   display: none;
   flex-direction: column;
