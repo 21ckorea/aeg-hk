@@ -26,7 +26,8 @@ function renderTimesheet() {
   if (!table) return;
 
   const daysInMonth = 30;
-  const ts = MOCK_DB.timesheets['emp01'] || {};
+  const activeUserId = MOCK_DB.currentUser.id;
+  const ts = MOCK_DB.timesheets[activeUserId] || {};
   initTimesheets();
 
   let headHtml = `
@@ -65,7 +66,7 @@ function renderTimesheet() {
         bodyHtml += `
           <td class="day-cell ${isWeekend ? 'weekend' : ''}">
             <input type="number" min="0" max="8" value="${val}" class="input-cell"
-                   onchange="updateCellHours('emp01', '${p.id}', ${d}, this.value)">
+                   onchange="updateCellHours('${activeUserId}', '${p.id}', ${d}, this.value)">
           </td>
         `;
       }
@@ -88,7 +89,7 @@ function renderTimesheet() {
     bodyHtml += `
       <td class="day-cell ${isWeekend ? 'weekend' : ''}">
         <input type="number" min="0" max="8" step="4" value="${val}" class="input-cell" style="color:var(--primary); font-weight:700;"
-               onchange="updateCellHours('emp01', 'vacation', ${d}, this.value)">
+               onchange="updateCellHours('${activeUserId}', 'vacation', ${d}, this.value)">
       </td>
     `;
   }
@@ -99,7 +100,7 @@ function renderTimesheet() {
   bodyHtml += '<tr class="day-total-row">';
   bodyHtml += '<td><strong>일별 합산 (최대 8H)</strong></td>';
   for (let d = 0; d < daysInMonth; d++) {
-    const dayTotal = getDayTotal('emp01', d);
+    const dayTotal = getDayTotal(activeUserId, d);
     const isExceeded = dayTotal > 8;
     bodyHtml += `<td class="${isExceeded ? 'exceeded' : 'valid'}" id="daytotal-${d}">${dayTotal}</td>`;
   }
@@ -157,7 +158,7 @@ function updateTimesheetSummaries() {
   let grandTotal = 0;
 
   for (let d = 0; d < daysInMonth; d++) {
-    grandTotal += getDayTotal('emp01', d);
+    grandTotal += getDayTotal(MOCK_DB.currentUser.id, d);
   }
 
   const targetDisplay = document.getElementById('ts-total-input-hours');

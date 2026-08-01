@@ -54,13 +54,25 @@ async function loadWorkflowResource(resource) {
 
 async function hydrateWorkflowsFromNeon() {
   try {
-    const [projects, approvals, notices, diaries, attendance] = await Promise.all(
-      ['projects', 'approvals', 'notices', 'diaries', 'attendance'].map(loadWorkflowResource)
+    const [projects, approvals, notices, diaries, attendance, timesheets] = await Promise.all(
+      ['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets'].map(loadWorkflowResource)
     );
     MOCK_DB.projects = projects.map(item => ({ id: item.id, name: item.name, role: item.work_role || '', active: item.is_active }));
     MOCK_DB.approvals = approvals.map(item => ({ id: item.id, type: item.document_type, title: item.title, drafter: item.requester_id, date: String(item.created_at).slice(0, 10), status: item.status, content: item.content }));
     MOCK_DB.notices = notices.map(item => ({ id: item.id, title: item.title, category: item.category, date: String(item.created_at).slice(0, 10), content: item.content }));
     MOCK_DB.diaries = diaries.map(item => ({ id: item.id, date: String(item.work_date).slice(0, 10), projectId: item.project_id, hours: Number(item.hours), content: item.content }));
+    const userId = MOCK_DB.currentUser.id;
+    const monthEntries = {};
+    timesheets.forEach(item => {
+      const date = String(item.work_date).slice(0, 10);
+      const day = Number(date.slice(-2)) - 1;
+      if (day < 0 || day > 30) return;
+      const key = item.entry_type === 'vacation' ? 'vacation' : item.project_id;
+      if (!key) return;
+      if (!monthEntries[key]) monthEntries[key] = new Array(30).fill(0);
+      monthEntries[key][day] = Number(item.hours);
+    });
+    if (Object.keys(monthEntries).length) MOCK_DB.timesheets[userId] = monthEntries;
     const today = new Date().toISOString().slice(0, 10);
     const todayAttendance = attendance.find(item => String(item.work_date).slice(0, 10) === today);
     if (todayAttendance) {
