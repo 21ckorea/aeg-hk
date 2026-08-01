@@ -623,7 +623,8 @@ function updateDashboardStats() {
 
   const activeProjectsCount = MOCK_DB.projects.filter(project => project.active).length;
   const pendingCount = MOCK_DB.approvals.filter(item => item.status === 'waiting').length;
-  const diariesThisMonth = MOCK_DB.diaries.filter(item => item.date.startsWith('2026-06')).length;
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const diariesThisMonth = MOCK_DB.diaries.filter(item => item.date.startsWith(currentMonth)).length;
   const checkedInCount = MOCK_DB.attendance.status === 'in' ? 1 : 0;
   const totalStaff = Math.max(MOCK_DB.employees.length, 1);
 
