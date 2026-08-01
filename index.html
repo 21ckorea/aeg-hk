@@ -42,7 +42,7 @@
         <i data-lucide="layout-dashboard"></i> 사내 인트라넷
       </button>
       <span class="dev-divider">|</span>
-      <button class="dev-btn secondary" id="btn-view-blueprint" onclick="toggleBlueprintDrawer()">
+      <button class="dev-btn secondary admin-only" id="btn-view-blueprint" onclick="toggleBlueprintDrawer()" hidden>
         <i data-lucide="file-text"></i> 와이어프레임 원본 보기
       </button>
     </div>
@@ -55,25 +55,23 @@
       <div class="auth-modal">
         <div class="auth-header">
           <h3>AEG HK 인트라넷 인증</h3>
-          <p>Google 로그인 또는 이메일 회원가입으로 바로 시작하세요.</p>
+          <p id="auth-description">가입된 Google 계정으로 로그인하세요.</p>
         </div>
         <div class="auth-tabs">
           <button class="auth-tab active" id="tab-login" type="button" onclick="switchAuthMode('login')">로그인</button>
           <button class="auth-tab" id="tab-signup" type="button" onclick="switchAuthMode('signup')">회원가입</button>
         </div>
         <div class="auth-message" id="auth-message"></div>
+        <form id="signup-form" class="auth-form" onsubmit="return false;">
+          <label for="signup-name">이름 <span class="field-required">필수</span></label>
+          <input id="signup-name" type="text" placeholder="예: 홍길동" autocomplete="name">
+          <label for="signup-rank">직급 <span class="field-optional">선택</span></label>
+          <input id="signup-rank" type="text" placeholder="예: 사원 · 대리 · 과장 · 차장">
+          <label for="signup-title">직책 <span class="field-optional">선택</span></label>
+          <input id="signup-title" type="text" placeholder="예: 팀장 · PM · 본부장">
+        </form>
+        <p class="google-auth-note" id="google-auth-note">Google 계정으로 계속</p>
         <div id="google-signin-button" class="auth-google-btn"></div>
-        <form id="login-form" class="auth-form active" onsubmit="handleEmailLogin(event)">
-          <input id="login-email" type="email" placeholder="이메일 주소" required>
-          <input id="login-password" type="password" placeholder="비밀번호" required>
-          <button type="submit">로그인</button>
-        </form>
-        <form id="signup-form" class="auth-form" onsubmit="handleEmailSignup(event)">
-          <input id="signup-name" type="text" placeholder="이름" required>
-          <input id="signup-email" type="email" placeholder="이메일 주소" required>
-          <input id="signup-password" type="password" placeholder="비밀번호" required>
-          <button type="submit">회원가입</button>
-        </form>
       </div>
     </div>
 
@@ -90,8 +88,8 @@
             <a href="#categories-section">Works</a>
             <a href="#news-section">News</a>
             <a href="#contact-section">Contact</a>
-            <button class="btn-intranet-login" onclick="requestIntranetAccess()">
-              <i data-lucide="log-in"></i> 인트라넷 로그인
+            <button class="btn-intranet-login" type="button" disabled title="사내 임직원 전용 기능입니다.">
+              <i data-lucide="lock"></i> 인트라넷 전용
             </button>
           </nav>
           <button class="pub-mobile-menu-btn" onclick="toggleMobileMenu()">
@@ -115,8 +113,8 @@
           <a href="#categories-section" onclick="toggleMobileMenu()">Works</a>
           <a href="#news-section" onclick="toggleMobileMenu()">News</a>
           <a href="#contact-section" onclick="toggleMobileMenu()">Contact</a>
-          <button class="btn-intranet-login w-full" onclick="toggleMobileMenu(); requestIntranetAccess()">
-            <i data-lucide="log-in"></i> 인트라넷 로그인
+          <button class="btn-intranet-login w-full" type="button" disabled>
+            <i data-lucide="lock"></i> 인트라넷 전용
           </button>
         </div>
       </div>

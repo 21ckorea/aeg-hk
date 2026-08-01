@@ -16,10 +16,19 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function handleGoogleCredential(response) {
-  const result = await fetch('/api/auth-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: response.credential }) });
+  const isSignup = authMode === 'signup';
+  const name = document.getElementById('signup-name')?.value.trim();
+  if (isSignup && !name) return setAuthMessage('회원가입을 위해 이름을 입력해 주세요.', 'error');
+  const profile = isSignup ? {
+    name,
+    jobRank: document.getElementById('signup-rank')?.value.trim() || '',
+    jobTitle: document.getElementById('signup-title')?.value.trim() || ''
+  } : undefined;
+  const result = await fetch('/api/auth-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: response.credential, profile }) });
   const data = await result.json();
+  if (data.code === 'PROFILE_REQUIRED') return switchAuthMode('signup'), setAuthMessage(data.error, 'info');
   if (!result.ok) return setAuthMessage(data.error || '승인되지 않은 계정입니다.', 'error');
-  applyAuthenticatedUser({ ...data.user, role: 'staff', avatar: data.user.picture });
+  applyAuthenticatedUser({ ...data.user, avatar: data.user.picture });
 }
 
 window.getGoogleSession = async () => {

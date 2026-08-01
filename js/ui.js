@@ -64,6 +64,7 @@ function filterFeatured(category) {
 }
 
 function toggleBlueprintDrawer() {
+  if (!isAuthenticated || MOCK_DB.currentUser.role.indexOf('관리자') !== 0) return;
   const drawer = document.getElementById('blueprint-drawer');
   drawer.classList.toggle('active');
 }

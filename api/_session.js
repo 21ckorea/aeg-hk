@@ -18,7 +18,15 @@ async function getSession(request) {
   const token = readCookie(request, COOKIE_NAME);
   if (!token) return null;
   const payload = verifySessionToken(token);
-  return payload ? { id: payload.sub, email: payload.email, name: payload.name, picture: payload.picture } : null;
+  return payload ? {
+    id: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    picture: payload.picture,
+    jobRank: payload.jobRank || '',
+    jobTitle: payload.jobTitle || '',
+    role: payload.role || 'staff'
+  } : null;
 }
 
 function encode(value) {
@@ -32,7 +40,17 @@ function sign(value) {
 function createSessionToken(user) {
   const now = Math.floor(Date.now() / 1000);
   const header = encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const payload = encode(JSON.stringify({ sub: user.id, email: user.email, name: user.name, picture: user.picture, iat: now, exp: now + 28800 }));
+  const payload = encode(JSON.stringify({
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+    picture: user.picture,
+    jobRank: user.jobRank || '',
+    jobTitle: user.jobTitle || '',
+    role: user.role || 'staff',
+    iat: now,
+    exp: now + 28800
+  }));
   const value = `${header}.${payload}`;
   return `${value}.${sign(value)}`;
 }

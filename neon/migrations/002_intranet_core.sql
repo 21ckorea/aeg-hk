@@ -6,6 +6,7 @@ create table if not exists public.app_users (
   email text not null unique,
   name text not null,
   department text,
+  job_rank text,
   job_title text,
   role text not null default 'staff' check (role in ('staff', 'manager', 'admin')),
   status text not null default 'active' check (status in ('active', 'inactive')),
