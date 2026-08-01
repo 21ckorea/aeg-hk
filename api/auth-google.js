@@ -77,7 +77,12 @@ module.exports = async (request, response) => {
       if (!user) return response.status(409).json({ code: 'PROFILE_REQUIRED', error: '먼저 회원가입에서 이름을 입력한 후 Google 계정을 연결해 주세요.' });
     }
 
-    const role = emailList('INTRANET_ADMIN_EMAILS').includes(email) ? 'admin' : user.role;
+    const configuredAdmin = emailList('INTRANET_ADMIN_EMAILS').includes(email);
+    if (configuredAdmin && user.role !== 'admin') {
+      const rows = await sql.query('UPDATE public.app_users SET role = $2, updated_at = now() WHERE id = $1 RETURNING id, email, name, job_rank, job_title, role, avatar_url', [user.id, 'admin']);
+      user = rows[0] || user;
+    }
+    const role = configuredAdmin ? 'admin' : user.role;
     const sessionUser = { id: user.id, email, name: user.name, picture: user.avatar_url || payload.picture || '', jobRank: user.job_rank || '', jobTitle: user.job_title || '', role };
     const token = createSessionToken(sessionUser);
     response.setHeader('Set-Cookie', `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800`);

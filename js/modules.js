@@ -770,27 +770,58 @@ function renderAttendancePageClock() {
   updateAttendanceUI();
 }
 
-function renderAdminPanel() {
+function escapeAdminHtml(value) {
+  return String(value || '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+}
+
+async function updateUserAccess(userId, change) {
+  const response = await fetch('/api/users', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: userId, ...change })
+  });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '권한 변경에 실패했습니다.');
+  await renderAdminPanel();
+}
+
+async function renderAdminPanel() {
   const countEl = document.getElementById('admin-user-count');
   const approvalEl = document.getElementById('admin-approval-count');
   const listEl = document.getElementById('admin-user-list');
 
   if (!countEl || !approvalEl || !listEl) return;
 
-  const users = getStoredUsers();
+  let users = [];
+  try {
+    const response = await fetch('/api/users', { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || '사용자 목록을 불러올 수 없습니다.');
+    users = data.users;
+  } catch (error) {
+    listEl.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--accent-red);">${escapeAdminHtml(error.message)}</td></tr>`;
+    return;
+  }
   countEl.textContent = `${users.length}명`;
   approvalEl.textContent = `${MOCK_DB.approvals.filter(item => item.status === 'waiting').length}건`;
 
   listEl.innerHTML = '';
   users.forEach(user => {
     const row = document.createElement('tr');
-    const roleLabel = user.role === 'admin' ? '관리자' : user.role === 'manager' ? '과장' : '사원';
-    const statusLabel = user.email === 'ingyo98@gmail.com' ? '활성' : '승인됨';
+    const position = [user.job_rank, user.job_title].filter(Boolean).join(' / ') || '-';
     row.innerHTML = `
-      <td>${user.name}</td>
-      <td>${user.email}</td>
-      <td>${roleLabel}</td>
-      <td>${statusLabel}</td>
+      <td>${escapeAdminHtml(user.name)}</td>
+      <td>${escapeAdminHtml(user.email)}</td>
+      <td>${escapeAdminHtml(position)}</td>
+      <td><select aria-label="${escapeAdminHtml(user.name)} 권한 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { role: this.value })">
+        <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>사원</option>
+        <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>PM</option>
+        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>관리자</option>
+      </select></td>
+      <td><select aria-label="${escapeAdminHtml(user.name)} 계정 상태 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { status: this.value })">
+        <option value="active" ${user.status === 'active' ? 'selected' : ''}>활성</option>
+        <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>비활성</option>
+      </select></td>
     `;
     listEl.appendChild(row);
   });
