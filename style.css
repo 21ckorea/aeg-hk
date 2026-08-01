@@ -67,6 +67,7 @@
 }
 .data-status-message[data-type="error"] { background: #b91c1c; }
 .data-status-message.visible { opacity: 1; transform: translateY(0); }
+button:disabled, button[data-loading="true"] { cursor: wait; opacity: 0.65; }
 
 html {
   scroll-behavior: smooth;

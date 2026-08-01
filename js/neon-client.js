@@ -16,6 +16,31 @@ function showDataStatus(message, type = 'info') {
   window.dataStatusTimer = window.setTimeout(() => target.classList.remove('visible'), 4000);
 }
 
+async function verifyDatabaseHealth() {
+  try {
+    const response = await fetch('/api/health', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Database unavailable');
+    return true;
+  } catch {
+    showDataStatus('데이터베이스 연결을 확인할 수 없습니다. 저장 기능을 다시 시도해 주세요.', 'error');
+    return false;
+  }
+}
+
+async function runWithButtonLock(button, task) {
+  if (!button || button.disabled) return;
+  const label = button.textContent;
+  button.disabled = true;
+  button.dataset.loading = 'true';
+  button.textContent = '처리 중…';
+  try { return await task(); }
+  finally {
+    button.disabled = false;
+    delete button.dataset.loading;
+    button.textContent = label;
+  }
+}
+
 async function loadStateFromRemote() {
   const response = await fetch('/api/app-state', { cache: 'no-store' });
   if (!response.ok) throw new Error(`Database load failed (${response.status})`);
