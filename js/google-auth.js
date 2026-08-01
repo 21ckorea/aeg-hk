@@ -26,6 +26,7 @@ async function handleGoogleCredential(response) {
   } : undefined;
   const result = await fetch('/api/auth-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: response.credential, profile }) });
   const data = await result.json();
+  if (data.pending) return setAuthMessage(data.message, 'success');
   if (data.code === 'PROFILE_REQUIRED') return switchAuthMode('signup'), setAuthMessage(data.error, 'info');
   if (!result.ok) return setAuthMessage(data.error || '승인되지 않은 계정입니다.', 'error');
   applyAuthenticatedUser({ ...data.user, avatar: data.user.picture });

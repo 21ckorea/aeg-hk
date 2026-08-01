@@ -48,26 +48,27 @@ module.exports = async (request, response) => {
     const ticket = await new OAuth2Client(clientId).verifyIdToken({ idToken: credential, audience: clientId });
     const payload = ticket.getPayload();
     const email = payload?.email?.toLowerCase();
-    const allowed = emailList('INTRANET_ALLOWED_EMAILS');
-    if (!email || !payload.email_verified || !allowed.includes(email)) return response.status(403).json({ error: 'This Google account is not approved for the intranet.' });
+    if (!email || !payload.email_verified) return response.status(403).json({ error: 'Google 이메일 인증 정보를 확인할 수 없습니다.' });
 
     if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured.');
     const sql = neon(process.env.DATABASE_URL);
     await ensureUsersTable(sql);
 
+    const configuredAdmin = emailList('INTRANET_ADMIN_EMAILS').includes(email);
     let user;
     if (profile !== undefined) {
       const submitted = cleanProfile(profile);
       if (!submitted) return response.status(400).json({ error: '이름은 필수 입력입니다.' });
       const rows = await sql.query(
-        `INSERT INTO public.app_users (id, email, name, job_rank, job_title, avatar_url)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO public.app_users (id, email, name, job_rank, job_title, role, status, avatar_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, job_rank = EXCLUDED.job_rank,
            job_title = EXCLUDED.job_title, avatar_url = EXCLUDED.avatar_url, updated_at = now()
-         RETURNING id, email, name, job_rank, job_title, role, avatar_url`,
-        [payload.sub, email, submitted.name, submitted.jobRank || null, submitted.jobTitle || null, payload.picture || null]
+         RETURNING id, email, name, job_rank, job_title, role, status, avatar_url`,
+        [payload.sub, email, submitted.name, submitted.jobRank || null, submitted.jobTitle || null, configuredAdmin ? 'admin' : 'staff', configuredAdmin ? 'active' : 'inactive', payload.picture || null]
       );
       user = rows[0];
+      if (!configuredAdmin && user.status !== 'active') return response.status(202).json({ pending: true, message: '회원가입이 접수되었습니다. 관리자 승인 후 로그인할 수 있습니다.' });
     } else {
       const rows = await sql.query(
         'SELECT id, email, name, job_rank, job_title, role, avatar_url FROM public.app_users WHERE email = $1 AND status = $2',
@@ -76,8 +77,7 @@ module.exports = async (request, response) => {
       user = rows[0];
       if (!user) return response.status(409).json({ code: 'PROFILE_REQUIRED', error: '먼저 회원가입에서 이름을 입력한 후 Google 계정을 연결해 주세요.' });
     }
-
-    const configuredAdmin = emailList('INTRANET_ADMIN_EMAILS').includes(email);
+    if (!configuredAdmin && user.status !== 'active') return response.status(403).json({ code: 'PENDING_APPROVAL', error: '관리자 승인 대기 중입니다. 승인 후 로그인할 수 있습니다.' });
     if (configuredAdmin && user.role !== 'admin') {
       const rows = await sql.query('UPDATE public.app_users SET role = $2, updated_at = now() WHERE id = $1 RETURNING id, email, name, job_rank, job_title, role, avatar_url', [user.id, 'admin']);
       user = rows[0] || user;

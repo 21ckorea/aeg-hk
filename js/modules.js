@@ -846,8 +846,8 @@ async function renderAdminPanel() {
         <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>관리자</option>
       </select></td>
       <td><select aria-label="${escapeAdminHtml(user.name)} 계정 상태 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { status: this.value })">
-        <option value="active" ${user.status === 'active' ? 'selected' : ''}>활성</option>
-        <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>비활성</option>
+        <option value="active" ${user.status === 'active' ? 'selected' : ''}>승인됨</option>
+        <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>승인 대기 / 비활성</option>
       </select></td>
     `;
     listEl.appendChild(row);
