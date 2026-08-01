@@ -64,7 +64,11 @@ function filterFeatured(category) {
 }
 
 function toggleBlueprintDrawer() {
-  if (!isAuthenticated || MOCK_DB.currentUser.role.indexOf('관리자') !== 0) return;
+  // The button itself is shown only after the signed-in server session is
+  // identified as an administrator. Reuse that same UI gate here so legacy
+  // role labels such as "인사팀 / 관리자" do not block an authorized click.
+  const button = document.getElementById('btn-view-blueprint');
+  if (!isAuthenticated || !button || button.hidden) return;
   const drawer = document.getElementById('blueprint-drawer');
   drawer.classList.toggle('active');
 }
