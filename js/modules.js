@@ -980,7 +980,7 @@ async function openDiaryAttachments(diaryId) {
   const response = await fetch(`/api/attachments?diaryId=${encodeURIComponent(diaryId)}`, { cache: 'no-store' });
   const data = await response.json();
   if (!response.ok) return alert(data.error || '첨부파일을 불러오지 못했습니다.');
-  if (!data.attachments.length) return alert('첨부파일이 없습니다.');
+  if (!data.attachments.length) return attachNextcloudFile(diaryId);
   const selected = window.prompt(`열 첨부파일 번호를 입력하세요.\n${data.attachments.map((file, index) => `${index + 1}. ${file.file_name}`).join('\n')}`);
   const file = data.attachments[Number(selected) - 1];
   if (!file) return;
@@ -988,6 +988,20 @@ async function openDiaryAttachments(diaryId) {
   const result = await link.json();
   if (!link.ok) return alert(result.error || '첨부파일 링크를 만들지 못했습니다.');
   window.open(result.url, '_blank', 'noopener');
+}
+
+async function attachNextcloudFile(diaryId) {
+  const response = await fetch('/api/attachment-library', { cache: 'no-store' });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || 'Nextcloud 파일 목록을 불러오지 못했습니다.');
+  if (!data.files.length) return alert('연결할 파일이 없습니다. 먼저 Nextcloud 파일 요청 페이지에서 파일을 업로드해 주세요.');
+  const choice = window.prompt(`이 업무일지에 연결할 파일 번호를 입력하세요.\n${data.files.map((file, index) => `${index + 1}. ${file.fileName}`).join('\n')}`);
+  const file = data.files[Number(choice) - 1];
+  if (!file) return;
+  const linked = await fetch('/api/attachments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diaryId, fileName: file.fileName, storagePath: file.storagePath, byteSize: 0 }) });
+  const result = await linked.json();
+  if (!linked.ok) return alert(result.error || '첨부파일 연결에 실패했습니다.');
+  alert('첨부파일이 업무일지에 연결되었습니다. 다시 첨부파일 버튼을 누르면 열 수 있습니다.');
 }
 
 
