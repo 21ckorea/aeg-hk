@@ -319,7 +319,7 @@ async function saveTimesheet() {
   const results = await Promise.all(requests);
   if (results.some(response => !response.ok)) return alert('일부 타임시트 저장에 실패했습니다.');
   saveAppState();
-  alert('타임시트가 Neon DB에 저장되었습니다.');
+  alert('타임시트가 저장되었습니다.');
 }
 
 function submitTimesheet() {
