@@ -952,6 +952,7 @@ function renderDiaryWeekView() {
           <span class="project">${proj ? proj.name : '기타과업'}</span>
           <span class="time">${item.hours}H</span>
           <p>${item.content}</p>
+          <button class="btn-sm-action" type="button" onclick="openDiaryAttachments('${item.id}')">첨부파일</button>
         </div>
       `;
     });
@@ -973,6 +974,21 @@ function renderDiaryWeekView() {
     container.appendChild(card);
   });
 }
+
+async function openDiaryAttachments(diaryId) {
+  const response = await fetch(`/api/attachments?diaryId=${encodeURIComponent(diaryId)}`, { cache: 'no-store' });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '첨부파일을 불러오지 못했습니다.');
+  if (!data.attachments.length) return alert('첨부파일이 없습니다.');
+  const selected = window.prompt(`열 첨부파일 번호를 입력하세요.\n${data.attachments.map((file, index) => `${index + 1}. ${file.file_name}`).join('\n')}`);
+  const file = data.attachments[Number(selected) - 1];
+  if (!file) return;
+  const link = await fetch('/api/attachments', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: file.id }) });
+  const result = await link.json();
+  if (!link.ok) return alert(result.error || '첨부파일 링크를 만들지 못했습니다.');
+  window.open(result.url, '_blank', 'noopener');
+}
+
 
 function openDiaryModal() {
   document.getElementById('modal-create-diary').classList.add('active');
