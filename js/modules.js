@@ -999,6 +999,19 @@ async function submitDiaryForm(e) {
   const response = await fetch('/api/intranet-data?resource=diaries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: date, projectId, hours, content }) });
   const result = await response.json();
   if (!response.ok) return alert(result.error || '업무일지 등록에 실패했습니다.');
+  const files = Array.from(document.getElementById('dy-attachments')?.files || []);
+  for (const file of files) {
+    if (file.size > 4 * 1024 * 1024) return alert(`업무일지는 저장됐지만 ${file.name}은 4MB를 초과해 첨부하지 못했습니다.`);
+    const data = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const upload = await fetch('/api/attachments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diaryId: result.record.id, fileName: file.name, contentType: file.type, data }) });
+    const uploaded = await upload.json();
+    if (!upload.ok) return alert(`업무일지는 저장됐지만 ${uploaded.error || file.name + ' 업로드에 실패했습니다.'}`);
+  }
   const newDiary = {
     id: result.record.id,
     date,
