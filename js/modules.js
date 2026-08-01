@@ -984,7 +984,7 @@ async function openDiaryAttachments(diaryId) {
   const selected = window.prompt(`열 첨부파일 번호를 입력하세요.\n${data.attachments.map((file, index) => `${index + 1}. ${file.file_name}`).join('\n')}`);
   const file = data.attachments[Number(selected) - 1];
   if (!file) return;
-  window.open(`/api/attachment-file?id=${encodeURIComponent(file.id)}`, '_blank', 'noopener');
+  window.open(`/api/attachments?fileId=${encodeURIComponent(file.id)}`, '_blank', 'noopener');
 }
 
 
