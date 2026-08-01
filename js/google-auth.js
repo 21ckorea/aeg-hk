@@ -9,11 +9,16 @@ window.googleAuthReady = (async () => {
   return true;
 })().catch(() => null);
 
-window.addEventListener('DOMContentLoaded', async () => {
+window.renderGoogleButton = async () => {
   if (!await window.googleAuthReady) return;
   const target = document.getElementById('google-signin-button');
-  if (target) window.google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', width: 320, text: 'continue_with' });
-});
+  if (!target) return;
+  target.replaceChildren();
+  const width = Math.max(220, Math.min(320, target.getBoundingClientRect().width || 320));
+  window.google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', width: Math.floor(width), text: 'continue_with' });
+};
+
+window.addEventListener('DOMContentLoaded', () => { void window.renderGoogleButton(); });
 
 async function handleGoogleCredential(response) {
   const isSignup = authMode === 'signup';

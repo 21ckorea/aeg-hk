@@ -24,6 +24,7 @@ function openAuthModal(mode = 'login') {
     ? '정보를 입력한 뒤 Google 계정으로 가입을 완료하세요.'
     : '가입된 Google 계정으로 로그인하세요.';
   if (googleNote) googleNote.textContent = mode === 'signup' ? 'Google 계정으로 회원가입' : 'Google 계정으로 로그인';
+  window.setTimeout(() => { void window.renderGoogleButton?.(); }, 0);
   setAuthMessage('');
 }
 

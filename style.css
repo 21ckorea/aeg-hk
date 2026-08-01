@@ -1124,13 +1124,18 @@ ul {
 }
 
 .auth-google-btn {
-  background: #111827;
-  color: white;
+  background: transparent;
+  color: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 44px;
+  overflow: hidden;
 }
+
+.auth-google-btn > div,
+.auth-google-btn iframe { max-width: 100% !important; }
 
 .auth-form {
   display: none;
