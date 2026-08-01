@@ -37,8 +37,9 @@ Google OAuth에는 Vercel 배포 URL을 Authorized JavaScript origin으로 등�
 ## 5. 배포와 확인
 1. 변경사항을 push하고 Vercel에서 배포합니다.
 2. Neon SQL Editor에서 스키마를 실행합니다.
-3. 배포 사이트에서 프로젝트·공지 등을 하나 추가한 뒤 새로고침해 데이터가 유지되는지 확인합니다.
-4. Vercel Functions 로그에서 `/api/app-state` 요청이 성공하는지 확인합니다.
+3. 관계형 업무 데이터 전환을 시작할 때 [`neon/migrations/002_intranet_core.sql`](../../neon/migrations/002_intranet_core.sql)도 실행합니다.
+4. 배포 사이트에서 프로젝트·공지 등을 하나 추가한 뒤 새로고침해 데이터가 유지되는지 확인합니다.
+5. Vercel Functions 로그에서 `/api/app-state` 요청이 성공하는지 확인합니다.
 
 ## 6. 동작 방식 및 제한
 - 브라우저는 `/api/app-state`만 호출하고, Vercel 서버리스 함수가 `DATABASE_URL`로 Neon에 연결합니다.
