@@ -1108,7 +1108,7 @@ function renderWbs() {
     if (!taskGroups.has(key)) taskGroups.set(key, []);
     taskGroups.get(key).push(task);
   });
-  let html = `<thead><tr><th>공종</th><th>작업명</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th><th>관리</th></tr></thead><tbody>`;
+  let html = `<thead><tr><th>공정</th><th>작업명</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th><th>관리</th></tr></thead><tbody>`;
   if (!tasks.length) html += `<tr><td colspan="${days + 4}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
   taskGroups.forEach((groupTasks, category) => {
     html += `<tr><td>${escapeAdminHtml(category)}</td><td class="wbs-task-list">${groupTasks.map(task => `<div><strong>${escapeAdminHtml(task.title)}</strong><small>${task.startedOn} ~ ${task.endedOn} · ${wbsStatusLabel(task.status)}</small></div>`).join('')}</td>`;
