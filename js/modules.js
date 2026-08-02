@@ -1191,22 +1191,44 @@ function showDiaryAttachmentPicker(attachments) {
 }
 
 
+function updateDiaryProjectOptions(workDate, selectedProjectId = '') {
+  const select = document.getElementById('dy-project');
+  const help = document.getElementById('dy-project-help');
+  if (!select) return;
+  select.innerHTML = '';
+  const diaryMonth = String(workDate || formatLocalDate(diaryWeekStart || getCurrentWorkweekStart())).slice(0, 7);
+  const available = MOCK_DB.projects.filter(p => p.active && MOCK_DB.assignedProjects.some(item => item.projectId === p.id && isAssignmentActiveForMonth(item, diaryMonth)));
+  const selectedProject = selectedProjectId && MOCK_DB.projects.find(project => project.id === selectedProjectId);
+  if (selectedProject && !available.some(project => project.id === selectedProjectId)) available.push(selectedProject);
+  if (!available.length) {
+    const option = new Option('선택 가능한 프로젝트가 없습니다.', '');
+    option.disabled = true;
+    option.selected = true;
+    select.appendChild(option);
+    select.disabled = true;
+    if (help) help.textContent = `${diaryMonth}에 내 투입 프로젝트가 없습니다. 투입시간 관리에서 해당 월의 프로젝트를 먼저 추가해 주세요.`;
+    return;
+  }
+  select.disabled = false;
+  if (help) help.textContent = '작성일이 속한 월에 추가된 프로젝트만 선택할 수 있습니다.';
+  available.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    opt.selected = p.id === selectedProjectId;
+    select.appendChild(opt);
+  });
+}
+
 function openDiaryModal() {
   editingDiaryId = null;
   document.getElementById('diary-form').reset();
   document.getElementById('modal-create-diary').classList.add('active');
 
-  const select = document.getElementById('dy-project');
-  select.innerHTML = '';
-  const diaryMonth = formatLocalDate(diaryWeekStart || getCurrentWorkweekStart()).slice(0, 7);
-  MOCK_DB.projects.filter(p => p.active && MOCK_DB.assignedProjects.some(item => item.projectId === p.id && isAssignmentActiveForMonth(item, diaryMonth))).forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name;
-    select.appendChild(opt);
-  });
-
-  document.getElementById('dy-date').value = formatLocalDate(diaryWeekStart || getCurrentWorkweekStart());
+  const dateInput = document.getElementById('dy-date');
+  dateInput.value = formatLocalDate(diaryWeekStart || getCurrentWorkweekStart());
+  updateDiaryProjectOptions(dateInput.value);
+  dateInput.onchange = () => updateDiaryProjectOptions(dateInput.value);
   document.querySelector('#modal-create-diary h3').textContent = '업무일지 기록 작성';
   document.querySelector('#diary-form button[type="submit"]').textContent = '일지 저장';
   document.getElementById('dy-existing-attachments').hidden = true;
@@ -1220,7 +1242,7 @@ function editDiary(diaryId) {
   openDiaryModal();
   editingDiaryId = diaryId;
   document.getElementById('dy-date').value = item.date;
-  document.getElementById('dy-project').value = item.projectId || '';
+  updateDiaryProjectOptions(item.date, item.projectId || '');
   document.getElementById('dy-hours').value = item.hours;
   document.getElementById('dy-content').value = item.content;
   document.querySelector('#modal-create-diary h3').textContent = '업무일지 수정';

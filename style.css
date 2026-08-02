@@ -2722,6 +2722,12 @@ body.intranet-mode .top-public-nav { display: none; }
   background-color: var(--bg-light);
 }
 
+.form-help {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
