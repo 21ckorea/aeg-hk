@@ -1118,10 +1118,22 @@ function renderWbs() {
   if (!tasks.length) html += `<tr><td colspan="${days + 3}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
   taskGroups.forEach((groupTasks, category) => {
     html += `<tr><td>${escapeAdminHtml(category)}</td>`;
-    for (let day = 1; day <= days; day += 1) {
+    const orderedTasks = [...groupTasks].sort((a, b) => a.startedOn.localeCompare(b.startedOn));
+    for (let day = 1; day <= days;) {
       const date = `${monthInput.value}-${String(day).padStart(2, '0')}`;
-      const activeTasks = groupTasks.filter(task => date >= task.startedOn && date <= task.endedOn);
-      html += `<td class="wbs-cell">${activeTasks.map(task => `<span class="wbs-mini-bar ${task.status}">${date === task.startedOn || day === 1 ? `<b>${escapeAdminHtml(task.title)}</b><small>${wbsShortRange(task)}</small>` : ''}</span>`).join('')}</td>`;
+      const task = orderedTasks.find(item => item.startedOn <= date && item.endedOn >= date);
+      if (!task) {
+        html += '<td class="wbs-cell"></td>';
+        day += 1;
+        continue;
+      }
+      let endDay = task.endedOn.slice(0, 7) === monthInput.value ? Math.min(days, Number(task.endedOn.slice(-2))) : days;
+      // 같은 공정의 다음 작업이 시작되면 그 전날까지만 한 막대로 표시한다.
+      const nextTask = orderedTasks.find(item => item.id !== task.id && item.startedOn > date && item.startedOn <= `${monthInput.value}-${String(endDay).padStart(2, '0')}`);
+      if (nextTask) endDay = Number(nextTask.startedOn.slice(-2)) - 1;
+      const span = Math.max(1, endDay - day + 1);
+      html += `<td colspan="${span}" class="wbs-cell wbs-span ${task.status}"><b>${escapeAdminHtml(task.title)}</b><small>${wbsShortRange(task)}</small></td>`;
+      day += span;
     }
     html += `<td class="wbs-task-list">${groupTasks.map(task => `<div>${escapeAdminHtml(task.note || '-')}</div>`).join('')}</td><td class="wbs-task-list">${groupTasks.map(task => `<div><button class="btn-sm-action" onclick="editWbsTask('${task.id}')">수정</button><button class="btn-sm-action reject" onclick="deleteWbsTask('${task.id}')">삭제</button></div>`).join('')}</td></tr>`;
   });

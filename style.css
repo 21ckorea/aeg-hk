@@ -2740,8 +2740,8 @@ body.intranet-mode .top-public-nav { display: none; }
 .wbs-toolbar select, .wbs-toolbar input { min-width: 180px; padding: 9px 10px; border: 1px solid var(--border-light); border-radius: 6px; }
 .wbs-toolbar p { margin: 0 0 8px; color: var(--text-muted); font-size: 12px; }
 .wbs-scroll { overflow-x: auto; }
-.wbs-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
-.wbs-table th, .wbs-table td { border: 1px solid #cbd5e1; height: 34px; min-width: 32px; padding: 4px; text-align: center; white-space: nowrap; }
+.wbs-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+.wbs-table th, .wbs-table td { border: 1px solid #cbd5e1; height: 34px; width: 38px; min-width: 38px; padding: 4px; text-align: center; white-space: nowrap; }
 .wbs-table th { background: #f1f5f9; color: #475569; font-weight: 700; }
 .wbs-table th:nth-child(1) { min-width: 88px; }
 .wbs-table th small, .wbs-table td small { display: block; font-size: 10px; color: #64748b; font-weight: 400; margin-top: 3px; }
@@ -2751,6 +2751,11 @@ body.intranet-mode .top-public-nav { display: none; }
 .wbs-mini-bar { display: block; min-height: 32px; margin: 1px 0; padding: 4px 2px; overflow: hidden; color: #fff; font-size: 10px; text-overflow: ellipsis; background: #64748b; }
 .wbs-mini-bar b, .wbs-mini-bar small { display: block; overflow: hidden; color: inherit; font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .wbs-mini-bar small { opacity: .9; font-weight: 500; }
+.wbs-span { overflow: hidden; color: #fff; font-size: 11px; font-weight: 700; text-align: center; text-overflow: ellipsis; background: #64748b; }
+.wbs-span small { display: block; color: #fff !important; font-size: 10px; font-weight: 500; line-height: 1.25; opacity: .92; }
+.wbs-span.progress { background: #4f46e5; }
+.wbs-span.done { background: #10b981; }
+.wbs-span.delayed { background: #ef4444; }
 .wbs-mini-bar.progress { background: #4f46e5; }
 .wbs-mini-bar.done { background: #10b981; }
 .wbs-mini-bar.delayed { background: #ef4444; }
