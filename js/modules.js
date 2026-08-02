@@ -609,13 +609,14 @@ function renderEmployeeDetails(empId) {
     let levelClass = 'level-0';
     if (dayTotal > 0 && dayTotal <= 3) levelClass = 'level-1';
     else if (dayTotal > 3 && dayTotal <= 6) levelClass = 'level-2';
-    else if (dayTotal > 6) levelClass = 'level-3';
+    else if (dayTotal <= 8) levelClass = 'level-3';
+    else levelClass = 'level-over';
 
     const cell = document.createElement('div');
     const weekDay = new Date(year, month - 1, d + 1).getDay();
     cell.className = `heatmap-cell ${levelClass}${weekDay === 0 || weekDay === 6 ? ' weekend' : ''}`;
     cell.textContent = dayTotal;
-    cell.title = `${month}월 ${d + 1}일: ${dayTotal}시간 투입`;
+    cell.title = `${month}월 ${d + 1}일: ${dayTotal}시간 투입${dayTotal > 8 ? ' (일일 8시간 초과)' : ''}`;
     heatmap.appendChild(cell);
   }
 

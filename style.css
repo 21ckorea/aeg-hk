@@ -2363,13 +2363,12 @@ body.intranet-mode .top-public-nav { display: none; }
   justify-content: center;
   font-size: 10px;
   font-weight: 700;
-  color: transparent;
+  color: #64748b;
   transition: var(--transition-fast);
   cursor: pointer;
 }
 
 .heatmap-cell:hover {
-  color: rgba(255,255,255,0.9);
   transform: scale(1.08);
 }
 
@@ -2377,6 +2376,7 @@ body.intranet-mode .top-public-nav { display: none; }
 .heatmap-cell.level-1 { background-color: #c7d2fe; } /* 1-3 hours */
 .heatmap-cell.level-2 { background-color: #818cf8; } /* 4-6 hours */
 .heatmap-cell.level-3 { background-color: #4f46e5; color: rgba(255,255,255,0.9); } /* 7-8 hours */
+.heatmap-cell.level-over { background-color: #ef4444; color: #fff; box-shadow: inset 0 0 0 1px rgba(127, 29, 29, .24); } /* 8 hours over */
 .heatmap-cell.weekend { border: 1px solid rgba(99, 102, 241, 0.15); }
 .heatmap-cell.heatmap-blank { background: transparent; border: 0; pointer-events: none; }
 
@@ -2400,6 +2400,7 @@ body.intranet-mode .top-public-nav { display: none; }
 .heatmap-legend .level-1 { background-color: #c7d2fe; }
 .heatmap-legend .level-2 { background-color: #818cf8; }
 .heatmap-legend .level-3 { background-color: #4f46e5; }
+.heatmap-legend .level-over { background-color: #ef4444; }
 
 
 /* ==================== SUB-VIEW 4: ELECTRONIC APPROVAL (전자결재) ==================== */
