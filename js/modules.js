@@ -433,6 +433,11 @@ async function saveTimesheet() {
     entryType: item.entry_type || 'project',
     projectId: item.project_id || null
   }));
+  // 인력 투입 분석은 별도 집계 배열을 사용하므로, 방금 저장한 본인 기록도 즉시 동기화한다.
+  MOCK_DB.manpowerRecords = [
+    ...(MOCK_DB.manpowerRecords || []).filter(item => item.userId !== MOCK_DB.currentUser.id),
+    ...MOCK_DB.timesheetRecords.map(item => ({ ...item, userId: MOCK_DB.currentUser.id }))
+  ];
   rebuildTimesheetForSelectedMonth();
   initTimesheets();
   renderTimesheet();
