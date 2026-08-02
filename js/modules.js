@@ -948,13 +948,15 @@ async function renderAdminPanel() {
   });
 }
 
+let editingManagedProjectId = null;
+
 function renderProjectManagement() {
   const list = document.getElementById('managed-project-list');
   if (!list) return;
-  list.innerHTML = MOCK_DB.projects.length ? '' : '<tr><td colspan="6" style="text-align:center;padding:20px;">등록된 프로젝트가 없습니다.</td></tr>';
+  list.innerHTML = MOCK_DB.projects.length ? '' : '<tr><td colspan="7" style="text-align:center;padding:20px;">등록된 프로젝트가 없습니다.</td></tr>';
   MOCK_DB.projects.forEach(project => {
     const row = document.createElement('tr');
-    row.innerHTML = `<td>${escapeAdminHtml(project.code || '-')}</td><td><strong>${escapeAdminHtml(project.name)}</strong><br><small>${escapeAdminHtml(project.clientName || '')}</small></td><td>${project.startedOn || '-'} ~ ${project.endedOn || '-'}</td><td>${project.plannedMm || 0} M/M</td><td>${project.cost ? `${Number(project.cost).toLocaleString()}원` : '-'}</td><td>${project.active ? '운영 중' : '종료'}</td>`;
+    row.innerHTML = `<td>${escapeAdminHtml(project.code || '-')}</td><td><strong>${escapeAdminHtml(project.name)}</strong><br><small>${escapeAdminHtml(project.clientName || '')}</small></td><td>${project.startedOn || '-'} ~ ${project.endedOn || '-'}</td><td>${project.plannedMm || 0} M/M</td><td>${project.cost ? `${Number(project.cost).toLocaleString()}원` : '-'}</td><td>${project.active ? '운영 중' : '종료'}</td><td><button class="btn-sm-action" onclick="editManagedProject('${project.id}')">수정</button></td>`;
     list.appendChild(row);
   });
 }
@@ -962,11 +964,40 @@ function renderProjectManagement() {
 async function submitManagedProject(event) {
   event.preventDefault();
   const input = id => document.getElementById(id).value.trim();
-  const response = await fetch('/api/intranet-data?resource=projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectCode: input('pm-code'), name: input('pm-name'), clientName: input('pm-client'), workRole: input('pm-role'), startedOn: input('pm-start'), endedOn: input('pm-end'), contractAmount: input('pm-cost'), plannedMm: input('pm-mm') }) });
+  const isEditing = Boolean(editingManagedProjectId);
+  const payload = { id: editingManagedProjectId, projectCode: input('pm-code'), name: input('pm-name'), clientName: input('pm-client'), workRole: input('pm-role'), startedOn: input('pm-start'), endedOn: input('pm-end'), contractAmount: input('pm-cost'), plannedMm: input('pm-mm'), isActive: document.getElementById('pm-active').value === 'true' };
+  const response = await fetch('/api/intranet-data?resource=projects', { method: isEditing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const data = await response.json();
   if (!response.ok) return alert(data.error || '프로젝트 등록에 실패했습니다.');
-  MOCK_DB.projects.unshift({ id: data.record.id, code: data.record.project_code || '', name: data.record.name, clientName: data.record.client_name || '', role: data.record.work_role || '', active: data.record.is_active, startedOn: String(data.record.started_on).slice(0, 10), endedOn: String(data.record.ended_on).slice(0, 10), plannedMm: Number(data.record.planned_mm || 0), cost: Number(data.record.contract_amount || 0) });
-  event.target.reset(); renderProjectManagement(); alert('프로젝트를 등록했습니다.');
+  const project = { id: data.record.id, code: data.record.project_code || '', name: data.record.name, clientName: data.record.client_name || '', role: data.record.work_role || '', active: data.record.is_active, startedOn: String(data.record.started_on).slice(0, 10), endedOn: String(data.record.ended_on).slice(0, 10), plannedMm: Number(data.record.planned_mm || 0), cost: Number(data.record.contract_amount || 0) };
+  if (isEditing) MOCK_DB.projects = MOCK_DB.projects.map(item => item.id === project.id ? project : item); else MOCK_DB.projects.unshift(project);
+  resetManagedProjectForm(); renderProjectManagement(); alert(isEditing ? '프로젝트를 수정했습니다.' : '프로젝트를 등록했습니다.');
+}
+
+function editManagedProject(projectId) {
+  const project = MOCK_DB.projects.find(item => item.id === projectId);
+  if (!project) return;
+  editingManagedProjectId = projectId;
+  document.getElementById('pm-code').value = project.code || '';
+  document.getElementById('pm-name').value = project.name;
+  document.getElementById('pm-client').value = project.clientName || '';
+  document.getElementById('pm-role').value = project.role || '';
+  document.getElementById('pm-start').value = project.startedOn || '';
+  document.getElementById('pm-end').value = project.endedOn || '';
+  document.getElementById('pm-cost').value = project.cost || '';
+  document.getElementById('pm-mm').value = project.plannedMm || '';
+  document.getElementById('pm-active').value = String(project.active);
+  document.getElementById('pm-submit-button').textContent = '프로젝트 수정 저장';
+  document.getElementById('pm-cancel-button').hidden = false;
+  document.getElementById('pm-name').focus();
+}
+
+function resetManagedProjectForm() {
+  editingManagedProjectId = null;
+  document.getElementById('project-management-form')?.reset();
+  document.getElementById('pm-active').value = 'true';
+  document.getElementById('pm-submit-button').textContent = '프로젝트 등록';
+  document.getElementById('pm-cancel-button').hidden = true;
 }
 
 let diaryWeekStart = null;

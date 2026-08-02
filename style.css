@@ -1938,7 +1938,7 @@ body.intranet-mode .top-public-nav { display: none; }
 }
 .timesheet-mobile-editor { display: none; }
 .project-management-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.project-management-form input { min-width: 0; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px; font: inherit; }
+.project-management-form input, .project-management-form select { min-width: 0; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px; font: inherit; }
 
 .timesheet-scroll-pane {
   overflow-x: auto;
