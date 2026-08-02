@@ -43,7 +43,7 @@ function applyAuthenticatedUser(user, { navigateToIntranet = true } = {}) {
   MOCK_DB.currentUser.id = user.id || user.email;
   MOCK_DB.currentUser.name = user.name;
   const position = [user.jobRank, user.jobTitle].filter(Boolean).join(' / ');
-  MOCK_DB.currentUser.role = user.role === 'admin' ? `관리자${position ? ` / ${position}` : ''}` : (position || '사원');
+  MOCK_DB.currentUser.role = user.role === 'admin' ? `관리자${position ? ` / ${position}` : ''}` : (position || '직원');
   MOCK_DB.currentUser.avatar = user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
 
   if (!MOCK_DB.employees.some(emp => emp.id === MOCK_DB.currentUser.id)) {
@@ -78,7 +78,7 @@ function applyAuthenticatedUser(user, { navigateToIntranet = true } = {}) {
 function updateRoleAwareUI(role) {
   const roleBadge = document.getElementById('role-badge');
   if (roleBadge) {
-    const label = role === 'admin' ? '관리자' : role === 'manager' ? '과장' : '사원';
+    const label = role === 'admin' ? '관리자' : role === 'manager' ? '과장' : '직원';
     roleBadge.textContent = label;
   }
 
@@ -141,7 +141,7 @@ async function openProfileModal() {
   document.getElementById('profile-name').value = data.user.name || '';
   document.getElementById('profile-rank').value = data.user.job_rank || '';
   document.getElementById('profile-title').value = data.user.job_title || '';
-  openModal('modal-profile');
+  document.getElementById('modal-profile')?.classList.add('active');
 }
 
 async function saveProfile(event) {

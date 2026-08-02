@@ -959,7 +959,7 @@ async function renderAdminPanel() {
       <td>${escapeAdminHtml(user.email)}</td>
       <td>${escapeAdminHtml(position)}</td>
       <td><select aria-label="${escapeAdminHtml(user.name)} 권한 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { role: this.value })">
-        <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>사원</option>
+        <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>직원</option>
         <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>PM</option>
         <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>관리자</option>
       </select></td>

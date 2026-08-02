@@ -12,11 +12,13 @@ function switchMainView(viewType) {
   }
 
   if (viewType === 'public') {
+    document.body.classList.remove('intranet-mode');
     pubView.classList.add('active');
     intraView.classList.remove('active');
     btnPub.classList.add('active');
     btnIntra.classList.remove('active');
   } else {
+    document.body.classList.add('intranet-mode');
     pubView.classList.remove('active');
     intraView.classList.add('active');
     btnPub.classList.remove('active');

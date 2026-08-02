@@ -119,9 +119,9 @@ function switchUserRole(role) {
     roleLabel.value = 'manager';
   } else if (role === 'staff') {
     MOCK_DB.currentUser.name = '김철수';
-    MOCK_DB.currentUser.role = '설계부서 / 사원';
+    MOCK_DB.currentUser.role = '설계부서 / 직원';
     userName.textContent = '김철수';
-    userRole.textContent = '설계부서 / 사원';
+    userRole.textContent = '설계부서 / 직원';
     roleLabel.value = 'staff';
   } else if (role === 'admin') {
     MOCK_DB.currentUser.name = '박민서';

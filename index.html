@@ -49,6 +49,9 @@
       <span class="pulse-indicator"></span>
       <strong><span class="brand-full">(주)그룹환경종합건축사사무소</span><span class="brand-short">그룹환경</span></strong>
     </div>
+    <nav class="top-public-nav" aria-label="공개 홈페이지 메뉴">
+      <a href="#hero-section">About</a><a href="#categories-section">Works</a><a href="#news-section">News</a><a href="#contact-section">Contact</a>
+    </nav>
     <div class="dev-actions">
       <button class="dev-btn active" id="btn-toggle-public" onclick="switchMainView('public')">
         <i data-lucide="globe"></i> 공개 홈페이지
@@ -81,7 +84,7 @@
           <label for="signup-name">이름 <span class="field-required">필수</span></label>
           <input id="signup-name" type="text" placeholder="예: 홍길동" autocomplete="name">
           <label for="signup-rank">직급 <span class="field-optional">선택</span></label>
-          <input id="signup-rank" type="text" placeholder="예: 사원 · 대리 · 과장 · 차장">
+          <input id="signup-rank" type="text" placeholder="예: 직원 · 대리 · 과장 · 차장">
           <label for="signup-title">직책 <span class="field-optional">선택</span></label>
           <input id="signup-title" type="text" placeholder="예: 팀장 · PM · 본부장">
         </form>
@@ -96,9 +99,6 @@
       <!-- Public Header -->
       <header class="pub-header">
         <div class="pub-header-container">
-          <div class="pub-logo" onclick="switchMainView('public')">
-            <span class="logo-bold">(주)그룹환경종합건축사사무소</span>
-          </div>
           <nav class="pub-nav">
             <a href="#hero-section">About</a>
             <a href="#categories-section">Works</a>
@@ -114,9 +114,7 @@
       <!-- Mobile Nav Drawer -->
       <div class="pub-mobile-nav" id="pub-mobile-nav">
         <div class="mobile-nav-header">
-          <div class="pub-logo">
-            <span class="logo-bold">(주)그룹환경종합건축사사무소</span>
-          </div>
+          <div class="pub-logo"><span class="logo-bold">메뉴</span></div>
           <button class="close-btn" onclick="toggleMobileMenu()">
             <i data-lucide="x"></i>
           </button>
@@ -1062,7 +1060,7 @@
       </div>
       <form class="modal-body" onsubmit="saveProfile(event)">
         <div class="form-group"><label for="profile-name">이름 *</label><input id="profile-name" required maxlength="80"></div>
-        <div class="form-group"><label for="profile-rank">직급 <small>예: 사원 · 대리 · 과장</small></label><input id="profile-rank" maxlength="80"></div>
+        <div class="form-group"><label for="profile-rank">직급 <small>예: 직원 · 대리 · 과장</small></label><input id="profile-rank" maxlength="80"></div>
         <div class="form-group"><label for="profile-title">직책 <small>예: 팀장 · PM · 본부장</small></label><input id="profile-title" maxlength="120"></div>
         <div class="modal-actions"><button class="btn-action primary" type="submit">저장</button></div>
       </form>
