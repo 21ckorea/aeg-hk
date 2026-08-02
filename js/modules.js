@@ -1082,6 +1082,12 @@ function wbsStatusLabel(status) {
   return ({ planned: '예정', progress: '진행 중', done: '완료', delayed: '지연' })[status] || '예정';
 }
 
+function wbsShortRange(task) {
+  const start = task.startedOn.slice(5).replace('-', '.');
+  const end = task.endedOn.slice(5).replace('-', '.');
+  return `(${start}~${end})`;
+}
+
 function renderWbs() {
   const projectSelect = document.getElementById('wbs-project-select');
   const monthInput = document.getElementById('wbs-month');
@@ -1108,14 +1114,14 @@ function renderWbs() {
     if (!taskGroups.has(key)) taskGroups.set(key, []);
     taskGroups.get(key).push(task);
   });
-  let html = `<thead><tr><th>공정</th><th>작업명</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th><th>관리</th></tr></thead><tbody>`;
-  if (!tasks.length) html += `<tr><td colspan="${days + 4}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
+  let html = `<thead><tr><th>공정</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th><th>관리</th></tr></thead><tbody>`;
+  if (!tasks.length) html += `<tr><td colspan="${days + 3}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
   taskGroups.forEach((groupTasks, category) => {
-    html += `<tr><td>${escapeAdminHtml(category)}</td><td class="wbs-task-list">${groupTasks.map(task => `<div><strong>${escapeAdminHtml(task.title)}</strong><small>${task.startedOn} ~ ${task.endedOn} · ${wbsStatusLabel(task.status)}</small></div>`).join('')}</td>`;
+    html += `<tr><td>${escapeAdminHtml(category)}</td>`;
     for (let day = 1; day <= days; day += 1) {
       const date = `${monthInput.value}-${String(day).padStart(2, '0')}`;
       const activeTasks = groupTasks.filter(task => date >= task.startedOn && date <= task.endedOn);
-      html += `<td class="wbs-cell">${activeTasks.map(task => `<span class="wbs-mini-bar ${task.status}">${date === task.startedOn || day === 1 ? escapeAdminHtml(task.title) : ''}</span>`).join('')}</td>`;
+      html += `<td class="wbs-cell">${activeTasks.map(task => `<span class="wbs-mini-bar ${task.status}">${date === task.startedOn || day === 1 ? `<b>${escapeAdminHtml(task.title)}</b><small>${wbsShortRange(task)}</small>` : ''}</span>`).join('')}</td>`;
     }
     html += `<td class="wbs-task-list">${groupTasks.map(task => `<div>${escapeAdminHtml(task.note || '-')}</div>`).join('')}</td><td class="wbs-task-list">${groupTasks.map(task => `<div><button class="btn-sm-action" onclick="editWbsTask('${task.id}')">수정</button><button class="btn-sm-action reject" onclick="deleteWbsTask('${task.id}')">삭제</button></div>`).join('')}</td></tr>`;
   });
