@@ -7,6 +7,19 @@ function getTimesheetDays() {
   return new Date(year, month, 0).getDate();
 }
 
+function getMonthDate(dayIndex) {
+  return `${getTimesheetMonth()}-${String(dayIndex + 1).padStart(2, '0')}`;
+}
+
+function isProjectInputAllowed(project, workDate) {
+  const assignment = MOCK_DB.assignedProjects.find(item => item.projectId === project.id);
+  if (!project?.active || !assignment) return false;
+  return (!project.startedOn || workDate >= project.startedOn)
+    && (!project.endedOn || workDate <= project.endedOn)
+    && (!assignment.startedOn || workDate >= assignment.startedOn)
+    && (!assignment.endedOn || workDate <= assignment.endedOn);
+}
+
 const KOREAN_HOLIDAYS = new Set([
   '2026-01-01', '2026-02-16', '2026-02-17', '2026-02-18', '2026-03-01', '2026-03-02',
   '2026-05-05', '2026-05-24', '2026-05-25', '2026-06-06', '2026-08-15', '2026-08-17',
@@ -97,14 +110,14 @@ function renderTimesheet() {
       let projTotal = 0;
       for (let d = 0; d < daysInMonth; d++) {
         const dateClass = getTimesheetDayClass(d + 1);
-        const val = ts[p.id]?.[d] || 0;
+        const workDate = getMonthDate(d);
+        const canInput = isProjectInputAllowed(p, workDate);
+        if (!canInput && ts[p.id]?.[d]) ts[p.id][d] = 0;
+        const val = canInput ? (ts[p.id]?.[d] || 0) : 0;
         projTotal += val;
-        bodyHtml += `
-          <td class="day-cell ${dateClass}">
-            <input type="number" min="0" max="8" value="${val}" class="input-cell"
-                   onchange="updateCellHours('${activeUserId}', '${p.id}', ${d}, this.value)">
-          </td>
-        `;
+        bodyHtml += canInput
+          ? `<td class="day-cell ${dateClass}"><input type="number" min="0" max="8" value="${val}" class="input-cell" onchange="updateCellHours('${activeUserId}', '${p.id}', ${d}, this.value)"></td>`
+          : `<td class="day-cell ${dateClass}" title="프로젝트 또는 개인 배정 기간 전/후에는 입력할 수 없습니다."><span class="timesheet-unavailable">-</span></td>`;
       }
 
       const calculatedMM = (projTotal / 176).toFixed(3);
@@ -164,7 +177,7 @@ function renderMobileTimesheetEditor() {
   const dateKey = `${getTimesheetMonth()}-${String(selectedDay).padStart(2, '0')}`;
   const dayLabel = new Date(year, month - 1, selectedDay).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
   const rows = [
-    ...MOCK_DB.projects.filter(project => project.active).map(project => ({ id: project.id, name: project.name, role: project.role, hours: timesheet[project.id]?.[selectedDay - 1] || 0 })),
+    ...MOCK_DB.projects.filter(project => isProjectInputAllowed(project, dateKey)).map(project => ({ id: project.id, name: project.name, role: project.role, hours: timesheet[project.id]?.[selectedDay - 1] || 0 })),
     { id: 'vacation', name: '개인휴가', role: '연차 · 반차', hours: timesheet.vacation?.[selectedDay - 1] || 0 }
   ];
   container.innerHTML = `
@@ -197,7 +210,7 @@ function getDayTotal(empId, dayIdx) {
     .map(project => project.id));
 
   MOCK_DB.projects.forEach(p => {
-    if (ts[p.id] && (!isCurrentUser || activeProjectIds.has(p.id))) total += ts[p.id][dayIdx] || 0;
+    if (ts[p.id] && (!isCurrentUser || (activeProjectIds.has(p.id) && isProjectInputAllowed(p, getMonthDate(dayIdx))))) total += ts[p.id][dayIdx] || 0;
   });
   if (ts['vacation']) total += ts['vacation'][dayIdx] || 0;
 
@@ -366,9 +379,10 @@ async function saveTimesheet() {
       .map(project => project.id)
   );
   Object.entries(current).forEach(([projectId, hours]) => hours.forEach((value, day) => {
-    if (Number(value) > 0 && (projectId === 'vacation' || activeProjectIds.has(projectId))) {
-      const workDate = `${month}-${String(day + 1).padStart(2, '0')}`;
-      const projectName = projectId === 'vacation' ? '개인휴가' : (MOCK_DB.projects.find(project => project.id === projectId)?.name || '알 수 없는 프로젝트');
+    const project = MOCK_DB.projects.find(item => item.id === projectId);
+    const workDate = `${month}-${String(day + 1).padStart(2, '0')}`;
+    if (Number(value) > 0 && (projectId === 'vacation' || (activeProjectIds.has(projectId) && isProjectInputAllowed(project, workDate)))) {
+      const projectName = projectId === 'vacation' ? '개인휴가' : (project?.name || '알 수 없는 프로젝트');
       requests.push({ projectName, workDate, request: fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate, hours: Number(value) }) }) });
     }
   }));

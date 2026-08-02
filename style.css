@@ -2728,6 +2728,13 @@ body.intranet-mode .top-public-nav { display: none; }
   line-height: 1.45;
 }
 
+.timesheet-unavailable {
+  display: block;
+  color: #b7c0ce;
+  font-size: 12px;
+  text-align: center;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
