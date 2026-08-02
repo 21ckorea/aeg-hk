@@ -312,14 +312,12 @@ function addProjectRowPopup() {
 async function activateProjectRow(projId) {
   const proj = MOCK_DB.projects.find(p => p.id === projId);
   if (proj) {
-    const plannedMm = window.prompt('이 프로젝트에 배정할 계획 M/M을 입력하세요.', proj.plannedMm || '0');
-    if (plannedMm === null) return;
-    const response = await fetch('/api/intranet-data?resource=projectAssignments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projId, yearMonth: getTimesheetMonth(), plannedMm }) });
+    const response = await fetch('/api/intranet-data?resource=projectAssignments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projId, yearMonth: getTimesheetMonth() }) });
     const result = await response.json();
     if (!response.ok) return alert(result.error || '프로젝트 추가에 실패했습니다.');
     const existing = MOCK_DB.assignedProjects.find(item => item.projectId === projId);
-    if (existing) { existing.plannedMm = Number(plannedMm) || 0; existing.endedOn = ''; }
-    else MOCK_DB.assignedProjects.push({ projectId: projId, plannedMm: Number(plannedMm) || 0, startedOn: `${getTimesheetMonth()}-01`, endedOn: '' });
+    if (existing) existing.endedOn = '';
+    else MOCK_DB.assignedProjects.push({ projectId: projId, plannedMm: 0, startedOn: `${getTimesheetMonth()}-01`, endedOn: '' });
     closeModal('modal-add-project');
     initTimesheets();
     saveAppState();

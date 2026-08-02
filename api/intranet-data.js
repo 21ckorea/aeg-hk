@@ -75,7 +75,7 @@ module.exports = async (request, response) => {
       const monthEnd = `${input.yearMonth}-31`;
       const project = await sql.query('SELECT id FROM public.projects WHERE id=$1 AND is_active=true AND (started_on IS NULL OR started_on <= $2) AND (ended_on IS NULL OR ended_on >= $3)', [input.projectId, monthEnd, monthStart]);
       if (!project[0]) return response.status(400).json({ error: '선택한 월에 투입할 수 없는 프로젝트입니다.' });
-      const rows = await sql.query('INSERT INTO public.project_assignments (user_id, project_id, planned_mm, started_on, ended_on) VALUES ($1,$2,$3,$4,NULL) ON CONFLICT (user_id, project_id) DO UPDATE SET planned_mm=EXCLUDED.planned_mm, started_on=LEAST(project_assignments.started_on, EXCLUDED.started_on), ended_on=NULL RETURNING *', [user.id, input.projectId, Number(input.plannedMm) || 0, monthStart]);
+      const rows = await sql.query('INSERT INTO public.project_assignments (user_id, project_id, planned_mm, started_on, ended_on) VALUES ($1,$2,COALESCE($3, 0),$4,NULL) ON CONFLICT (user_id, project_id) DO UPDATE SET planned_mm=COALESCE($3, project_assignments.planned_mm), started_on=LEAST(project_assignments.started_on, EXCLUDED.started_on), ended_on=NULL RETURNING *', [user.id, input.projectId, input.plannedMm === undefined ? null : Number(input.plannedMm), monthStart]);
       return response.status(201).json({ resource, record: rows[0] });
     }
     if (request.method === 'DELETE' && resource === 'projectAssignments') {
