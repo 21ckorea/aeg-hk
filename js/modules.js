@@ -1290,7 +1290,7 @@ function wbsStatusLabel(status) {
 function wbsShortRange(task) {
   const start = task.startedOn.slice(5).replace('-', '.');
   const end = task.endedOn.slice(5).replace('-', '.');
-  return `(${start}~${end})`;
+  return start === end ? `(${start})` : `(${start}~${end})`;
 }
 
 function renderWbs() {

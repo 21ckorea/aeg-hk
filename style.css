@@ -2787,10 +2787,11 @@ body.intranet-mode .top-public-nav { display: none; }
 }
 
 .wbs-toolbar { display: flex; align-items: end; gap: 16px; flex-wrap: wrap; }
+.wbs-toolbar { padding: 20px 24px !important; }
 .wbs-toolbar label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
 .wbs-toolbar select, .wbs-toolbar input { min-width: 180px; padding: 9px 10px; border: 1px solid var(--border-light); border-radius: 6px; }
 .wbs-toolbar p { margin: 0 0 8px; color: var(--text-muted); font-size: 12px; }
-.wbs-scroll { overflow-x: auto; }
+.wbs-scroll { overflow-x: auto; padding: 0 24px 24px !important; }
 .wbs-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
 .wbs-table th, .wbs-table td { border: 1px solid #cbd5e1; height: 34px; width: 38px; min-width: 38px; padding: 4px; text-align: center; white-space: nowrap; }
 .wbs-table th { background: #f1f5f9; color: #475569; font-weight: 700; }
@@ -2817,6 +2818,14 @@ body.intranet-mode .top-public-nav { display: none; }
 .wbs-table .wbs-bar.done { background: #10b981; }
 .wbs-table .wbs-bar.delayed { background: #ef4444; }
 .wbs-empty { padding: 28px; color: var(--text-muted); }
+
+/* WBS 표가 브라우저 가장자리에 붙지 않도록 읽기 여백을 확보한다. */
+#sub-wbs { max-width: 1640px; margin: 0 auto; }
+
+/* 근태 화면은 조작 영역과 통계 영역에 독립적인 내부 여백을 둔다. */
+#sub-attendance .dashboard-grid { gap: 32px; }
+#sub-attendance .dash-panel > .panel-body { padding: 24px 28px; }
+#sub-attendance .attendance-history-short { margin-bottom: 4px; }
 
 @media (max-width: 720px) {
   .wbs-toolbar { align-items: stretch; }
