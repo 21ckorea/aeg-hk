@@ -1004,12 +1004,17 @@ function showDiaryAttachmentPicker(attachments) {
   picker.onclick = event => { if (event.target === picker) close(); };
   const list = picker.querySelector('.attachment-picker-list');
   attachments.forEach(file => {
+    const item = document.createElement('div');
+    item.className = 'attachment-picker-item';
+    const name = document.createElement('span');
+    name.textContent = file.file_name;
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'attachment-picker-item';
-    button.textContent = file.file_name;
+    button.className = 'btn-sm-action approve';
+    button.textContent = '열기';
     button.onclick = () => { openDiaryAttachment(file.id); close(); };
-    list.appendChild(button);
+    item.append(name, button);
+    list.appendChild(item);
   });
   document.body.appendChild(picker);
 }
