@@ -981,10 +981,37 @@ async function openDiaryAttachments(diaryId) {
   const data = await response.json();
   if (!response.ok) return alert(data.error || '첨부파일을 불러오지 못했습니다.');
   if (!data.attachments.length) return alert('첨부파일이 없습니다.');
-  const selected = window.prompt(`열 첨부파일 번호를 입력하세요.\n${data.attachments.map((file, index) => `${index + 1}. ${file.file_name}`).join('\n')}`);
-  const file = data.attachments[Number(selected) - 1];
-  if (!file) return;
-  window.open(`/api/attachments?fileId=${encodeURIComponent(file.id)}`, '_blank', 'noopener');
+  if (data.attachments.length === 1) return openDiaryAttachment(data.attachments[0].id);
+  showDiaryAttachmentPicker(data.attachments);
+}
+
+function openDiaryAttachment(fileId) {
+  window.open(`/api/attachments?fileId=${encodeURIComponent(fileId)}`, '_blank', 'noopener');
+}
+
+function showDiaryAttachmentPicker(attachments) {
+  document.getElementById('diary-attachment-picker')?.remove();
+  const picker = document.createElement('div');
+  picker.id = 'diary-attachment-picker';
+  picker.className = 'modal-backdrop active';
+  picker.innerHTML = `
+    <div class="modal-card attachment-picker-card">
+      <div class="modal-header"><h3>첨부파일</h3><button class="close-btn" type="button" aria-label="닫기">×</button></div>
+      <div class="modal-body"><p class="attachment-picker-guide">열 파일을 선택하세요.</p><div class="attachment-picker-list"></div></div>
+    </div>`;
+  const close = () => picker.remove();
+  picker.querySelector('.close-btn').onclick = close;
+  picker.onclick = event => { if (event.target === picker) close(); };
+  const list = picker.querySelector('.attachment-picker-list');
+  attachments.forEach(file => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'attachment-picker-item';
+    button.textContent = file.file_name;
+    button.onclick = () => { openDiaryAttachment(file.id); close(); };
+    list.appendChild(button);
+  });
+  document.body.appendChild(picker);
 }
 
 
