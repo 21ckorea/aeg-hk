@@ -24,6 +24,13 @@ function requireFields(input, fields) {
   for (const field of fields) if (!input[field]) throw new Error(`${field} is required.`);
 }
 
+function dateKey(value) {
+  if (!value) return '';
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  const text = String(value);
+  return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : new Date(text).toISOString().slice(0, 10);
+}
+
 module.exports = async (request, response) => {
   response.setHeader('Cache-Control', 'no-store, max-age=0');
   try {
@@ -133,10 +140,10 @@ module.exports = async (request, response) => {
         const rows = await sql.query('SELECT p.name, p.is_active, p.started_on, p.ended_on, pa.started_on AS assignment_started_on, pa.ended_on AS assignment_ended_on FROM public.projects p LEFT JOIN public.project_assignments pa ON pa.project_id=p.id AND pa.user_id=$1 WHERE p.id=$2', [user.id, input.projectId]);
         const project = rows[0];
         if (!project) return response.status(400).json({ error: `${input.workDate}: 선택한 프로젝트를 찾을 수 없습니다. 목록을 새로고침한 뒤 다시 선택해 주세요.` });
-        const projectStart = project.started_on ? String(project.started_on).slice(0, 10) : '';
-        const projectEnd = project.ended_on ? String(project.ended_on).slice(0, 10) : '';
-        const assignmentStart = project.assignment_started_on ? String(project.assignment_started_on).slice(0, 10) : '';
-        const assignmentEnd = project.assignment_ended_on ? String(project.assignment_ended_on).slice(0, 10) : '';
+        const projectStart = dateKey(project.started_on);
+        const projectEnd = dateKey(project.ended_on);
+        const assignmentStart = dateKey(project.assignment_started_on);
+        const assignmentEnd = dateKey(project.assignment_ended_on);
         if (!project.is_active) return response.status(400).json({ error: `${project.name}: 종료 또는 비활성 프로젝트라 시간을 저장할 수 없습니다.` });
         if ((projectStart && input.workDate < projectStart) || (projectEnd && input.workDate > projectEnd)) return response.status(400).json({ error: `${project.name}: ${input.workDate}은 프로젝트 기간(${projectStart || '시작일 미정'} ~ ${projectEnd || '종료일 미정'}) 밖입니다. 기간 안의 날짜에만 입력해 주세요.` });
         if (!assignmentStart) return response.status(400).json({ error: `${project.name}: 내 투입 프로젝트에 아직 추가되지 않았습니다. ‘프로젝트 추가’에서 먼저 추가해 주세요.` });

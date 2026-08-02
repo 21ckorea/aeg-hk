@@ -191,9 +191,13 @@ function renderMobileTimesheetEditor() {
 function getDayTotal(empId, dayIdx) {
   const ts = MOCK_DB.timesheets[empId];
   let total = 0;
+  const isCurrentUser = empId === MOCK_DB.currentUser.id;
+  const activeProjectIds = new Set(MOCK_DB.assignedProjects
+    .filter(item => isAssignmentActiveForMonth(item, getTimesheetMonth()))
+    .map(item => item.projectId));
 
   MOCK_DB.projects.forEach(p => {
-    if (ts[p.id]) total += ts[p.id][dayIdx] || 0;
+    if (ts[p.id] && (!isCurrentUser || activeProjectIds.has(p.id))) total += ts[p.id][dayIdx] || 0;
   });
   if (ts['vacation']) total += ts['vacation'][dayIdx] || 0;
 
@@ -356,8 +360,13 @@ async function saveTimesheet() {
   const current = MOCK_DB.timesheets[MOCK_DB.currentUser.id] || MOCK_DB.timesheets.emp01 || {};
   const requests = [];
   const month = getTimesheetMonth();
+  const activeProjectIds = new Set(
+    MOCK_DB.assignedProjects
+      .filter(item => isAssignmentActiveForMonth(item, month))
+      .map(item => item.projectId)
+  );
   Object.entries(current).forEach(([projectId, hours]) => hours.forEach((value, day) => {
-    if (Number(value) > 0) {
+    if (Number(value) > 0 && (projectId === 'vacation' || activeProjectIds.has(projectId))) {
       const workDate = `${month}-${String(day + 1).padStart(2, '0')}`;
       const projectName = projectId === 'vacation' ? '개인휴가' : (MOCK_DB.projects.find(project => project.id === projectId)?.name || '알 수 없는 프로젝트');
       requests.push({ projectName, workDate, request: fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate, hours: Number(value) }) }) });
@@ -381,16 +390,18 @@ async function saveTimesheet() {
 
 function submitTimesheet() {
   let errorFound = false;
-  for (let d = 0; d < 30; d++) {
-    if (getDayTotal('emp01', d) > 8) {
+  const activeUserId = MOCK_DB.currentUser.id;
+  const daysInMonth = getTimesheetDays();
+  for (let d = 0; d < daysInMonth; d++) {
+    if (getDayTotal(activeUserId, d) > 8) {
       errorFound = true;
       break;
     }
   }
 
   let grandTotal = 0;
-  for (let d = 0; d < 30; d++) {
-    grandTotal += getDayTotal('emp01', d);
+  for (let d = 0; d < daysInMonth; d++) {
+    grandTotal += getDayTotal(activeUserId, d);
   }
 
   saveAppState();
