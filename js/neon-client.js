@@ -92,11 +92,11 @@ async function hydrateWorkflowsFromNeon() {
       popupEnd: item.popup_end ? String(item.popup_end).slice(0, 10) : ''
     }));
     MOCK_DB.diaries = diaries.map(item => ({ id: item.id, userId: item.user_id, authorName: directoryById.get(item.user_id)?.name || item.user_id, attachmentCount: Number(item.attachment_count || 0), date: String(item.work_date).slice(0, 10), projectId: item.project_id, hours: Number(item.hours), content: item.content }));
-    const userId = MOCK_DB.currentUser.id;
     MOCK_DB.timesheetRecords = timesheets.map(item => ({
       workDate: String(item.work_date).slice(0, 10),
       hours: Number(item.hours || 0),
-      entryType: item.entry_type || 'project'
+      entryType: item.entry_type || 'project',
+      projectId: item.project_id || null
     }));
     MOCK_DB.manpowerRecords = manpower.map(item => ({ userId: item.user_id, projectId: item.project_id, workDate: String(item.work_date).slice(0, 10), hours: Number(item.hours || 0), entryType: item.entry_type || 'project' }));
     MOCK_DB.attendance.records = attendance.map(item => ({
@@ -104,17 +104,8 @@ async function hydrateWorkflowsFromNeon() {
       checkedInAt: item.checked_in_at || null,
       checkedOutAt: item.checked_out_at || null
     }));
-    const monthEntries = {};
-    timesheets.forEach(item => {
-      const date = String(item.work_date).slice(0, 10);
-      const day = Number(date.slice(-2)) - 1;
-      if (day < 0 || day > 30) return;
-      const key = item.entry_type === 'vacation' ? 'vacation' : item.project_id;
-      if (!key) return;
-      if (!monthEntries[key]) monthEntries[key] = new Array(30).fill(0);
-      monthEntries[key][day] = Number(item.hours);
-    });
-    if (Object.keys(monthEntries).length) MOCK_DB.timesheets[userId] = monthEntries;
+    // 실제 월별 배열 구성은 현재 선택 월을 기준으로 renderTimesheet에서 처리한다.
+    // 여기서 모든 월을 일자(1~31)만으로 합치면 7월 31일이 8월 31일에 섞일 수 있다.
     if (directory.users?.length) {
       MOCK_DB.employees = directory.users.map(item => ({
         id: item.id,

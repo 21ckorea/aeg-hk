@@ -73,14 +73,32 @@ function initTimesheets() {
   saveAppState();
 }
 
+function rebuildTimesheetForSelectedMonth() {
+  const userId = MOCK_DB.currentUser.id;
+  const month = getTimesheetMonth();
+  const daysInMonth = getTimesheetDays();
+  const entries = {};
+  (MOCK_DB.timesheetRecords || [])
+    .filter(item => item.workDate.startsWith(month))
+    .forEach(item => {
+      const key = item.entryType === 'vacation' ? 'vacation' : item.projectId;
+      const day = Number(item.workDate.slice(-2)) - 1;
+      if (!key || day < 0 || day >= daysInMonth) return;
+      if (!entries[key]) entries[key] = new Array(daysInMonth).fill(0);
+      entries[key][day] = item.hours;
+    });
+  MOCK_DB.timesheets[userId] = entries;
+}
+
 function renderTimesheet() {
   const table = document.getElementById('timesheet-grid-table');
   if (!table) return;
 
   const daysInMonth = getTimesheetDays();
   const activeUserId = MOCK_DB.currentUser.id;
-  const ts = MOCK_DB.timesheets[activeUserId] || {};
+  rebuildTimesheetForSelectedMonth();
   initTimesheets();
+  const ts = MOCK_DB.timesheets[activeUserId] || {};
 
   let headHtml = `
     <thead>
