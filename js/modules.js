@@ -591,6 +591,13 @@ function renderEmployeeDetails(empId) {
 
   const [year, month] = getManpowerMonthKey().split('-').map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
+  // 월요일부터 일요일까지 실제 달력 위치를 유지한다. 토·일 근무도 같은 기준으로 표시한다.
+  const firstDayOffset = (new Date(year, month - 1, 1).getDay() + 6) % 7;
+  for (let index = 0; index < firstDayOffset; index += 1) {
+    const blank = document.createElement('div');
+    blank.className = 'heatmap-cell heatmap-blank';
+    heatmap.appendChild(blank);
+  }
   for (let d = 0; d < daysInMonth; d++) {
     const date = `${getManpowerMonthKey()}-${String(d + 1).padStart(2, '0')}`;
     const dayTotal = entries.filter(item => item.workDate === date).reduce((sum, item) => sum + item.hours, 0);
@@ -600,7 +607,8 @@ function renderEmployeeDetails(empId) {
     else if (dayTotal > 6) levelClass = 'level-3';
 
     const cell = document.createElement('div');
-    cell.className = `heatmap-cell ${levelClass}`;
+    const weekDay = new Date(year, month - 1, d + 1).getDay();
+    cell.className = `heatmap-cell ${levelClass}${weekDay === 0 || weekDay === 6 ? ' weekend' : ''}`;
     cell.textContent = dayTotal;
     cell.title = `${month}월 ${d + 1}일: ${dayTotal}시간 투입`;
     heatmap.appendChild(cell);

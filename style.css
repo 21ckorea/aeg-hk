@@ -2337,7 +2337,7 @@ body.intranet-mode .top-public-nav { display: none; }
 
 .heatmap-days-header {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-size: 11px;
   font-weight: 600;
@@ -2345,9 +2345,12 @@ body.intranet-mode .top-public-nav { display: none; }
   margin-bottom: 4px;
 }
 
+.heatmap-days-header .saturday { color: #2563eb; }
+.heatmap-days-header .sunday { color: var(--accent-red); }
+
 .heatmap-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 }
 
@@ -2374,6 +2377,8 @@ body.intranet-mode .top-public-nav { display: none; }
 .heatmap-cell.level-1 { background-color: #c7d2fe; } /* 1-3 hours */
 .heatmap-cell.level-2 { background-color: #818cf8; } /* 4-6 hours */
 .heatmap-cell.level-3 { background-color: #4f46e5; color: rgba(255,255,255,0.9); } /* 7-8 hours */
+.heatmap-cell.weekend { border: 1px solid rgba(99, 102, 241, 0.15); }
+.heatmap-cell.heatmap-blank { background: transparent; border: 0; pointer-events: none; }
 
 .heatmap-legend {
   display: flex;
