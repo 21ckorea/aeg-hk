@@ -48,13 +48,27 @@ async function loadWorkflowResource(resource) {
 
 async function hydrateWorkflowsFromNeon() {
   try {
-    const [projects, approvals, notices, diaries, attendance, timesheets, assignments, directory] = await Promise.all([
-      ...['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets', 'projectAssignments'].map(loadWorkflowResource),
+    // 하나의 보조 데이터 요청이 실패해도 프로젝트 등 나머지 화면 데이터까지 비우지 않는다.
+    const resourceNames = ['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets', 'projectAssignments'];
+    const results = await Promise.allSettled([
+      ...resourceNames.map(loadWorkflowResource),
       fetch('/api/directory', { cache: 'no-store' }).then(response => response.ok ? response.json() : { users: [] })
-    ]
-    );
+    ]);
+    const failedResources = results
+      .slice(0, resourceNames.length)
+      .map((result, index) => result.status === 'rejected' ? resourceNames[index] : null)
+      .filter(Boolean);
+    const records = index => results[index].status === 'fulfilled' ? results[index].value : [];
+    const projects = records(0);
+    const approvals = records(1);
+    const notices = records(2);
+    const diaries = records(3);
+    const attendance = records(4);
+    const timesheets = records(5);
+    const assignments = records(6);
+    const directory = results[7].status === 'fulfilled' ? results[7].value : { users: [] };
     MOCK_DB.projects = projects.map(item => ({ id: item.id, name: item.name, role: item.work_role || '', active: item.is_active, startedOn: item.started_on ? String(item.started_on).slice(0, 10) : '', endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '', plannedMm: Number(item.planned_mm || 0), cost: Number(item.contract_amount || 0), clientName: item.client_name || '', code: item.project_code || '' }));
-    MOCK_DB.assignedProjects = assignments.map(item => ({ projectId: item.project_id, plannedMm: Number(item.planned_mm || 0), startedOn: String(item.started_on).slice(0, 10), endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '' }));
+    MOCK_DB.assignedProjects = assignments.map(item => ({ projectId: item.project_id, plannedMm: Number(item.planned_mm || 0), startedOn: String(item.started_on || '1900-01-01').slice(0, 10), endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '' }));
     MOCK_DB.projectsSummary = MOCK_DB.projects.map(project => ({
       name: project.name,
       pm: MOCK_DB.currentUser.name,
@@ -96,6 +110,7 @@ async function hydrateWorkflowsFromNeon() {
       MOCK_DB.attendance.checkInTime = todayAttendance.checked_in_at ? new Date(todayAttendance.checked_in_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : null;
       MOCK_DB.attendance.checkOutTime = todayAttendance.checked_out_at ? new Date(todayAttendance.checked_out_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : null;
     }
+    if (failedResources.length) console.info('Some workflow resources could not be loaded:', failedResources);
     return true;
   } catch (error) {
     console.info('Workflow data hydration skipped.', error);
