@@ -1193,6 +1193,8 @@ async function deleteWbsTask(taskId) {
 
 let diaryWeekStart = null;
 let editingDiaryId = null;
+let diaryViewMode = 'mine';
+let diaryProjectFilter = 'all';
 
 function getMonday(date) {
   const result = new Date(date);
@@ -1219,6 +1221,25 @@ function moveDiaryWeek(offset) {
   renderDiaryWeekView();
 }
 
+function setDiaryViewMode(mode) {
+  diaryViewMode = mode;
+  renderDiaryWeekView();
+}
+
+function setDiaryProjectFilter(projectId) {
+  diaryProjectFilter = projectId;
+  renderDiaryWeekView();
+}
+
+function renderDiaryTeamFilters() {
+  const target = document.getElementById('diary-team-filters');
+  if (!target) return;
+  const canViewTeam = ['admin', 'manager'].includes(MOCK_DB.currentUser.accessRole);
+  target.hidden = !canViewTeam;
+  if (!canViewTeam) return;
+  target.innerHTML = `<div class="diary-view-tabs"><button type="button" class="${diaryViewMode === 'mine' ? 'active' : ''}" onclick="setDiaryViewMode('mine')">내 업무일지</button><button type="button" class="${diaryViewMode === 'team' ? 'active' : ''}" onclick="setDiaryViewMode('team')">프로젝트별 팀 일지</button></div>${diaryViewMode === 'team' ? `<select aria-label="프로젝트별 팀 일지 필터" onchange="setDiaryProjectFilter(this.value)"><option value="all">전체 프로젝트</option>${MOCK_DB.projects.map(project => `<option value="${project.id}" ${diaryProjectFilter === project.id ? 'selected' : ''}>${escapeAdminHtml(project.name)}</option>`).join('')}</select>` : ''}`;
+}
+
 function renderDiaryWeekView() {
   const container = document.getElementById('diary-list-container');
   if (!container) return;
@@ -1226,6 +1247,7 @@ function renderDiaryWeekView() {
   container.innerHTML = '';
 
   if (!diaryWeekStart) diaryWeekStart = getCurrentWorkweekStart();
+  renderDiaryTeamFilters();
   const labels = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
   const weekdays = labels.map((label, index) => {
     const date = new Date(diaryWeekStart);
@@ -1239,18 +1261,21 @@ function renderDiaryWeekView() {
   }
 
   weekdays.forEach(day => {
-    const dayDiaries = MOCK_DB.diaries.filter(d => d.date === day.date);
+    const dayDiaries = MOCK_DB.diaries.filter(diary => {
+      if (diary.date !== day.date) return false;
+      if (diaryViewMode === 'mine') return diary.userId === MOCK_DB.currentUser.id;
+      return diaryProjectFilter === 'all' || diary.projectId === diaryProjectFilter;
+    });
     const card = document.createElement('div');
     card.className = 'diary-day-card';
 
     let diariesHtml = '';
     dayDiaries.forEach(item => {
       const proj = MOCK_DB.projects.find(p => p.id === item.projectId);
-      const canManage = item.userId === MOCK_DB.currentUser.id || MOCK_DB.currentUser.role.startsWith('관리자');
+      const canManage = item.userId === MOCK_DB.currentUser.id || MOCK_DB.currentUser.accessRole === 'admin';
       diariesHtml += `
         <div class="diary-item-node">
-          <span class="project">${proj ? proj.name : '기타과업'}</span>
-          <span class="time">${item.hours}H</span>
+          <div class="diary-item-meta"><span class="project">${proj ? proj.name : '기타과업'}</span><span class="diary-author">작성자 ${escapeAdminHtml(item.authorName || '알 수 없음')}</span><span class="time">${item.hours}H</span></div>
           <p>${item.content}</p>
           <button class="btn-sm-action" type="button" onclick="openDiaryAttachments('${item.id}')">첨부파일 (${item.attachmentCount || 0})</button>
           ${canManage ? `<button class="btn-sm-action" type="button" onclick="editDiary('${item.id}')">수정</button><button class="btn-sm-action reject" type="button" onclick="deleteDiary('${item.id}')">삭제</button>` : ''}
@@ -1445,6 +1470,7 @@ async function submitDiaryForm(e) {
     const newDiary = {
       id: result.record.id,
       userId: result.record.user_id || MOCK_DB.currentUser.id,
+      authorName: MOCK_DB.currentUser.name,
       attachmentCount: isEditing ? undefined : attachments.length,
       date,
       projectId,
