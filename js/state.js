@@ -6,6 +6,7 @@ function createDefaultAppState() {
   const defaultUser = {
     id: 'emp01',
     name: '홍길동',
+    accessRole: 'staff',
     role: 'AA부서 / 과장',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'
   };
@@ -13,6 +14,7 @@ function createDefaultAppState() {
   return {
     currentUser: { ...defaultUser },
     projects: [],
+    wbsTasks: [],
     assignedProjects: [],
     employees: [
       { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
@@ -38,6 +40,7 @@ function normalizeAppState(state) {
     ...state,
     currentUser: { ...base.currentUser, ...(state?.currentUser || {}) },
     projects: Array.isArray(state?.projects) ? state.projects : [],
+    wbsTasks: Array.isArray(state?.wbsTasks) ? state.wbsTasks : [],
     assignedProjects: Array.isArray(state?.assignedProjects) ? state.assignedProjects : [],
     employees: Array.isArray(state?.employees) && state.employees.length > 0 ? state.employees : [
       { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
@@ -63,6 +66,7 @@ function saveAppState() {
 
 function ensureStateShape() {
   if (!MOCK_DB.projects) MOCK_DB.projects = [];
+  if (!MOCK_DB.wbsTasks) MOCK_DB.wbsTasks = [];
   if (!MOCK_DB.assignedProjects) MOCK_DB.assignedProjects = [];
   if (!MOCK_DB.approvals) MOCK_DB.approvals = [];
   if (!MOCK_DB.notices) MOCK_DB.notices = [];

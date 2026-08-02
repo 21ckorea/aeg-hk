@@ -500,6 +500,9 @@
               <li class="menu-item" id="menu-diary" onclick="switchSubView('diary')">
                 <i data-lucide="book-open"></i> <span>업무일지</span>
               </li>
+              <li class="menu-item" id="menu-wbs" onclick="switchSubView('wbs')">
+                <i data-lucide="gantt-chart"></i> <span>공정표 (WBS)</span>
+              </li>
               <li class="menu-item admin-only" id="menu-admin" onclick="switchSubView('admin')" style="display:none">
                 <i data-lucide="user-round-check"></i> <span>사용자 승인</span>
                 <span class="badge-count" id="pending-user-count">0</span>
@@ -996,6 +999,27 @@
                 </form></div>
               </div>
               <div class="dash-panel mt-6"><div class="panel-header"><h3>프로젝트 목록</h3></div><div class="panel-body"><table class="data-table"><thead><tr><th>코드</th><th>프로젝트</th><th>기간</th><th>계획 M/M</th><th>비용</th><th>상태</th><th>관리</th></tr></thead><tbody id="managed-project-list"></tbody></table></div></div>
+            </div>
+
+            <div id="sub-wbs" class="sub-view">
+              <div class="dash-panel">
+                <div class="panel-header"><h3>프로젝트 주간 예정 공정표</h3></div>
+                <div class="panel-body wbs-toolbar">
+                  <label>프로젝트 <select id="wbs-project-select" onchange="renderWbs()"></select></label>
+                  <label>조회 월 <input id="wbs-month" type="month" onchange="renderWbs()"></label>
+                  <p>작업 기간을 등록하면 해당 날짜에 공정 막대로 표시됩니다.</p>
+                </div>
+              </div>
+              <div class="dash-panel mt-6">
+                <div class="panel-header"><h3 id="wbs-project-title">공정 일정</h3></div>
+                <div class="panel-body wbs-scroll"><table class="wbs-table" id="wbs-grid"></table></div>
+              </div>
+              <div class="dash-panel mt-6" id="wbs-editor-panel">
+                <div class="panel-header"><h3 id="wbs-form-title">공정 작업 등록</h3></div>
+                <div class="panel-body"><form id="wbs-form" class="project-management-form" onsubmit="submitWbsTask(event)">
+                  <input id="wbs-category" placeholder="공종 · 예: 전기, 설비, 마감"><input id="wbs-title" placeholder="작업명 *" required><input id="wbs-start" type="date" required><input id="wbs-end" type="date" required><select id="wbs-status"><option value="planned">예정</option><option value="progress">진행 중</option><option value="done">완료</option><option value="delayed">지연</option></select><input id="wbs-note" placeholder="비고 (선택)"><button id="wbs-submit" class="btn-action primary" type="submit">작업 등록</button><button id="wbs-cancel" class="btn-action secondary" type="button" onclick="resetWbsForm()" hidden>수정 취소</button>
+                </form></div>
+              </div>
             </div>
 
             <!-- SUB-VIEW 7: WORK DIARY (업무일지) -->

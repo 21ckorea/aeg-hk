@@ -9,7 +9,8 @@ const RESOURCES = {
   approvals: { table: 'approval_documents', owner: 'requester_id' },
   notices: { table: 'notices', owner: null },
   diaries: { table: 'diary_entries', owner: 'user_id' },
-  projectAssignments: { table: 'project_assignments', owner: 'user_id' }
+  projectAssignments: { table: 'project_assignments', owner: 'user_id' },
+  wbs: { table: 'project_wbs_tasks', owner: null }
 };
 
 function body(request) {
@@ -46,6 +47,14 @@ module.exports = async (request, response) => {
         const rows = await sql.query('SELECT project_id, planned_mm, started_on, ended_on FROM public.project_assignments WHERE user_id = $1', [user.id]);
         return response.status(200).json({ resource, records: rows });
       }
+      if (resource === 'wbs') {
+        const projectId = String(request.query?.projectId || '');
+        const rows = await sql.query(
+          `SELECT t.*, p.name AS project_name FROM public.project_wbs_tasks t JOIN public.projects p ON p.id=t.project_id${projectId ? ' WHERE t.project_id=$1' : ''} ORDER BY t.started_on ASC, t.created_at ASC`,
+          projectId ? [projectId] : []
+        );
+        return response.status(200).json({ resource, records: rows });
+      }
       if (resource === 'diaries') {
         const where = isPrivileged ? '' : ' WHERE d.user_id = $1';
         const rows = await sql.query(
@@ -80,6 +89,21 @@ module.exports = async (request, response) => {
       if (input.startedOn > input.endedOn) return response.status(400).json({ error: '종료일은 시작일 이후여야 합니다.' });
       const rows = await sql.query('UPDATE public.projects SET project_code=$2, name=$3, client_name=$4, work_role=$5, started_on=$6, ended_on=$7, contract_amount=$8, planned_mm=$9, is_active=$10, updated_at=now() WHERE id=$1 RETURNING *', [input.id, input.projectCode || null, input.name, input.clientName || null, input.workRole || null, input.startedOn, input.endedOn, input.contractAmount || null, input.plannedMm || null, input.isActive !== false]);
       return response.status(rows[0] ? 200 : 404).json(rows[0] ? { resource, record: rows[0] } : { error: '프로젝트를 찾을 수 없습니다.' });
+    }
+    if (request.method === 'PATCH' && resource === 'wbs') {
+      if (!isPrivileged) return response.status(403).json({ error: '관리자 또는 PM만 공정표를 수정할 수 있습니다.' });
+      const input = body(request);
+      requireFields(input, ['id', 'title', 'startedOn', 'endedOn']);
+      if (input.startedOn > input.endedOn) return response.status(400).json({ error: '작업 종료일은 시작일 이후여야 합니다.' });
+      const rows = await sql.query('UPDATE public.project_wbs_tasks SET category=$2, title=$3, started_on=$4, ended_on=$5, status=$6, note=$7, updated_at=now() WHERE id=$1 RETURNING *', [input.id, input.category || null, input.title, input.startedOn, input.endedOn, input.status || 'planned', input.note || null]);
+      return response.status(rows[0] ? 200 : 404).json(rows[0] ? { resource, record: rows[0] } : { error: '작업 항목을 찾을 수 없습니다.' });
+    }
+    if (request.method === 'DELETE' && resource === 'wbs') {
+      if (!isPrivileged) return response.status(403).json({ error: '관리자 또는 PM만 공정표를 삭제할 수 있습니다.' });
+      const input = body(request);
+      if (!input.id) return response.status(400).json({ error: '삭제할 작업 항목이 필요합니다.' });
+      const rows = await sql.query('DELETE FROM public.project_wbs_tasks WHERE id=$1 RETURNING id', [input.id]);
+      return response.status(rows[0] ? 200 : 404).json(rows[0] ? { resource, deletedId: input.id } : { error: '작업 항목을 찾을 수 없습니다.' });
     }
     if (request.method === 'POST' && resource === 'projectAssignments') {
       const input = body(request);
@@ -140,6 +164,11 @@ module.exports = async (request, response) => {
       requireFields(input, ['name', 'startedOn', 'endedOn']);
       if (input.startedOn > input.endedOn) return response.status(400).json({ error: '종료일은 시작일 이후여야 합니다.' });
       rows = await sql.query('INSERT INTO public.projects (id, project_code, name, client_name, work_role, manager_id, started_on, ended_on, contract_amount, planned_mm, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true) RETURNING *', [id('project'), input.projectCode || null, input.name, input.clientName || null, input.workRole || null, user.id, input.startedOn, input.endedOn, input.contractAmount || null, input.plannedMm || null]);
+    } else if (resource === 'wbs') {
+      if (!isPrivileged) return response.status(403).json({ error: '관리자 또는 PM만 공정표를 등록할 수 있습니다.' });
+      requireFields(input, ['projectId', 'title', 'startedOn', 'endedOn']);
+      if (input.startedOn > input.endedOn) return response.status(400).json({ error: '작업 종료일은 시작일 이후여야 합니다.' });
+      rows = await sql.query('INSERT INTO public.project_wbs_tasks (id, project_id, category, title, started_on, ended_on, status, note, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [id('wbs'), input.projectId, input.category || null, input.title, input.startedOn, input.endedOn, input.status || 'planned', input.note || null, user.id]);
     } else if (resource === 'timesheets') {
       requireFields(input, ['workDate', 'hours']);
       if (input.entryType !== 'vacation') {

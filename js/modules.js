@@ -1076,6 +1076,95 @@ function resetManagedProjectForm() {
   document.getElementById('pm-cancel-button').hidden = true;
 }
 
+let editingWbsTaskId = null;
+
+function wbsStatusLabel(status) {
+  return ({ planned: '예정', progress: '진행 중', done: '완료', delayed: '지연' })[status] || '예정';
+}
+
+function renderWbs() {
+  const projectSelect = document.getElementById('wbs-project-select');
+  const monthInput = document.getElementById('wbs-month');
+  const grid = document.getElementById('wbs-grid');
+  if (!projectSelect || !monthInput || !grid) return;
+  const previousProject = projectSelect.value;
+  projectSelect.innerHTML = MOCK_DB.projects.map(project => `<option value="${project.id}">${escapeAdminHtml(project.name)}</option>`).join('');
+  if (previousProject && MOCK_DB.projects.some(project => project.id === previousProject)) projectSelect.value = previousProject;
+  if (!monthInput.value) monthInput.value = new Date().toISOString().slice(0, 7);
+  const project = MOCK_DB.projects.find(item => item.id === projectSelect.value);
+  const title = document.getElementById('wbs-project-title');
+  if (!project) {
+    if (title) title.textContent = '공정 일정';
+    grid.innerHTML = '<tbody><tr><td>등록된 프로젝트가 없습니다.</td></tr></tbody>';
+    return;
+  }
+  if (title) title.textContent = `${project.name} 공정 일정`;
+  const [year, month] = monthInput.value.split('-').map(Number);
+  const days = new Date(year, month, 0).getDate();
+  const tasks = MOCK_DB.wbsTasks.filter(task => task.projectId === project.id && task.startedOn <= `${monthInput.value}-${String(days).padStart(2, '0')}` && task.endedOn >= `${monthInput.value}-01`);
+  let html = `<thead><tr><th>공종</th><th>작업명</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th><th>관리</th></tr></thead><tbody>`;
+  if (!tasks.length) html += `<tr><td colspan="${days + 4}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
+  tasks.forEach(task => {
+    html += `<tr><td>${escapeAdminHtml(task.category || '-')}</td><td><strong>${escapeAdminHtml(task.title)}</strong><small>${task.startedOn} ~ ${task.endedOn} · ${wbsStatusLabel(task.status)}</small></td>`;
+    for (let day = 1; day <= days; day += 1) {
+      const date = `${monthInput.value}-${String(day).padStart(2, '0')}`;
+      const active = date >= task.startedOn && date <= task.endedOn;
+      html += `<td class="${active ? `wbs-bar ${task.status}` : ''}">${active && (date === task.startedOn || day === 1) ? escapeAdminHtml(task.title) : ''}</td>`;
+    }
+    html += `<td>${escapeAdminHtml(task.note || '-')}</td><td><button class="btn-sm-action" onclick="editWbsTask('${task.id}')">수정</button><button class="btn-sm-action reject" onclick="deleteWbsTask('${task.id}')">삭제</button></td></tr>`;
+  });
+  grid.innerHTML = `${html}</tbody>`;
+  const canEdit = ['admin', 'manager'].includes(MOCK_DB.currentUser.accessRole);
+  document.getElementById('wbs-editor-panel').hidden = !canEdit;
+  lucide.createIcons();
+}
+
+async function submitWbsTask(event) {
+  event.preventDefault();
+  const input = id => document.getElementById(id).value.trim();
+  const isEditing = Boolean(editingWbsTaskId);
+  const payload = { id: editingWbsTaskId, projectId: document.getElementById('wbs-project-select').value, category: input('wbs-category'), title: input('wbs-title'), startedOn: input('wbs-start'), endedOn: input('wbs-end'), status: document.getElementById('wbs-status').value, note: input('wbs-note') };
+  const response = await fetch('/api/intranet-data?resource=wbs', { method: isEditing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '공정 작업 저장에 실패했습니다.');
+  const record = data.record;
+  const task = { id: record.id, projectId: record.project_id, category: record.category || '', title: record.title, startedOn: String(record.started_on).slice(0, 10), endedOn: String(record.ended_on).slice(0, 10), status: record.status, note: record.note || '' };
+  if (isEditing) MOCK_DB.wbsTasks = MOCK_DB.wbsTasks.map(item => item.id === task.id ? task : item); else MOCK_DB.wbsTasks.push(task);
+  resetWbsForm(); renderWbs();
+}
+
+function editWbsTask(taskId) {
+  const task = MOCK_DB.wbsTasks.find(item => item.id === taskId);
+  if (!task) return;
+  editingWbsTaskId = taskId;
+  document.getElementById('wbs-category').value = task.category;
+  document.getElementById('wbs-title').value = task.title;
+  document.getElementById('wbs-start').value = task.startedOn;
+  document.getElementById('wbs-end').value = task.endedOn;
+  document.getElementById('wbs-status').value = task.status;
+  document.getElementById('wbs-note').value = task.note;
+  document.getElementById('wbs-form-title').textContent = '공정 작업 수정';
+  document.getElementById('wbs-submit').textContent = '수정 저장';
+  document.getElementById('wbs-cancel').hidden = false;
+}
+
+function resetWbsForm() {
+  editingWbsTaskId = null;
+  document.getElementById('wbs-form')?.reset();
+  document.getElementById('wbs-form-title').textContent = '공정 작업 등록';
+  document.getElementById('wbs-submit').textContent = '작업 등록';
+  document.getElementById('wbs-cancel').hidden = true;
+}
+
+async function deleteWbsTask(taskId) {
+  if (!window.confirm('이 공정 작업을 삭제할까요?')) return;
+  const response = await fetch('/api/intranet-data?resource=wbs', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: taskId }) });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '공정 작업 삭제에 실패했습니다.');
+  MOCK_DB.wbsTasks = MOCK_DB.wbsTasks.filter(item => item.id !== taskId);
+  renderWbs();
+}
+
 let diaryWeekStart = null;
 let editingDiaryId = null;
 

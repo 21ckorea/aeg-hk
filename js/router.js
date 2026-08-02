@@ -53,6 +53,7 @@ function switchSubView(subViewId) {
     attendance: '사내 근태 관리',
     admin: '사용자 승인',
     projects: '프로젝트 관리',
+    wbs: '프로젝트 공정표 (WBS)',
     diary: '주간 업무일지'
   };
   titleDisplay.textContent = titles[subViewId] || '사내 시스템';
@@ -75,6 +76,8 @@ function switchSubView(subViewId) {
     renderAdminPanel();
   } else if (subViewId === 'projects') {
     renderProjectManagement();
+  } else if (subViewId === 'wbs') {
+    renderWbs();
   }
 
   lucide.createIcons();

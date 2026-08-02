@@ -42,6 +42,7 @@ function applyAuthenticatedUser(user, { navigateToIntranet = true } = {}) {
   isAuthenticated = true;
   MOCK_DB.currentUser.id = user.id || user.email;
   MOCK_DB.currentUser.name = user.name;
+  MOCK_DB.currentUser.accessRole = user.role || 'staff';
   const position = [user.jobRank, user.jobTitle].filter(Boolean).join(' / ');
   MOCK_DB.currentUser.role = user.role === 'admin' ? (position || '관리자') : (position || '직원');
   MOCK_DB.currentUser.avatar = user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
