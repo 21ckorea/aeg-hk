@@ -46,6 +46,15 @@ function toggleMobileMenu() {
   nav.classList.toggle('active');
 }
 
+function toggleIntranetMenu(force) {
+  const sidebar = document.querySelector('.intra-sidebar');
+  const backdrop = document.getElementById('intra-menu-backdrop');
+  if (!sidebar || !backdrop) return;
+  const open = typeof force === 'boolean' ? force : !sidebar.classList.contains('active');
+  sidebar.classList.toggle('active', open);
+  backdrop.classList.toggle('active', open);
+}
+
 function filterFeatured(category) {
   const filterBtns = document.querySelectorAll('.filter-buttons .filter-btn');
   filterBtns.forEach(btn => btn.classList.remove('active'));

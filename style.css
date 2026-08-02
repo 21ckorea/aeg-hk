@@ -1055,6 +1055,7 @@ ul {
 /* ==================== VIEW 2: INTERNAL INTRANET STYLING ==================== */
 .intra-wrapper {
   display: flex;
+  position: relative;
   height: calc(100vh - var(--dev-bar-height));
   background-color: #f1f5f9;
 }
@@ -1412,6 +1413,9 @@ ul {
   align-items: center;
   flex-shrink: 0;
 }
+
+.header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.intra-mobile-menu-btn, .intra-menu-backdrop { display: none; }
 
 .header-right {
   display: flex;
@@ -2786,12 +2790,13 @@ ul {
 }
 
 @media(max-width: 768px) {
-  .dev-control-bar { padding: 0 10px; }
-  .dev-logo { gap: 6px; font-size: 13px; max-width: 112px; }
+  .dev-control-bar { height: 52px; padding: 0 10px; gap: 6px; }
+  .dev-logo { gap: 5px; font-size: 12px; max-width: 100px; min-width: 0; overflow: hidden; }
   .brand-full { display: none; }
   .brand-short { display: inline; }
-  .dev-actions { display: flex; align-items: stretch; height: 100%; }
-  .dev-actions .dev-btn { padding: 0 9px; border-radius: 0; font-size: 11px; line-height: 1.15; max-width: 68px; white-space: normal; }
+  .dev-actions { display: flex; align-items: stretch; justify-content: flex-end; height: 100%; min-width: 0; }
+  .dev-actions .dev-btn { padding: 0 8px; border-radius: 0; font-size: 10px; line-height: 1.1; max-width: 70px; white-space: normal; overflow-wrap: anywhere; }
+  .dev-actions .dev-btn i { display: none; }
   #btn-toggle-public, #btn-view-blueprint, .dev-divider { display: none; }
   #btn-toggle-intranet { max-width: 78px; }
   .pub-nav {
@@ -2814,12 +2819,23 @@ ul {
     position: absolute;
     left: -260px;
     height: 100%;
-    z-index: 100;
+    z-index: 101;
     transition: left var(--transition-normal);
   }
   .intra-sidebar.active {
     left: 0;
   }
+  .intra-menu-backdrop { position: absolute; inset: 0; z-index: 100; border: 0; background: rgba(15, 23, 42, 0.45); }
+  .intra-menu-backdrop.active { display: block; }
+  .intra-mobile-menu-btn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-light); border-radius: 6px; color: var(--primary); background: var(--bg-white); flex: 0 0 auto; }
+  .intra-mobile-menu-btn i { width: 20px; height: 20px; }
+  .intra-header { height: 62px; padding: 0 16px; }
+  .intra-header h2 { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header-right { gap: 10px; }
+  .clock-display { padding: 6px 10px; font-size: 11px; gap: 5px; }
+  .clock-display #live-time, .clock-display .divider, .clock-display .lucide-clock-alarm { display: none; }
+  .notification-bell { display: none; }
+  .intra-content { padding: 16px; }
   .stats-row {
     grid-template-columns: 1fr;
   }

@@ -29,6 +29,7 @@ function switchMainView(viewType) {
 }
 
 function switchSubView(subViewId) {
+  toggleIntranetMenu(false);
   const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
   menuItems.forEach(item => item.classList.remove('active'));
 
