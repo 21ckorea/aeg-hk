@@ -357,10 +357,24 @@ async function saveTimesheet() {
   const requests = [];
   const month = getTimesheetMonth();
   Object.entries(current).forEach(([projectId, hours]) => hours.forEach((value, day) => {
-    if (Number(value) > 0) requests.push(fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate: `${month}-${String(day + 1).padStart(2, '0')}`, hours: Number(value) }) }));
+    if (Number(value) > 0) {
+      const workDate = `${month}-${String(day + 1).padStart(2, '0')}`;
+      const projectName = projectId === 'vacation' ? '개인휴가' : (MOCK_DB.projects.find(project => project.id === projectId)?.name || '알 수 없는 프로젝트');
+      requests.push({ projectName, workDate, request: fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate, hours: Number(value) }) }) });
+    }
   }));
-  const results = await Promise.all(requests);
-  if (results.some(response => !response.ok)) return alert('일부 타임시트 저장에 실패했습니다.');
+  const results = await Promise.allSettled(requests.map(item => item.request));
+  const failures = [];
+  for (let index = 0; index < results.length; index += 1) {
+    const result = results[index];
+    if (result.status === 'rejected') {
+      failures.push(`${requests[index].projectName} · ${requests[index].workDate}: 네트워크 연결을 확인한 뒤 다시 저장해 주세요.`);
+    } else if (!result.value.ok) {
+      const data = await result.value.json().catch(() => ({}));
+      failures.push(`${requests[index].projectName} · ${requests[index].workDate}: ${data.error || '저장할 수 없습니다.'}`);
+    }
+  }
+  if (failures.length) return alert(`다음 항목을 저장하지 못했습니다.\n\n${failures.join('\n\n')}`);
   saveAppState();
   alert('타임시트가 저장되었습니다.');
 }

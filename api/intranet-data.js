@@ -130,8 +130,17 @@ module.exports = async (request, response) => {
     } else if (resource === 'timesheets') {
       requireFields(input, ['workDate', 'hours']);
       if (input.entryType !== 'vacation') {
-        const assignment = await sql.query('SELECT p.id FROM public.project_assignments pa JOIN public.projects p ON p.id=pa.project_id WHERE pa.user_id=$1 AND p.id=$2 AND p.is_active=true AND pa.started_on <= $3 AND (pa.ended_on IS NULL OR pa.ended_on >= $3) AND (p.started_on IS NULL OR p.started_on <= $3) AND (p.ended_on IS NULL OR p.ended_on >= $3)', [user.id, input.projectId, input.workDate]);
-        if (!assignment[0]) return response.status(400).json({ error: '프로젝트 기간 밖이거나 내 투입 프로젝트에 추가되지 않은 항목입니다.' });
+        const rows = await sql.query('SELECT p.name, p.is_active, p.started_on, p.ended_on, pa.started_on AS assignment_started_on, pa.ended_on AS assignment_ended_on FROM public.projects p LEFT JOIN public.project_assignments pa ON pa.project_id=p.id AND pa.user_id=$1 WHERE p.id=$2', [user.id, input.projectId]);
+        const project = rows[0];
+        if (!project) return response.status(400).json({ error: `${input.workDate}: 선택한 프로젝트를 찾을 수 없습니다. 목록을 새로고침한 뒤 다시 선택해 주세요.` });
+        const projectStart = project.started_on ? String(project.started_on).slice(0, 10) : '';
+        const projectEnd = project.ended_on ? String(project.ended_on).slice(0, 10) : '';
+        const assignmentStart = project.assignment_started_on ? String(project.assignment_started_on).slice(0, 10) : '';
+        const assignmentEnd = project.assignment_ended_on ? String(project.assignment_ended_on).slice(0, 10) : '';
+        if (!project.is_active) return response.status(400).json({ error: `${project.name}: 종료 또는 비활성 프로젝트라 시간을 저장할 수 없습니다.` });
+        if ((projectStart && input.workDate < projectStart) || (projectEnd && input.workDate > projectEnd)) return response.status(400).json({ error: `${project.name}: ${input.workDate}은 프로젝트 기간(${projectStart || '시작일 미정'} ~ ${projectEnd || '종료일 미정'}) 밖입니다. 기간 안의 날짜에만 입력해 주세요.` });
+        if (!assignmentStart) return response.status(400).json({ error: `${project.name}: 내 투입 프로젝트에 아직 추가되지 않았습니다. ‘프로젝트 추가’에서 먼저 추가해 주세요.` });
+        if (input.workDate < assignmentStart || (assignmentEnd && input.workDate > assignmentEnd)) return response.status(400).json({ error: `${project.name}: ${input.workDate}은 내 프로젝트 배정 기간(${assignmentStart} ~ ${assignmentEnd || '진행 중'}) 밖입니다.` });
       }
       rows = await sql.query('INSERT INTO public.timesheet_entries (user_id, project_id, work_date, hours, entry_type, memo) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (user_id, project_id, work_date, entry_type) DO UPDATE SET hours = EXCLUDED.hours, memo = EXCLUDED.memo, updated_at = now() RETURNING *', [user.id, input.projectId || null, input.workDate, input.hours, input.entryType || 'project', input.memo || null]);
     } else if (resource === 'attendance') {
