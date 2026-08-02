@@ -192,9 +192,9 @@ function getDayTotal(empId, dayIdx) {
   const ts = MOCK_DB.timesheets[empId];
   let total = 0;
   const isCurrentUser = empId === MOCK_DB.currentUser.id;
-  const activeProjectIds = new Set(MOCK_DB.assignedProjects
-    .filter(item => isAssignmentActiveForMonth(item, getTimesheetMonth()))
-    .map(item => item.projectId));
+  const activeProjectIds = new Set(MOCK_DB.projects
+    .filter(project => project.active && MOCK_DB.assignedProjects.some(item => item.projectId === project.id && isAssignmentActiveForMonth(item, getTimesheetMonth())))
+    .map(project => project.id));
 
   MOCK_DB.projects.forEach(p => {
     if (ts[p.id] && (!isCurrentUser || activeProjectIds.has(p.id))) total += ts[p.id][dayIdx] || 0;
@@ -361,9 +361,9 @@ async function saveTimesheet() {
   const requests = [];
   const month = getTimesheetMonth();
   const activeProjectIds = new Set(
-    MOCK_DB.assignedProjects
-      .filter(item => isAssignmentActiveForMonth(item, month))
-      .map(item => item.projectId)
+    MOCK_DB.projects
+      .filter(project => project.active && MOCK_DB.assignedProjects.some(item => item.projectId === project.id && isAssignmentActiveForMonth(item, month)))
+      .map(project => project.id)
   );
   Object.entries(current).forEach(([projectId, hours]) => hours.forEach((value, day) => {
     if (Number(value) > 0 && (projectId === 'vacation' || activeProjectIds.has(projectId))) {
