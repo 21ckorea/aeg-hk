@@ -1,4 +1,5 @@
 const { neon } = require('@neondatabase/serverless');
+const { del } = require('@vercel/blob');
 const { requireSession } = require('./_session');
 
 const RESOURCES = {
@@ -45,6 +46,28 @@ module.exports = async (request, response) => {
       if (!rows[0]) return response.status(409).json({ error: '이미 처리되었거나 찾을 수 없는 결재입니다.' });
       await sql.query('INSERT INTO public.approval_actions (document_id, actor_id, action) VALUES ($1, $2, $3)', [input.id, user.id, input.status]);
       return response.status(200).json({ resource, record: rows[0] });
+    }
+    if (request.method === 'PATCH' && resource === 'diaries') {
+      const input = body(request);
+      requireFields(input, ['id', 'workDate', 'hours', 'content']);
+      const rows = await sql.query(
+        'UPDATE public.diary_entries SET project_id = $2, work_date = $3, hours = $4, content = $5, updated_at = now() WHERE id = $1 AND (user_id = $6 OR $7 = true) RETURNING *',
+        [input.id, input.projectId || null, input.workDate, input.hours, input.content, user.id, user.role === 'admin']
+      );
+      if (!rows[0]) return response.status(403).json({ error: '업무일지 수정 권한이 없거나 항목을 찾을 수 없습니다.' });
+      return response.status(200).json({ resource, record: rows[0] });
+    }
+    if (request.method === 'DELETE' && resource === 'diaries') {
+      const input = body(request);
+      if (!input.id) return response.status(400).json({ error: '삭제할 업무일지가 필요합니다.' });
+      const attachments = await sql.query(
+        'SELECT a.storage_path FROM public.diary_attachments a JOIN public.diary_entries d ON d.id = a.diary_id WHERE d.id = $1 AND (d.user_id = $2 OR $3 = true)',
+        [input.id, user.id, user.role === 'admin']
+      );
+      const rows = await sql.query('DELETE FROM public.diary_entries WHERE id = $1 AND (user_id = $2 OR $3 = true) RETURNING id', [input.id, user.id, user.role === 'admin']);
+      if (!rows[0]) return response.status(403).json({ error: '업무일지 삭제 권한이 없거나 항목을 찾을 수 없습니다.' });
+      await Promise.all(attachments.filter(item => item.storage_path.startsWith('diary/')).map(item => del(item.storage_path).catch(() => null)));
+      return response.status(200).json({ resource, deletedId: rows[0].id });
     }
     if (request.method !== 'POST') return response.status(405).json({ error: 'Method not allowed.' });
 

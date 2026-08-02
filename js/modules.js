@@ -892,6 +892,7 @@ async function renderAdminPanel() {
 }
 
 let diaryWeekStart = null;
+let editingDiaryId = null;
 
 function getMonday(date) {
   const result = new Date(date);
@@ -902,10 +903,7 @@ function getMonday(date) {
 }
 
 function getCurrentWorkweekStart() {
-  const today = new Date();
-  if (today.getDay() === 0) today.setDate(today.getDate() + 1);
-  if (today.getDay() === 6) today.setDate(today.getDate() + 2);
-  return getMonday(today);
+  return getMonday(new Date());
 }
 
 function formatLocalDate(date) {
@@ -928,7 +926,7 @@ function renderDiaryWeekView() {
   container.innerHTML = '';
 
   if (!diaryWeekStart) diaryWeekStart = getCurrentWorkweekStart();
-  const labels = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+  const labels = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
   const weekdays = labels.map((label, index) => {
     const date = new Date(diaryWeekStart);
     date.setDate(date.getDate() + index);
@@ -936,8 +934,8 @@ function renderDiaryWeekView() {
   });
   const label = document.getElementById('diary-week-label');
   if (label) {
-    const friday = new Date(diaryWeekStart); friday.setDate(friday.getDate() + 4);
-    label.textContent = `${diaryWeekStart.getFullYear()}년 ${diaryWeekStart.getMonth() + 1}월 ${Math.ceil((diaryWeekStart.getDate() + new Date(diaryWeekStart.getFullYear(), diaryWeekStart.getMonth(), 1).getDay()) / 7)}주차 (${formatLocalDate(diaryWeekStart).slice(5)} ~ ${formatLocalDate(friday).slice(5)})`;
+    const sunday = new Date(diaryWeekStart); sunday.setDate(sunday.getDate() + 6);
+    label.textContent = `${diaryWeekStart.getFullYear()}년 ${diaryWeekStart.getMonth() + 1}월 ${Math.ceil((diaryWeekStart.getDate() + new Date(diaryWeekStart.getFullYear(), diaryWeekStart.getMonth(), 1).getDay()) / 7)}주차 (${formatLocalDate(diaryWeekStart).slice(5)} ~ ${formatLocalDate(sunday).slice(5)})`;
   }
 
   weekdays.forEach(day => {
@@ -948,12 +946,14 @@ function renderDiaryWeekView() {
     let diariesHtml = '';
     dayDiaries.forEach(item => {
       const proj = MOCK_DB.projects.find(p => p.id === item.projectId);
+      const canManage = item.userId === MOCK_DB.currentUser.id || MOCK_DB.currentUser.role.startsWith('관리자');
       diariesHtml += `
         <div class="diary-item-node">
           <span class="project">${proj ? proj.name : '기타과업'}</span>
           <span class="time">${item.hours}H</span>
           <p>${item.content}</p>
           <button class="btn-sm-action" type="button" onclick="openDiaryAttachments('${item.id}')">첨부파일</button>
+          ${canManage ? `<button class="btn-sm-action" type="button" onclick="editDiary('${item.id}')">수정</button><button class="btn-sm-action reject" type="button" onclick="deleteDiary('${item.id}')">삭제</button>` : ''}
         </div>
       `;
     });
@@ -989,6 +989,8 @@ async function openDiaryAttachments(diaryId) {
 
 
 function openDiaryModal() {
+  editingDiaryId = null;
+  document.getElementById('diary-form').reset();
   document.getElementById('modal-create-diary').classList.add('active');
 
   const select = document.getElementById('dy-project');
@@ -1001,6 +1003,32 @@ function openDiaryModal() {
   });
 
   document.getElementById('dy-date').value = formatLocalDate(diaryWeekStart || getCurrentWorkweekStart());
+  document.querySelector('#modal-create-diary h3').textContent = '업무일지 기록 작성';
+  document.querySelector('#diary-form button[type="submit"]').textContent = '일지 저장';
+}
+
+function editDiary(diaryId) {
+  const item = MOCK_DB.diaries.find(diary => diary.id === diaryId);
+  if (!item) return alert('업무일지를 찾을 수 없습니다.');
+  editingDiaryId = diaryId;
+  openDiaryModal();
+  editingDiaryId = diaryId;
+  document.getElementById('dy-date').value = item.date;
+  document.getElementById('dy-project').value = item.projectId || '';
+  document.getElementById('dy-hours').value = item.hours;
+  document.getElementById('dy-content').value = item.content;
+  document.querySelector('#modal-create-diary h3').textContent = '업무일지 수정';
+  document.querySelector('#diary-form button[type="submit"]').textContent = '수정 저장';
+}
+
+async function deleteDiary(diaryId) {
+  if (!window.confirm('이 업무일지와 첨부파일을 삭제할까요? 삭제한 내용은 복구할 수 없습니다.')) return;
+  const response = await fetch('/api/intranet-data?resource=diaries', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: diaryId }) });
+  const result = await response.json();
+  if (!response.ok) return alert(result.error || '업무일지 삭제에 실패했습니다.');
+  MOCK_DB.diaries = MOCK_DB.diaries.filter(item => item.id !== diaryId);
+  renderDiaryWeekView();
+  alert('업무일지를 삭제했습니다.');
 }
 
 async function submitDiaryForm(e) {
@@ -1023,7 +1051,8 @@ async function submitDiaryForm(e) {
   }
 
   try {
-    const response = await fetch('/api/intranet-data?resource=diaries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workDate: date, projectId, hours, content }) });
+    const isEditing = Boolean(editingDiaryId);
+    const response = await fetch('/api/intranet-data?resource=diaries', { method: isEditing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingDiaryId, workDate: date, projectId, hours, content }) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || '업무일지 등록에 실패했습니다.');
     for (let index = 0; index < attachments.length; index += 1) {
@@ -1035,17 +1064,19 @@ async function submitDiaryForm(e) {
     }
     const newDiary = {
       id: result.record.id,
+      userId: result.record.user_id || MOCK_DB.currentUser.id,
       date,
       projectId,
       hours,
       content
     };
 
-    MOCK_DB.diaries.push(newDiary);
+    if (isEditing) MOCK_DB.diaries = MOCK_DB.diaries.map(item => item.id === newDiary.id ? { ...item, ...newDiary } : item);
+    else MOCK_DB.diaries.push(newDiary);
     saveAppState();
     closeModal('modal-create-diary');
     document.getElementById('diary-form').reset();
-    alert(attachments.length ? '업무일지와 첨부파일이 저장되었습니다.' : '업무일지가 성공적으로 등록되었습니다.');
+    alert(attachments.length ? '업무일지와 첨부파일이 저장되었습니다.' : (isEditing ? '업무일지를 수정했습니다.' : '업무일지가 성공적으로 등록되었습니다.'));
 
     if (activeSubView === 'diary') renderDiaryWeekView();
   } catch (error) {
