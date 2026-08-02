@@ -54,6 +54,12 @@ module.exports = async (request, response) => {
         );
         return response.status(200).json({ resource, records: rows });
       }
+      // 투입시간과 근태는 관리자 화면에서도 현재 로그인한 사용자의 개인 입력값만 사용한다.
+      // 모든 직원 기록은 인력 투입 분석 전용 조회에서 별도로 다뤄야 하며, 개인 타임시트에 섞이면 안 된다.
+      if (resource === 'timesheets' || resource === 'attendance') {
+        const rows = await sql.query(`SELECT * FROM public.${config.table} WHERE user_id = $1 ORDER BY created_at DESC`, [user.id]);
+        return response.status(200).json({ resource, records: rows });
+      }
       const where = config.owner && !isPrivileged ? ` WHERE ${config.owner} = $1` : '';
       const rows = await sql.query(`SELECT * FROM public.${config.table}${where} ORDER BY created_at DESC`, config.owner && !isPrivileged ? [user.id] : []);
       return response.status(200).json({ resource, records: rows });
