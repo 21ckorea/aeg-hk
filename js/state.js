@@ -13,6 +13,7 @@ function createDefaultAppState() {
   return {
     currentUser: { ...defaultUser },
     projects: [],
+    assignedProjects: [],
     employees: [
       { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
     ],
@@ -37,6 +38,7 @@ function normalizeAppState(state) {
     ...state,
     currentUser: { ...base.currentUser, ...(state?.currentUser || {}) },
     projects: Array.isArray(state?.projects) ? state.projects : [],
+    assignedProjects: Array.isArray(state?.assignedProjects) ? state.assignedProjects : [],
     employees: Array.isArray(state?.employees) && state.employees.length > 0 ? state.employees : [
       { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
     ],
@@ -61,6 +63,7 @@ function saveAppState() {
 
 function ensureStateShape() {
   if (!MOCK_DB.projects) MOCK_DB.projects = [];
+  if (!MOCK_DB.assignedProjects) MOCK_DB.assignedProjects = [];
   if (!MOCK_DB.approvals) MOCK_DB.approvals = [];
   if (!MOCK_DB.notices) MOCK_DB.notices = [];
   if (!MOCK_DB.projectsSummary) MOCK_DB.projectsSummary = [];

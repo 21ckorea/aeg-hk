@@ -48,12 +48,13 @@ async function loadWorkflowResource(resource) {
 
 async function hydrateWorkflowsFromNeon() {
   try {
-    const [projects, approvals, notices, diaries, attendance, timesheets, directory] = await Promise.all([
-      ...['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets'].map(loadWorkflowResource),
+    const [projects, approvals, notices, diaries, attendance, timesheets, assignments, directory] = await Promise.all([
+      ...['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets', 'projectAssignments'].map(loadWorkflowResource),
       fetch('/api/directory', { cache: 'no-store' }).then(response => response.ok ? response.json() : { users: [] })
     ]
     );
-    MOCK_DB.projects = projects.map(item => ({ id: item.id, name: item.name, role: item.work_role || '', active: item.is_active }));
+    MOCK_DB.projects = projects.map(item => ({ id: item.id, name: item.name, role: item.work_role || '', active: item.is_active, startedOn: item.started_on ? String(item.started_on).slice(0, 10) : '', endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '', plannedMm: Number(item.planned_mm || 0), cost: Number(item.contract_amount || 0), clientName: item.client_name || '', code: item.project_code || '' }));
+    MOCK_DB.assignedProjects = assignments.map(item => ({ projectId: item.project_id, plannedMm: Number(item.planned_mm || 0) }));
     MOCK_DB.projectsSummary = MOCK_DB.projects.map(project => ({
       name: project.name,
       pm: MOCK_DB.currentUser.name,

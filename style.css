@@ -1937,6 +1937,8 @@ body.intranet-mode .top-public-nav { display: none; }
   box-shadow: var(--shadow-sm);
 }
 .timesheet-mobile-editor { display: none; }
+.project-management-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.project-management-form input { min-width: 0; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px; font: inherit; }
 
 .timesheet-scroll-pane {
   overflow-x: auto;
@@ -2795,6 +2797,7 @@ body.intranet-mode .top-public-nav { display: none; }
 }
 
 @media(max-width: 768px) {
+  .project-management-form { grid-template-columns: 1fr; }
   .dev-control-bar { height: 52px; padding: 0 10px; gap: 6px; }
   .dev-logo { gap: 5px; font-size: 12px; max-width: 100px; min-width: 0; overflow: hidden; }
   .brand-full { display: none; }

@@ -38,12 +38,13 @@ function initTimesheets() {
   const daysInMonth = getTimesheetDays();
   ensureStateShape();
 
+  const assignedIds = new Set(MOCK_DB.assignedProjects.map(item => item.projectId));
   MOCK_DB.employees.forEach(emp => {
     if (!MOCK_DB.timesheets[emp.id]) {
       MOCK_DB.timesheets[emp.id] = {};
     }
 
-    MOCK_DB.projects.forEach(p => {
+    MOCK_DB.projects.filter(p => emp.id !== MOCK_DB.currentUser.id || assignedIds.has(p.id)).forEach(p => {
       if (!MOCK_DB.timesheets[emp.id][p.id]) {
         MOCK_DB.timesheets[emp.id][p.id] = new Array(daysInMonth).fill(0);
       }
@@ -84,7 +85,7 @@ function renderTimesheet() {
   headHtml += `</tr></thead>`;
 
   let bodyHtml = '<tbody>';
-  let activeProjects = MOCK_DB.projects.filter(p => p.active);
+  let activeProjects = MOCK_DB.projects.filter(p => p.active && MOCK_DB.assignedProjects.some(item => item.projectId === p.id));
 
   if (activeProjects.length === 0) {
     bodyHtml += `<tr><td colspan="${daysInMonth + 3}" style="text-align:center; padding:28px; color:var(--text-muted);">프로젝트가 아직 없습니다. 아래에서 새 프로젝트를 등록해 주세요.</td></tr>`;
@@ -284,12 +285,12 @@ function addProjectRowPopup() {
   const listContainer = document.getElementById('modal-project-choices');
   listContainer.innerHTML = '';
 
-  const inactiveProjects = MOCK_DB.projects.filter(p => !p.active);
-  if (inactiveProjects.length === 0) {
-    closeModal('modal-add-project');
-    createProjectFromPrompt();
-    return;
-  }
+  const month = getTimesheetMonth();
+  const monthStart = `${month}-01`;
+  const monthEnd = `${month}-31`;
+  const assigned = new Set(MOCK_DB.assignedProjects.map(item => item.projectId));
+  const inactiveProjects = MOCK_DB.projects.filter(p => p.active && !assigned.has(p.id) && (!p.startedOn || p.startedOn <= monthEnd) && (!p.endedOn || p.endedOn >= monthStart));
+  if (inactiveProjects.length === 0) return listContainer.innerHTML = '<p class="desc">현재 선택한 월에 추가할 수 있는 사전 등록 프로젝트가 없습니다.</p>';
 
   inactiveProjects.forEach(p => {
     const item = document.createElement('div');
@@ -298,7 +299,7 @@ function addProjectRowPopup() {
     item.innerHTML = `
       <div>
         <h5>${p.name}</h5>
-        <span class="role">배정역할: AA기획설계</span>
+        <span class="role">기간: ${p.startedOn || '-'} ~ ${p.endedOn || '-'} · 계획 ${p.plannedMm || 0} M/M</span>
       </div>
       <button class="btn-sm-action approve"><i data-lucide="plus"></i> 추가</button>
     `;
@@ -308,40 +309,15 @@ function addProjectRowPopup() {
   lucide.createIcons();
 }
 
-async function createProjectFromPrompt() {
-  const name = window.prompt('새 프로젝트명을 입력해 주세요.', '신규 프로젝트');
-  if (!name) return;
-
-  const role = window.prompt('담당 역할을 입력해 주세요.', '설계지원');
-  const response = await fetch('/api/intranet-data?resource=projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim(), workRole: role?.trim() || '설계지원' }) });
-  const result = await response.json();
-  if (!response.ok) return alert(result.error || '프로젝트 등록에 실패했습니다.');
-  const newProject = {
-    id: result.record.id,
-    name: name.trim(),
-    role: role?.trim() || '설계지원',
-    active: true
-  };
-
-  MOCK_DB.projects.push(newProject);
-  MOCK_DB.projectsSummary.push({
-    name: newProject.name,
-    pm: MOCK_DB.currentUser.name,
-    status: '진행 중',
-    mm: '0.0 M/M',
-    state: 'active'
-  });
-  initTimesheets();
-  saveAppState();
-  renderTimesheet();
-  renderDashboardProjects();
-  closeModal('modal-add-project');
-}
-
-function activateProjectRow(projId) {
+async function activateProjectRow(projId) {
   const proj = MOCK_DB.projects.find(p => p.id === projId);
   if (proj) {
-    proj.active = true;
+    const plannedMm = window.prompt('이 프로젝트에 배정할 계획 M/M을 입력하세요.', proj.plannedMm || '0');
+    if (plannedMm === null) return;
+    const response = await fetch('/api/intranet-data?resource=projectAssignments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projId, yearMonth: getTimesheetMonth(), plannedMm }) });
+    const result = await response.json();
+    if (!response.ok) return alert(result.error || '프로젝트 추가에 실패했습니다.');
+    MOCK_DB.assignedProjects.push({ projectId: projId, plannedMm: Number(plannedMm) || 0 });
     closeModal('modal-add-project');
     initTimesheets();
     saveAppState();
@@ -970,6 +946,27 @@ async function renderAdminPanel() {
     `;
     listEl.appendChild(row);
   });
+}
+
+function renderProjectManagement() {
+  const list = document.getElementById('managed-project-list');
+  if (!list) return;
+  list.innerHTML = MOCK_DB.projects.length ? '' : '<tr><td colspan="6" style="text-align:center;padding:20px;">등록된 프로젝트가 없습니다.</td></tr>';
+  MOCK_DB.projects.forEach(project => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${escapeAdminHtml(project.code || '-')}</td><td><strong>${escapeAdminHtml(project.name)}</strong><br><small>${escapeAdminHtml(project.clientName || '')}</small></td><td>${project.startedOn || '-'} ~ ${project.endedOn || '-'}</td><td>${project.plannedMm || 0} M/M</td><td>${project.cost ? `${Number(project.cost).toLocaleString()}원` : '-'}</td><td>${project.active ? '운영 중' : '종료'}</td>`;
+    list.appendChild(row);
+  });
+}
+
+async function submitManagedProject(event) {
+  event.preventDefault();
+  const input = id => document.getElementById(id).value.trim();
+  const response = await fetch('/api/intranet-data?resource=projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectCode: input('pm-code'), name: input('pm-name'), clientName: input('pm-client'), workRole: input('pm-role'), startedOn: input('pm-start'), endedOn: input('pm-end'), contractAmount: input('pm-cost'), plannedMm: input('pm-mm') }) });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '프로젝트 등록에 실패했습니다.');
+  MOCK_DB.projects.unshift({ id: data.record.id, code: data.record.project_code || '', name: data.record.name, clientName: data.record.client_name || '', role: data.record.work_role || '', active: data.record.is_active, startedOn: String(data.record.started_on).slice(0, 10), endedOn: String(data.record.ended_on).slice(0, 10), plannedMm: Number(data.record.planned_mm || 0), cost: Number(data.record.contract_amount || 0) });
+  event.target.reset(); renderProjectManagement(); alert('프로젝트를 등록했습니다.');
 }
 
 let diaryWeekStart = null;

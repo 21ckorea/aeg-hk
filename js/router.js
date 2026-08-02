@@ -52,6 +52,7 @@ function switchSubView(subViewId) {
     approval: '전자결재 문서함',
     attendance: '사내 근태 관리',
     admin: '사용자 승인',
+    projects: '프로젝트 관리',
     diary: '주간 업무일지'
   };
   titleDisplay.textContent = titles[subViewId] || '사내 시스템';
@@ -72,6 +73,8 @@ function switchSubView(subViewId) {
     renderAttendancePageClock();
   } else if (subViewId === 'admin') {
     renderAdminPanel();
+  } else if (subViewId === 'projects') {
+    renderProjectManagement();
   }
 
   lucide.createIcons();

@@ -43,8 +43,10 @@ function applyAuthenticatedUser(user, { navigateToIntranet = true } = {}) {
   MOCK_DB.currentUser.id = user.id || user.email;
   MOCK_DB.currentUser.name = user.name;
   const position = [user.jobRank, user.jobTitle].filter(Boolean).join(' / ');
-  MOCK_DB.currentUser.role = user.role === 'admin' ? `관리자${position ? ` / ${position}` : ''}` : (position || '직원');
+  MOCK_DB.currentUser.role = user.role === 'admin' ? (position || '관리자') : (position || '직원');
   MOCK_DB.currentUser.avatar = user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
+  const avatarImage = document.getElementById('current-user-avatar');
+  if (avatarImage) avatarImage.src = MOCK_DB.currentUser.avatar;
 
   if (!MOCK_DB.employees.some(emp => emp.id === MOCK_DB.currentUser.id)) {
     MOCK_DB.employees.unshift({
@@ -91,6 +93,8 @@ function updateRoleAwareUI(role) {
   if (adminMenu) {
     adminMenu.style.display = role === 'admin' ? 'flex' : 'none';
   }
+  const projectMenu = document.getElementById('menu-projects');
+  if (projectMenu) projectMenu.style.display = role === 'admin' ? 'flex' : 'none';
 
   const blueprintButton = document.getElementById('btn-view-blueprint');
   if (blueprintButton) blueprintButton.hidden = role !== 'admin';

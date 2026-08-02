@@ -8,7 +8,8 @@ const RESOURCES = {
   attendance: { table: 'attendance_records', owner: 'user_id' },
   approvals: { table: 'approval_documents', owner: 'requester_id' },
   notices: { table: 'notices', owner: null },
-  diaries: { table: 'diary_entries', owner: 'user_id' }
+  diaries: { table: 'diary_entries', owner: 'user_id' },
+  projectAssignments: { table: 'project_assignments', owner: 'user_id' }
 };
 
 function body(request) {
@@ -34,6 +35,10 @@ module.exports = async (request, response) => {
     const sql = neon(process.env.DATABASE_URL);
     const isPrivileged = user.role === 'admin' || user.role === 'manager';
     if (request.method === 'GET') {
+      if (resource === 'projectAssignments') {
+        const rows = await sql.query('SELECT project_id, planned_mm FROM public.project_assignments WHERE user_id = $1', [user.id]);
+        return response.status(200).json({ resource, records: rows });
+      }
       if (resource === 'diaries') {
         const where = isPrivileged ? '' : ' WHERE d.user_id = $1';
         const rows = await sql.query(
@@ -54,6 +59,24 @@ module.exports = async (request, response) => {
       if (!rows[0]) return response.status(409).json({ error: '이미 처리되었거나 찾을 수 없는 결재입니다.' });
       await sql.query('INSERT INTO public.approval_actions (document_id, actor_id, action) VALUES ($1, $2, $3)', [input.id, user.id, input.status]);
       return response.status(200).json({ resource, record: rows[0] });
+    }
+    if (request.method === 'PATCH' && resource === 'projects') {
+      if (user.role !== 'admin') return response.status(403).json({ error: '관리자만 프로젝트를 수정할 수 있습니다.' });
+      const input = body(request);
+      requireFields(input, ['id', 'name', 'startedOn', 'endedOn']);
+      if (input.startedOn > input.endedOn) return response.status(400).json({ error: '종료일은 시작일 이후여야 합니다.' });
+      const rows = await sql.query('UPDATE public.projects SET project_code=$2, name=$3, client_name=$4, work_role=$5, started_on=$6, ended_on=$7, contract_amount=$8, planned_mm=$9, is_active=$10, updated_at=now() WHERE id=$1 RETURNING *', [input.id, input.projectCode || null, input.name, input.clientName || null, input.workRole || null, input.startedOn, input.endedOn, input.contractAmount || null, input.plannedMm || null, input.isActive !== false]);
+      return response.status(rows[0] ? 200 : 404).json(rows[0] ? { resource, record: rows[0] } : { error: '프로젝트를 찾을 수 없습니다.' });
+    }
+    if (request.method === 'POST' && resource === 'projectAssignments') {
+      const input = body(request);
+      if (!input.projectId || !input.yearMonth) return response.status(400).json({ error: '프로젝트와 기준 월이 필요합니다.' });
+      const monthStart = `${input.yearMonth}-01`;
+      const monthEnd = `${input.yearMonth}-31`;
+      const project = await sql.query('SELECT id FROM public.projects WHERE id=$1 AND is_active=true AND (started_on IS NULL OR started_on <= $2) AND (ended_on IS NULL OR ended_on >= $3)', [input.projectId, monthEnd, monthStart]);
+      if (!project[0]) return response.status(400).json({ error: '선택한 월에 투입할 수 없는 프로젝트입니다.' });
+      const rows = await sql.query('INSERT INTO public.project_assignments (user_id, project_id, planned_mm) VALUES ($1,$2,$3) ON CONFLICT (user_id, project_id) DO UPDATE SET planned_mm=EXCLUDED.planned_mm RETURNING *', [user.id, input.projectId, Number(input.plannedMm) || 0]);
+      return response.status(201).json({ resource, record: rows[0] });
     }
     if (request.method === 'PATCH' && resource === 'diaries') {
       const input = body(request);
@@ -82,11 +105,16 @@ module.exports = async (request, response) => {
     const input = body(request);
     let rows;
     if (resource === 'projects') {
-      if (!isPrivileged) return response.status(403).json({ error: 'PM 또는 관리자만 프로젝트를 등록할 수 있습니다.' });
-      requireFields(input, ['name']);
-      rows = await sql.query('INSERT INTO public.projects (id, name, work_role, manager_id, started_on, ended_on) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [id('project'), input.name, input.workRole || null, input.managerId || user.id, input.startedOn || null, input.endedOn || null]);
+      if (user.role !== 'admin') return response.status(403).json({ error: '관리자만 프로젝트를 등록할 수 있습니다.' });
+      requireFields(input, ['name', 'startedOn', 'endedOn']);
+      if (input.startedOn > input.endedOn) return response.status(400).json({ error: '종료일은 시작일 이후여야 합니다.' });
+      rows = await sql.query('INSERT INTO public.projects (id, project_code, name, client_name, work_role, manager_id, started_on, ended_on, contract_amount, planned_mm, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true) RETURNING *', [id('project'), input.projectCode || null, input.name, input.clientName || null, input.workRole || null, user.id, input.startedOn, input.endedOn, input.contractAmount || null, input.plannedMm || null]);
     } else if (resource === 'timesheets') {
       requireFields(input, ['workDate', 'hours']);
+      if (input.entryType !== 'vacation') {
+        const assignment = await sql.query('SELECT p.id FROM public.project_assignments pa JOIN public.projects p ON p.id=pa.project_id WHERE pa.user_id=$1 AND p.id=$2 AND p.is_active=true AND (p.started_on IS NULL OR p.started_on <= $3) AND (p.ended_on IS NULL OR p.ended_on >= $3)', [user.id, input.projectId, input.workDate]);
+        if (!assignment[0]) return response.status(400).json({ error: '프로젝트 기간 밖이거나 내 투입 프로젝트에 추가되지 않은 항목입니다.' });
+      }
       rows = await sql.query('INSERT INTO public.timesheet_entries (user_id, project_id, work_date, hours, entry_type, memo) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (user_id, project_id, work_date, entry_type) DO UPDATE SET hours = EXCLUDED.hours, memo = EXCLUDED.memo, updated_at = now() RETURNING *', [user.id, input.projectId || null, input.workDate, input.hours, input.entryType || 'project', input.memo || null]);
     } else if (resource === 'attendance') {
       requireFields(input, ['workDate']);
