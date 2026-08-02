@@ -299,7 +299,7 @@ function addProjectRowPopup() {
     item.innerHTML = `
       <div>
         <h5>${p.name}</h5>
-        <span class="role">기간: ${p.startedOn || '-'} ~ ${p.endedOn || '-'} · 계획 ${p.plannedMm || 0} M/M</span>
+        <span class="role">기간: ${p.startedOn || '-'} ~ ${p.endedOn || '-'}</span>
       </div>
       <button class="btn-sm-action approve"><i data-lucide="plus"></i> 추가</button>
     `;
