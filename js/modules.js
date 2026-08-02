@@ -596,6 +596,7 @@ function renderApprovalsTable() {
       <td data-label="기안일자">${ap.date}</td>
       <td data-label="결재상태"><span class="badge-status ${badgeClass}">${statusText}</span></td>
       <td data-label="작업">
+        <button class="btn-sm-action" onclick="openApprovalDetail('${ap.id}')">내용 보기</button>
         ${ap.status === 'waiting' ? `
           <button class="btn-sm-action approve" onclick="processApproval('${ap.id}', 'approved')">승인</button>
           <button class="btn-sm-action reject" onclick="processApproval('${ap.id}', 'rejected')">반려</button>
@@ -604,6 +605,30 @@ function renderApprovalsTable() {
     `;
     tbody.appendChild(row);
   });
+}
+
+function openApprovalDetail(approvalId) {
+  const approval = MOCK_DB.approvals.find(item => item.id === approvalId);
+  if (!approval) return alert('결재 문서를 찾을 수 없습니다.');
+  document.getElementById('approval-detail-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'approval-detail-modal';
+  modal.className = 'modal-backdrop active';
+  modal.innerHTML = `
+    <div class="modal-card approval-detail-modal-card">
+      <div class="modal-header"><h3>결재 문서 내용</h3><button type="button" class="close-btn" aria-label="닫기">×</button></div>
+      <div class="modal-body">
+        <dl class="approval-detail-meta"><dt>문서유형</dt><dd></dd><dt>제목</dt><dd></dd><dt>기안자</dt><dd></dd><dt>기안일자</dt><dd></dd></dl>
+        <h4>상세 내용</h4><div class="approval-detail-content"></div>
+      </div>
+    </div>`;
+  const values = modal.querySelectorAll('.approval-detail-meta dd');
+  [approval.type, approval.title, approval.drafter, approval.date].forEach((value, index) => { values[index].textContent = value || '-'; });
+  modal.querySelector('.approval-detail-content').textContent = approval.content || '작성된 상세 내용이 없습니다.';
+  const close = () => modal.remove();
+  modal.querySelector('.close-btn').onclick = close;
+  modal.onclick = event => { if (event.target === modal) close(); };
+  document.body.appendChild(modal);
 }
 
 async function processApproval(apId, action) {
