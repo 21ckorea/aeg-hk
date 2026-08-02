@@ -1932,6 +1932,7 @@ ul {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
 }
+.timesheet-mobile-editor { display: none; }
 
 .timesheet-scroll-pane {
   overflow-x: auto;
@@ -2836,6 +2837,45 @@ ul {
   .clock-display #live-time, .clock-display .divider, .clock-display .lucide-clock-alarm { display: none; }
   .notification-bell { display: none; }
   .intra-content { padding: 16px; }
+  .timesheet-header-area { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px; margin-bottom: 16px; }
+  .timesheet-filters, .timesheet-actions { width: 100%; gap: 8px; }
+  .timesheet-filters { flex-direction: column; align-items: stretch; }
+  .form-group.inline { justify-content: space-between; }
+  .form-group.inline select { min-width: 150px; min-height: 42px; font-size: 15px; }
+  .total-hours-summary { justify-content: space-between; gap: 6px; font-size: 12px; }
+  .total-hours-summary .divider { display: none; }
+  .timesheet-actions .btn-action { flex: 1; justify-content: center; min-height: 44px; padding: 8px; font-size: 12px; }
+  .timesheet-actions .btn-action i { display: none; }
+  .timesheet-container-wrapper { display: none; }
+  .timesheet-mobile-editor { display: block; background: var(--bg-white); border: 1px solid var(--border-light); border-radius: 10px; padding: 16px; box-shadow: var(--shadow-sm); }
+  .mobile-timesheet-head { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px 12px; margin-bottom: 14px; }
+  .mobile-timesheet-head label { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+  .mobile-timesheet-head input { width: 100%; min-height: 42px; padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; font: inherit; }
+  .mobile-timesheet-head strong { grid-column: 1 / -1; padding: 10px; border-radius: 6px; background: #eef2ff; color: var(--primary); text-align: center; font-size: 14px; }
+  .mobile-timesheet-list { display: flex; flex-direction: column; gap: 8px; }
+  .mobile-timesheet-row { display: grid; grid-template-columns: 1fr 68px auto; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--border-light); border-radius: 8px; }
+  .mobile-timesheet-row span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .mobile-timesheet-row strong { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-timesheet-row small { color: var(--text-muted); font-size: 11px; }
+  .mobile-timesheet-row input { min-height: 42px; width: 68px; text-align: center; border: 1px solid var(--primary); border-radius: 6px; font: inherit; font-weight: 700; }
+  .mobile-timesheet-row em { font-size: 12px; font-style: normal; color: var(--text-muted); }
+  .tab-buttons { width: 100%; }
+  .tab-btn { flex: 1; padding: 10px 6px; font-size: 12px; }
+  #sub-approval .timesheet-actions .btn-action { width: 100%; }
+  .data-table { width: 100%; }
+  #sub-approval .panel-body, .manpower-table-section { overflow: visible; }
+  #approval-list-table, #approval-list-table tbody, #approval-list-table tr, #approval-list-table td, #manpower-allocation-table, #manpower-allocation-table tbody, #manpower-allocation-table tr, #manpower-allocation-table td { display: block; width: 100%; }
+  #approval-list-table thead, #manpower-allocation-table thead { display: none; }
+  #approval-list-table tr, #manpower-allocation-table tr { margin-bottom: 12px; padding: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--bg-white); box-shadow: var(--shadow-sm); }
+  #approval-list-table td, #manpower-allocation-table td { min-height: 28px; padding: 6px 0; border: 0; text-align: right; overflow-wrap: anywhere; }
+  #approval-list-table td::before, #manpower-allocation-table td::before { content: attr(data-label); float: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: left; }
+  #approval-list-table td:first-child { font-size: 11px; color: var(--text-muted); }
+  .manpower-detail-card { padding: 16px; }
+  .detail-header { flex-direction: column; align-items: stretch; gap: 14px; }
+  .emp-profile-detail { gap: 12px; }
+  .emp-meta h3 { font-size: 18px; }
+  .detail-analytics-grid { grid-template-columns: 1fr; gap: 12px; }
+  .analytic-panel { padding: 16px; }
   .stats-row {
     grid-template-columns: 1fr;
   }

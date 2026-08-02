@@ -145,6 +145,46 @@ function renderTimesheet() {
   table.innerHTML = headHtml + bodyHtml;
 
   updateTimesheetSummaries();
+  renderMobileTimesheetEditor();
+}
+
+function renderMobileTimesheetEditor() {
+  const container = document.getElementById('timesheet-mobile-editor');
+  if (!container) return;
+  const [year, month] = getTimesheetMonth().split('-').map(Number);
+  const daysInMonth = getTimesheetDays();
+  const today = new Date();
+  const defaultDay = today.getFullYear() === year && today.getMonth() + 1 === month ? today.getDate() : 1;
+  let selectedDay = Number(container.dataset.day || defaultDay);
+  if (selectedDay < 1 || selectedDay > daysInMonth) selectedDay = 1;
+  container.dataset.day = selectedDay;
+  const activeUserId = MOCK_DB.currentUser.id;
+  const timesheet = MOCK_DB.timesheets[activeUserId] || {};
+  const dateKey = `${getTimesheetMonth()}-${String(selectedDay).padStart(2, '0')}`;
+  const dayLabel = new Date(year, month - 1, selectedDay).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+  const rows = [
+    ...MOCK_DB.projects.filter(project => project.active).map(project => ({ id: project.id, name: project.name, role: project.role, hours: timesheet[project.id]?.[selectedDay - 1] || 0 })),
+    { id: 'vacation', name: '개인휴가', role: '연차 · 반차', hours: timesheet.vacation?.[selectedDay - 1] || 0 }
+  ];
+  container.innerHTML = `
+    <div class="mobile-timesheet-head">
+      <label for="ts-mobile-date">입력 날짜</label>
+      <input id="ts-mobile-date" type="date" min="${getTimesheetMonth()}-01" max="${getTimesheetMonth()}-${String(daysInMonth).padStart(2, '0')}" value="${dateKey}">
+      <strong>${dayLabel} · 합계 ${getDayTotal(activeUserId, selectedDay - 1)}H / 8H</strong>
+    </div>
+    <div class="mobile-timesheet-list">
+      ${rows.map(row => `<label class="mobile-timesheet-row"><span><strong>${row.name}</strong><small>${row.role || '프로젝트'}</small></span><input type="number" min="0" max="8" step="${row.id === 'vacation' ? 4 : 1}" value="${row.hours}" data-project-id="${row.id}"><em>시간</em></label>`).join('')}
+    </div>`;
+  container.querySelector('#ts-mobile-date').onchange = event => {
+    container.dataset.day = Number(event.target.value.slice(-2));
+    renderMobileTimesheetEditor();
+  };
+  container.querySelectorAll('[data-project-id]').forEach(input => {
+    input.onchange = event => {
+      updateCellHours(activeUserId, event.target.dataset.projectId, selectedDay - 1, event.target.value);
+      renderMobileTimesheetEditor();
+    };
+  });
 }
 
 function getDayTotal(empId, dayIdx) {
@@ -491,12 +531,12 @@ function renderEmployeeDetails(empId) {
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td><strong>${alloc.name}</strong></td>
-      <td>${alloc.role}</td>
-      <td>${alloc.hours}H</td>
-      <td>${calculatedMM} M/M</td>
-      <td><input type="number" min="0" max="1" step="0.05" value="${confirmedMM}" style="width:70px; padding:3px; font-size:12px; border:1px solid var(--border-light); outline:none;"></td>
-      <td class="text-blue" style="font-weight:600;">${ratio}%</td>
+      <td data-label="프로젝트"><strong>${alloc.name}</strong></td>
+      <td data-label="역할">${alloc.role}</td>
+      <td data-label="총 투입시간">${alloc.hours}H</td>
+      <td data-label="계산 M/M">${calculatedMM} M/M</td>
+      <td data-label="확정 M/M"><input type="number" min="0" max="1" step="0.05" value="${confirmedMM}" style="width:70px; padding:3px; font-size:12px; border:1px solid var(--border-light); outline:none;"></td>
+      <td data-label="비율" class="text-blue" style="font-weight:600;">${ratio}%</td>
     `;
     tbody.appendChild(row);
   });
@@ -549,13 +589,13 @@ function renderApprovalsTable() {
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${ap.id}</td>
-      <td><span class="badge" style="background:#e2e8f0; color:var(--text-dark);">${ap.type}</span></td>
-      <td><strong>${ap.title}</strong></td>
-      <td>${ap.drafter}</td>
-      <td>${ap.date}</td>
-      <td><span class="badge-status ${badgeClass}">${statusText}</span></td>
-      <td>
+      <td data-label="문서번호">${ap.id}</td>
+      <td data-label="문서유형"><span class="badge" style="background:#e2e8f0; color:var(--text-dark);">${ap.type}</span></td>
+      <td data-label="제목"><strong>${ap.title}</strong></td>
+      <td data-label="기안자">${ap.drafter}</td>
+      <td data-label="기안일자">${ap.date}</td>
+      <td data-label="결재상태"><span class="badge-status ${badgeClass}">${statusText}</span></td>
+      <td data-label="작업">
         ${ap.status === 'waiting' ? `
           <button class="btn-sm-action approve" onclick="processApproval('${ap.id}', 'approved')">승인</button>
           <button class="btn-sm-action reject" onclick="processApproval('${ap.id}', 'rejected')">반려</button>
