@@ -130,7 +130,6 @@ function renderTimesheet() {
         const dateClass = getTimesheetDayClass(d + 1);
         const workDate = getMonthDate(d);
         const canInput = isProjectInputAllowed(p, workDate);
-        if (!canInput && ts[p.id]?.[d]) ts[p.id][d] = 0;
         const val = canInput ? (ts[p.id]?.[d] || 0) : 0;
         projTotal += val;
         bodyHtml += canInput
@@ -396,26 +395,47 @@ async function saveTimesheet() {
       .filter(project => project.active && MOCK_DB.assignedProjects.some(item => item.projectId === project.id && isAssignmentActiveForMonth(item, month)))
       .map(project => project.id)
   );
-  Object.entries(current).forEach(([projectId, hours]) => hours.forEach((value, day) => {
+  const projectsToSync = [...activeProjectIds, 'vacation'];
+  projectsToSync.forEach(projectId => {
     const project = MOCK_DB.projects.find(item => item.id === projectId);
-    const workDate = `${month}-${String(day + 1).padStart(2, '0')}`;
-    if (Number(value) > 0 && (projectId === 'vacation' || (activeProjectIds.has(projectId) && isProjectInputAllowed(project, workDate)))) {
+    const entryType = projectId === 'vacation' ? 'vacation' : 'project';
+    (current[projectId] || []).forEach((value, day) => {
+      const workDate = `${month}-${String(day + 1).padStart(2, '0')}`;
+      const canSave = projectId === 'vacation' || isProjectInputAllowed(project, workDate);
+      if (!canSave) return;
+      const hours = Number(value) || 0;
+      const existing = (MOCK_DB.timesheetRecords || []).some(item => item.workDate === workDate && item.entryType === entryType && (entryType === 'vacation' || item.projectId === projectId));
+      if (!hours && !existing) return;
       const projectName = projectId === 'vacation' ? '개인휴가' : (project?.name || '알 수 없는 프로젝트');
-      requests.push({ projectName, workDate, request: fetch('/api/intranet-data?resource=timesheets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projectId === 'vacation' ? null : projectId, entryType: projectId === 'vacation' ? 'vacation' : 'project', workDate, hours: Number(value) }) }) });
-    }
-  }));
+      const method = hours > 0 ? 'POST' : 'DELETE';
+      const body = { projectId: projectId === 'vacation' ? null : projectId, entryType, workDate, ...(hours > 0 ? { hours } : {}) };
+      requests.push({ projectName, workDate, action: hours > 0 ? '저장' : '삭제', request: fetch('/api/intranet-data?resource=timesheets', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }) });
+    });
+  });
   const results = await Promise.allSettled(requests.map(item => item.request));
   const failures = [];
   for (let index = 0; index < results.length; index += 1) {
     const result = results[index];
     if (result.status === 'rejected') {
-      failures.push(`${requests[index].projectName} · ${requests[index].workDate}: 네트워크 연결을 확인한 뒤 다시 저장해 주세요.`);
+      failures.push(`${requests[index].projectName} · ${requests[index].workDate}: ${requests[index].action} 중 네트워크 연결을 확인해 주세요.`);
     } else if (!result.value.ok) {
       const data = await result.value.json().catch(() => ({}));
       failures.push(`${requests[index].projectName} · ${requests[index].workDate}: ${data.error || '저장할 수 없습니다.'}`);
     }
   }
   if (failures.length) return alert(`다음 항목을 저장하지 못했습니다.\n\n${failures.join('\n\n')}`);
+  const refreshedResponse = await fetch('/api/intranet-data?resource=timesheets', { cache: 'no-store' });
+  const refreshedData = await refreshedResponse.json();
+  if (!refreshedResponse.ok) return alert(refreshedData.error || '저장 후 타임시트 기록을 다시 불러오지 못했습니다. 새로고침 후 확인해 주세요.');
+  MOCK_DB.timesheetRecords = (refreshedData.records || []).map(item => ({
+    workDate: String(item.work_date).slice(0, 10),
+    hours: Number(item.hours || 0),
+    entryType: item.entry_type || 'project',
+    projectId: item.project_id || null
+  }));
+  rebuildTimesheetForSelectedMonth();
+  initTimesheets();
+  renderTimesheet();
   saveAppState();
   alert('타임시트가 저장되었습니다.');
 }

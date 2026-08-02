@@ -167,6 +167,15 @@ module.exports = async (request, response) => {
       if (!rows[0]) await sql.query('DELETE FROM public.project_assignments WHERE user_id=$1 AND project_id=$2', [user.id, input.projectId]);
       return response.status(200).json({ resource, projectId: input.projectId });
     }
+    if (request.method === 'DELETE' && resource === 'timesheets') {
+      const input = body(request);
+      if (!input.workDate || !input.entryType) return response.status(400).json({ error: '삭제할 타임시트 날짜와 유형이 필요합니다.' });
+      const rows = await sql.query(
+        'DELETE FROM public.timesheet_entries WHERE user_id = $1 AND work_date = $2 AND entry_type = $3 AND project_id IS NOT DISTINCT FROM $4 RETURNING id',
+        [user.id, input.workDate, input.entryType, input.projectId || null]
+      );
+      return response.status(200).json({ resource, deleted: Boolean(rows[0]) });
+    }
     if (request.method === 'PATCH' && resource === 'diaries') {
       const input = body(request);
       requireFields(input, ['id', 'workDate', 'hours', 'content']);
