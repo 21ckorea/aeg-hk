@@ -430,7 +430,17 @@ function submitTimesheet() {
 }
 
 let manpowerViewMode = 'employee';
-let activeEmployeeId = 'emp01';
+let activeEmployeeId = null;
+
+function getManpowerMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getEmployeeManpowerEntries(employeeId) {
+  const monthKey = getManpowerMonthKey();
+  return (MOCK_DB.manpowerRecords || []).filter(item => item.userId === employeeId && item.workDate.startsWith(monthKey));
+}
 
 function setManpowerViewMode(mode) {
   manpowerViewMode = mode;
@@ -441,6 +451,11 @@ function setManpowerViewMode(mode) {
 }
 
 function renderManpowerAnalysis() {
+  if (!MOCK_DB.employees.length) {
+    document.getElementById('manpower-employee-list').innerHTML = '<p class="empty-state">조회 가능한 직원이 없습니다.</p>';
+    return;
+  }
+  if (!MOCK_DB.employees.some(employee => employee.id === activeEmployeeId)) activeEmployeeId = MOCK_DB.employees[0].id;
   renderEmployeeList();
   renderEmployeeDetails(activeEmployeeId);
 }
@@ -452,11 +467,7 @@ function renderEmployeeList() {
   container.innerHTML = '';
 
   MOCK_DB.employees.forEach(emp => {
-    let totalHours = 0;
-    const ts = MOCK_DB.timesheets[emp.id];
-    Object.keys(ts).forEach(projId => {
-      ts[projId].forEach(h => totalHours += h);
-    });
+    const totalHours = getEmployeeManpowerEntries(emp.id).reduce((sum, item) => sum + item.hours, 0);
     const totalMM = (totalHours / 176).toFixed(1);
 
     const item = document.createElement('div');
@@ -498,21 +509,18 @@ function filterEmployees() {
 
 function renderEmployeeDetails(empId) {
   const emp = MOCK_DB.employees.find(e => e.id === empId);
-  const ts = MOCK_DB.timesheets[empId];
-  if (!emp || !ts) return;
+  if (!emp) return;
+  const entries = getEmployeeManpowerEntries(empId);
 
-  document.getElementById('detail-emp-avatar').textContent = emp.avatar;
-  document.getElementById('detail-emp-name').textContent = `${emp.name} ${emp.rank}`;
-  document.getElementById('detail-emp-dept').textContent = `${emp.dept} | 입사일: ${emp.joinDate}`;
+  document.getElementById('detail-emp-avatar').textContent = String(emp.avatar || '').startsWith('http') ? emp.name.charAt(0) : (emp.avatar || emp.name.charAt(0));
+  document.getElementById('detail-emp-name').textContent = `${emp.name}${emp.rank ? ` ${emp.rank}` : ''}`;
+  document.getElementById('detail-emp-dept').textContent = emp.dept || '직책 미입력';
 
   const allocations = [];
   let grandTotal = 0;
 
   MOCK_DB.projects.forEach(p => {
-    let projSum = 0;
-    if (ts[p.id]) {
-      ts[p.id].forEach(h => projSum += h);
-    }
+    const projSum = entries.filter(item => item.projectId === p.id && item.entryType === 'project').reduce((sum, item) => sum + item.hours, 0);
     if (projSum > 0) {
       allocations.push({ id: p.id, name: p.name, role: p.role, hours: projSum });
       grandTotal += projSum;
@@ -543,9 +551,11 @@ function renderEmployeeDetails(empId) {
   const heatmap = document.getElementById('manpower-heatmap-grid');
   heatmap.innerHTML = '';
 
-  const daysInMonth = 30;
+  const [year, month] = getManpowerMonthKey().split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
   for (let d = 0; d < daysInMonth; d++) {
-    const dayTotal = getDayTotal(empId, d);
+    const date = `${getManpowerMonthKey()}-${String(d + 1).padStart(2, '0')}`;
+    const dayTotal = entries.filter(item => item.workDate === date).reduce((sum, item) => sum + item.hours, 0);
     let levelClass = 'level-0';
     if (dayTotal > 0 && dayTotal <= 3) levelClass = 'level-1';
     else if (dayTotal > 3 && dayTotal <= 6) levelClass = 'level-2';
@@ -554,7 +564,7 @@ function renderEmployeeDetails(empId) {
     const cell = document.createElement('div');
     cell.className = `heatmap-cell ${levelClass}`;
     cell.textContent = dayTotal;
-    cell.title = `6월 ${d + 1}일: ${dayTotal}시간 투입`;
+    cell.title = `${month}월 ${d + 1}일: ${dayTotal}시간 투입`;
     heatmap.appendChild(cell);
   }
 
@@ -568,7 +578,6 @@ function renderEmployeeDetails(empId) {
 
   allocations.forEach(alloc => {
     const calculatedMM = (alloc.hours / 176).toFixed(3);
-    const confirmedMM = calculatedMM;
     const ratio = grandTotal > 0 ? ((alloc.hours / grandTotal) * 100).toFixed(1) : 0;
 
     const row = document.createElement('tr');
@@ -577,7 +586,7 @@ function renderEmployeeDetails(empId) {
       <td data-label="역할">${alloc.role}</td>
       <td data-label="총 투입시간">${alloc.hours}H</td>
       <td data-label="계산 M/M">${calculatedMM} M/M</td>
-      <td data-label="확정 M/M"><input type="number" min="0" max="1" step="0.05" value="${confirmedMM}" style="width:70px; padding:3px; font-size:12px; border:1px solid var(--border-light); outline:none;"></td>
+      <td data-label="확정 M/M">-</td>
       <td data-label="비율" class="text-blue" style="font-weight:600;">${ratio}%</td>
     `;
     tbody.appendChild(row);

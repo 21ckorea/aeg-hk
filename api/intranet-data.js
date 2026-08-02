@@ -10,7 +10,8 @@ const RESOURCES = {
   notices: { table: 'notices', owner: null },
   diaries: { table: 'diary_entries', owner: 'user_id' },
   projectAssignments: { table: 'project_assignments', owner: 'user_id' },
-  wbs: { table: 'project_wbs_tasks', owner: null }
+  wbs: { table: 'project_wbs_tasks', owner: null },
+  manpower: { table: 'timesheet_entries', owner: 'user_id' }
 };
 
 function body(request) {
@@ -85,6 +86,13 @@ module.exports = async (request, response) => {
         const where = isPrivileged ? '' : ' WHERE d.user_id = $1';
         const rows = await sql.query(
           `SELECT d.*, (SELECT count(*) FROM public.diary_attachments a WHERE a.diary_id = d.id)::int AS attachment_count FROM public.diary_entries d${where} ORDER BY d.created_at DESC`,
+          isPrivileged ? [] : [user.id]
+        );
+        return response.status(200).json({ resource, records: rows });
+      }
+      if (resource === 'manpower') {
+        const rows = await sql.query(
+          `SELECT user_id, project_id, work_date, hours, entry_type FROM public.timesheet_entries${isPrivileged ? '' : ' WHERE user_id = $1'} ORDER BY work_date ASC`,
           isPrivileged ? [] : [user.id]
         );
         return response.status(200).json({ resource, records: rows });
