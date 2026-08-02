@@ -1203,8 +1203,9 @@ async function renderAdminPanel() {
     const row = document.createElement('tr');
     const position = [user.job_rank, user.job_title].filter(Boolean).join(' / ') || '-';
     row.innerHTML = `
-      <td>${escapeAdminHtml(user.name)}</td><td>${escapeAdminHtml(user.email)}</td><td>${escapeAdminHtml(position)}</td>
-      <td><button class="btn-sm-action approve" onclick="updateUserAccess('${escapeAdminHtml(user.id)}', { status: 'active' })">승인</button></td>`;
+      <td><div class="admin-user-cell"><span class="admin-user-avatar">${escapeAdminHtml(String(user.name || '?').trim().charAt(0))}</span><strong>${escapeAdminHtml(user.name)}</strong></div></td>
+      <td><span class="admin-email">${escapeAdminHtml(user.email)}</span></td><td><span class="admin-position">${escapeAdminHtml(position)}</span></td>
+      <td><button class="btn-sm-action approve" onclick="updateUserAccess('${escapeAdminHtml(user.id)}', { status: 'active' })">가입 승인</button></td>`;
     pendingListEl.appendChild(row);
   });
 
@@ -1213,15 +1214,15 @@ async function renderAdminPanel() {
     const row = document.createElement('tr');
     const position = [user.job_rank, user.job_title].filter(Boolean).join(' / ') || '-';
     row.innerHTML = `
-      <td>${escapeAdminHtml(user.name)}</td>
-      <td>${escapeAdminHtml(user.email)}</td>
-      <td>${escapeAdminHtml(position)}</td>
-      <td><select aria-label="${escapeAdminHtml(user.name)} 권한 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { role: this.value })">
+      <td><div class="admin-user-cell"><span class="admin-user-avatar">${escapeAdminHtml(String(user.name || '?').trim().charAt(0))}</span><strong>${escapeAdminHtml(user.name)}</strong></div></td>
+      <td><span class="admin-email">${escapeAdminHtml(user.email)}</span></td>
+      <td><span class="admin-position">${escapeAdminHtml(position)}</span></td>
+      <td><select class="admin-access-select" aria-label="${escapeAdminHtml(user.name)} 권한 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { role: this.value })">
         <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>직원</option>
         <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>PM</option>
         <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>관리자</option>
       </select></td>
-      <td><select aria-label="${escapeAdminHtml(user.name)} 계정 상태 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { status: this.value })">
+      <td><select class="admin-access-select" aria-label="${escapeAdminHtml(user.name)} 계정 상태 변경" onchange="updateUserAccess('${escapeAdminHtml(user.id)}', { status: this.value })">
         <option value="active" ${user.status === 'active' ? 'selected' : ''}>승인됨</option>
         <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>승인 대기 / 비활성</option>
       </select></td>
@@ -1238,7 +1239,7 @@ function renderProjectManagement() {
   list.innerHTML = MOCK_DB.projects.length ? '' : '<tr><td colspan="7" style="text-align:center;padding:20px;">등록된 프로젝트가 없습니다.</td></tr>';
   MOCK_DB.projects.forEach(project => {
     const row = document.createElement('tr');
-    row.innerHTML = `<td>${escapeAdminHtml(project.code || '-')}</td><td><strong>${escapeAdminHtml(project.name)}</strong><br><small>${escapeAdminHtml(project.clientName || '')}</small></td><td>${project.startedOn || '-'} ~ ${project.endedOn || '-'}</td><td>${project.plannedMm || 0} M/M</td><td>${project.cost ? `${Number(project.cost).toLocaleString()}원` : '-'}</td><td>${project.active ? '운영 중' : '종료'}</td><td><button class="btn-sm-action" onclick="editManagedProject('${project.id}')">수정</button></td>`;
+    row.innerHTML = `<td><span class="project-code">${escapeAdminHtml(project.code || '-')}</span></td><td><strong>${escapeAdminHtml(project.name)}</strong><br><small>${escapeAdminHtml(project.clientName || '발주처 미입력')}</small></td><td><span class="project-period">${project.startedOn || '-'}<br>~ ${project.endedOn || '-'}</span></td><td><strong>${project.plannedMm || 0}</strong> M/M</td><td>${project.cost ? `${Number(project.cost).toLocaleString()}원` : '-'}</td><td><span class="status-pill ${project.active ? 'active' : 'pending'}">${project.active ? '운영 중' : '종료'}</span></td><td><button class="btn-sm-action project-edit-action" onclick="editManagedProject('${project.id}')">수정</button></td>`;
     list.appendChild(row);
   });
 }

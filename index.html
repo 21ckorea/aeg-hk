@@ -899,9 +899,9 @@
             <!-- SUB-VIEW 6: ADMIN SETTINGS (관리자 설정) -->
             <div id="sub-admin" class="sub-view">
               <div class="dashboard-grid">
-                <div class="dash-panel">
+                <div class="dash-panel admin-overview-panel">
                   <div class="panel-header">
-                    <h3>관리자 운영 패널</h3>
+                    <div><h3>관리자 운영 패널</h3><p>사용자와 승인 현황을 한눈에 관리하세요.</p></div>
                   </div>
                   <div class="panel-body">
                     <div class="stats-row">
@@ -931,9 +931,9 @@
                   </div>
                 </div>
 
-                <div class="dash-panel">
+                <div class="dash-panel admin-table-panel">
                   <div class="panel-header">
-                    <h3>가입 승인 대기</h3>
+                    <div><h3>가입 승인 대기</h3><p>가입 요청을 확인한 뒤 계정을 활성화합니다.</p></div>
                   </div>
                   <div class="panel-body">
                     <table class="data-table">
@@ -943,9 +943,9 @@
                   </div>
                 </div>
 
-                <div class="dash-panel">
+                <div class="dash-panel admin-table-panel">
                   <div class="panel-header">
-                    <h3>사용자 계정 목록</h3>
+                    <div><h3>사용자 계정 목록</h3><p>권한과 계정 상태를 바로 변경할 수 있습니다.</p></div>
                   </div>
                   <div class="panel-body">
                     <table class="data-table">
@@ -966,13 +966,13 @@
             </div>
 
             <div id="sub-projects" class="sub-view">
-              <div class="dash-panel">
-                <div class="panel-header"><h3>프로젝트 등록</h3></div>
+              <div class="dash-panel project-form-panel">
+                <div class="panel-header"><div><h3>프로젝트 등록</h3><p>기간·예산·계획 공수를 등록해 팀원 투입 기준을 만듭니다.</p></div></div>
                 <div class="panel-body"><form id="project-management-form" class="project-management-form" onsubmit="submitManagedProject(event)">
                   <input id="pm-code" placeholder="프로젝트 코드 (선택)"><input id="pm-name" placeholder="프로젝트명 *" required><input id="pm-client" placeholder="발주처 / 고객사"><input id="pm-role" placeholder="기본 역할"><input id="pm-start" type="date" required><input id="pm-end" type="date" required><input id="pm-cost" type="number" min="0" placeholder="계약 금액 (원)"><input id="pm-mm" type="number" min="0" step="0.001" placeholder="계획 M/M"><select id="pm-active"><option value="true">운영 중</option><option value="false">종료</option></select><button id="pm-submit-button" class="btn-action primary" type="submit">프로젝트 등록</button><button id="pm-cancel-button" class="btn-action secondary" type="button" onclick="resetManagedProjectForm()" hidden>수정 취소</button>
                 </form></div>
               </div>
-              <div class="dash-panel mt-6"><div class="panel-header"><h3>프로젝트 목록</h3></div><div class="panel-body"><table class="data-table"><thead><tr><th>코드</th><th>프로젝트</th><th>기간</th><th>계획 M/M</th><th>비용</th><th>상태</th><th>관리</th></tr></thead><tbody id="managed-project-list"></tbody></table></div></div>
+              <div class="dash-panel mt-6 project-list-panel"><div class="panel-header"><div><h3>프로젝트 목록</h3><p>등록된 프로젝트의 기간과 운영 상태를 관리합니다.</p></div></div><div class="panel-body"><table class="data-table"><thead><tr><th>코드</th><th>프로젝트</th><th>기간</th><th>계획 M/M</th><th>비용</th><th>상태</th><th>관리</th></tr></thead><tbody id="managed-project-list"></tbody></table></div></div>
             </div>
 
             <div id="sub-wbs" class="sub-view">
