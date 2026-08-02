@@ -1007,7 +1007,7 @@
                 <div class="panel-body wbs-toolbar">
                   <label>프로젝트 <select id="wbs-project-select" onchange="renderWbs()"></select></label>
                   <label>조회 월 <input id="wbs-month" type="month" onchange="renderWbs()"></label>
-                  <p>작업 기간을 등록하면 해당 날짜에 공정 막대로 표시됩니다.</p>
+                  <p>작업 기간을 등록하면 해당 날짜에 공정 막대로 표시됩니다. 일정 막대를 누르면 작업을 수정할 수 있습니다.</p>
                 </div>
               </div>
               <div class="dash-panel mt-6">
@@ -1017,7 +1017,7 @@
               <div class="dash-panel mt-6" id="wbs-editor-panel">
                 <div class="panel-header"><h3 id="wbs-form-title">공정 작업 등록</h3></div>
                 <div class="panel-body"><form id="wbs-form" class="project-management-form" onsubmit="submitWbsTask(event)">
-                  <input id="wbs-category" placeholder="공정 · 예: 전기, 설비, 마감"><input id="wbs-title" placeholder="작업명 *" required><input id="wbs-start" type="date" required><input id="wbs-end" type="date" required><select id="wbs-status"><option value="planned">예정</option><option value="progress">진행 중</option><option value="done">완료</option><option value="delayed">지연</option></select><input id="wbs-note" placeholder="비고 (선택)"><button id="wbs-submit" class="btn-action primary" type="submit">작업 등록</button><button id="wbs-cancel" class="btn-action secondary" type="button" onclick="resetWbsForm()" hidden>수정 취소</button>
+                  <input id="wbs-category" placeholder="공정 · 예: 전기, 설비, 마감"><input id="wbs-title" placeholder="작업명 *" required><input id="wbs-start" type="date" required><input id="wbs-end" type="date" required><select id="wbs-status"><option value="planned">예정</option><option value="progress">진행 중</option><option value="done">완료</option><option value="delayed">지연</option></select><input id="wbs-note" placeholder="비고 (선택)"><button id="wbs-submit" class="btn-action primary" type="submit">작업 등록</button><button id="wbs-cancel" class="btn-action secondary" type="button" onclick="resetWbsForm()" hidden>수정 취소</button><button id="wbs-delete" class="btn-action danger" type="button" onclick="deleteWbsTask(editingWbsTaskId)" hidden>작업 삭제</button>
                 </form></div>
               </div>
             </div>

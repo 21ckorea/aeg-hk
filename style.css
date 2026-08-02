@@ -2752,6 +2752,8 @@ body.intranet-mode .top-public-nav { display: none; }
 .wbs-mini-bar b, .wbs-mini-bar small { display: block; overflow: hidden; color: inherit; font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .wbs-mini-bar small { opacity: .9; font-weight: 500; }
 .wbs-span { overflow: hidden; color: #fff; font-size: 11px; font-weight: 700; text-align: center; text-overflow: ellipsis; background: #64748b; }
+.wbs-span { cursor: pointer; }
+.wbs-span:focus { outline: 2px solid #1d4ed8; outline-offset: -2px; }
 .wbs-span small { display: block; color: #fff !important; font-size: 10px; font-weight: 500; line-height: 1.25; opacity: .92; }
 .wbs-span.progress { background: #4f46e5; }
 .wbs-span.done { background: #10b981; }

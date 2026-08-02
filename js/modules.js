@@ -1114,8 +1114,8 @@ function renderWbs() {
     if (!taskGroups.has(key)) taskGroups.set(key, []);
     taskGroups.get(key).push(task);
   });
-  let html = `<thead><tr><th>공정</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th><th>관리</th></tr></thead><tbody>`;
-  if (!tasks.length) html += `<tr><td colspan="${days + 3}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
+  let html = `<thead><tr><th>공정</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th></tr></thead><tbody>`;
+  if (!tasks.length) html += `<tr><td colspan="${days + 2}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
   taskGroups.forEach((groupTasks, category) => {
     html += `<tr><td>${escapeAdminHtml(category)}</td>`;
     const orderedTasks = [...groupTasks].sort((a, b) => a.startedOn.localeCompare(b.startedOn));
@@ -1132,10 +1132,10 @@ function renderWbs() {
       const nextTask = orderedTasks.find(item => item.id !== task.id && item.startedOn > date && item.startedOn <= `${monthInput.value}-${String(endDay).padStart(2, '0')}`);
       if (nextTask) endDay = Number(nextTask.startedOn.slice(-2)) - 1;
       const span = Math.max(1, endDay - day + 1);
-      html += `<td colspan="${span}" class="wbs-cell wbs-span ${task.status}"><b>${escapeAdminHtml(task.title)}</b><small>${wbsShortRange(task)}</small></td>`;
+      html += `<td colspan="${span}" class="wbs-cell wbs-span ${task.status}" role="button" tabindex="0" title="${escapeAdminHtml(task.note || '클릭하여 작업 수정')}" onclick="editWbsTask('${task.id}')"><b>${escapeAdminHtml(task.title)}</b><small>${wbsShortRange(task)}</small></td>`;
       day += span;
     }
-    html += `<td class="wbs-task-list">${groupTasks.map(task => `<div>${escapeAdminHtml(task.note || '-')}</div>`).join('')}</td><td class="wbs-task-list">${groupTasks.map(task => `<div><button class="btn-sm-action" onclick="editWbsTask('${task.id}')">수정</button><button class="btn-sm-action reject" onclick="deleteWbsTask('${task.id}')">삭제</button></div>`).join('')}</td></tr>`;
+    html += `<td>${escapeAdminHtml(groupTasks.map(task => task.note).filter(Boolean).join(' · ') || '-')}</td></tr>`;
   });
   grid.innerHTML = `${html}</tbody>`;
   const canEdit = ['admin', 'manager'].includes(MOCK_DB.currentUser.accessRole);
@@ -1170,6 +1170,7 @@ function editWbsTask(taskId) {
   document.getElementById('wbs-form-title').textContent = '공정 작업 수정';
   document.getElementById('wbs-submit').textContent = '수정 저장';
   document.getElementById('wbs-cancel').hidden = false;
+  document.getElementById('wbs-delete').hidden = false;
 }
 
 function resetWbsForm() {
@@ -1178,6 +1179,7 @@ function resetWbsForm() {
   document.getElementById('wbs-form-title').textContent = '공정 작업 등록';
   document.getElementById('wbs-submit').textContent = '작업 등록';
   document.getElementById('wbs-cancel').hidden = true;
+  document.getElementById('wbs-delete').hidden = true;
 }
 
 async function deleteWbsTask(taskId) {
