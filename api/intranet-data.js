@@ -36,7 +36,7 @@ module.exports = async (request, response) => {
     const isPrivileged = user.role === 'admin' || user.role === 'manager';
     if (request.method === 'GET') {
       if (resource === 'projectAssignments') {
-        const rows = await sql.query('SELECT project_id, planned_mm FROM public.project_assignments WHERE user_id = $1', [user.id]);
+        const rows = await sql.query('SELECT project_id, planned_mm, started_on, ended_on FROM public.project_assignments WHERE user_id = $1', [user.id]);
         return response.status(200).json({ resource, records: rows });
       }
       if (resource === 'diaries') {
@@ -75,8 +75,16 @@ module.exports = async (request, response) => {
       const monthEnd = `${input.yearMonth}-31`;
       const project = await sql.query('SELECT id FROM public.projects WHERE id=$1 AND is_active=true AND (started_on IS NULL OR started_on <= $2) AND (ended_on IS NULL OR ended_on >= $3)', [input.projectId, monthEnd, monthStart]);
       if (!project[0]) return response.status(400).json({ error: '선택한 월에 투입할 수 없는 프로젝트입니다.' });
-      const rows = await sql.query('INSERT INTO public.project_assignments (user_id, project_id, planned_mm) VALUES ($1,$2,$3) ON CONFLICT (user_id, project_id) DO UPDATE SET planned_mm=EXCLUDED.planned_mm RETURNING *', [user.id, input.projectId, Number(input.plannedMm) || 0]);
+      const rows = await sql.query('INSERT INTO public.project_assignments (user_id, project_id, planned_mm, started_on, ended_on) VALUES ($1,$2,$3,$4,NULL) ON CONFLICT (user_id, project_id) DO UPDATE SET planned_mm=EXCLUDED.planned_mm, started_on=LEAST(project_assignments.started_on, EXCLUDED.started_on), ended_on=NULL RETURNING *', [user.id, input.projectId, Number(input.plannedMm) || 0, monthStart]);
       return response.status(201).json({ resource, record: rows[0] });
+    }
+    if (request.method === 'DELETE' && resource === 'projectAssignments') {
+      const input = body(request);
+      if (!input.projectId || !input.yearMonth) return response.status(400).json({ error: '프로젝트와 종료 월이 필요합니다.' });
+      const monthStart = `${input.yearMonth}-01`;
+      const rows = await sql.query('UPDATE public.project_assignments SET ended_on = ($3::date - interval \'1 day\')::date WHERE user_id=$1 AND project_id=$2 AND started_on < $3::date RETURNING *', [user.id, input.projectId, monthStart]);
+      if (!rows[0]) await sql.query('DELETE FROM public.project_assignments WHERE user_id=$1 AND project_id=$2', [user.id, input.projectId]);
+      return response.status(200).json({ resource, projectId: input.projectId });
     }
     if (request.method === 'PATCH' && resource === 'diaries') {
       const input = body(request);
@@ -112,7 +120,7 @@ module.exports = async (request, response) => {
     } else if (resource === 'timesheets') {
       requireFields(input, ['workDate', 'hours']);
       if (input.entryType !== 'vacation') {
-        const assignment = await sql.query('SELECT p.id FROM public.project_assignments pa JOIN public.projects p ON p.id=pa.project_id WHERE pa.user_id=$1 AND p.id=$2 AND p.is_active=true AND (p.started_on IS NULL OR p.started_on <= $3) AND (p.ended_on IS NULL OR p.ended_on >= $3)', [user.id, input.projectId, input.workDate]);
+        const assignment = await sql.query('SELECT p.id FROM public.project_assignments pa JOIN public.projects p ON p.id=pa.project_id WHERE pa.user_id=$1 AND p.id=$2 AND p.is_active=true AND pa.started_on <= $3 AND (pa.ended_on IS NULL OR pa.ended_on >= $3) AND (p.started_on IS NULL OR p.started_on <= $3) AND (p.ended_on IS NULL OR p.ended_on >= $3)', [user.id, input.projectId, input.workDate]);
         if (!assignment[0]) return response.status(400).json({ error: '프로젝트 기간 밖이거나 내 투입 프로젝트에 추가되지 않은 항목입니다.' });
       }
       rows = await sql.query('INSERT INTO public.timesheet_entries (user_id, project_id, work_date, hours, entry_type, memo) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (user_id, project_id, work_date, entry_type) DO UPDATE SET hours = EXCLUDED.hours, memo = EXCLUDED.memo, updated_at = now() RETURNING *', [user.id, input.projectId || null, input.workDate, input.hours, input.entryType || 'project', input.memo || null]);

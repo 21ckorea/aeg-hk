@@ -38,7 +38,7 @@ function initTimesheets() {
   const daysInMonth = getTimesheetDays();
   ensureStateShape();
 
-  const assignedIds = new Set(MOCK_DB.assignedProjects.map(item => item.projectId));
+  const assignedIds = new Set(MOCK_DB.assignedProjects.filter(item => isAssignmentActiveForMonth(item, getTimesheetMonth())).map(item => item.projectId));
   MOCK_DB.employees.forEach(emp => {
     if (!MOCK_DB.timesheets[emp.id]) {
       MOCK_DB.timesheets[emp.id] = {};
@@ -85,14 +85,14 @@ function renderTimesheet() {
   headHtml += `</tr></thead>`;
 
   let bodyHtml = '<tbody>';
-  let activeProjects = MOCK_DB.projects.filter(p => p.active && MOCK_DB.assignedProjects.some(item => item.projectId === p.id));
+  let activeProjects = MOCK_DB.projects.filter(p => p.active && MOCK_DB.assignedProjects.some(item => item.projectId === p.id && isAssignmentActiveForMonth(item, getTimesheetMonth())));
 
   if (activeProjects.length === 0) {
     bodyHtml += `<tr><td colspan="${daysInMonth + 3}" style="text-align:center; padding:28px; color:var(--text-muted);">프로젝트가 아직 없습니다. 아래에서 새 프로젝트를 등록해 주세요.</td></tr>`;
   } else {
     activeProjects.forEach(p => {
       bodyHtml += '<tr>';
-      bodyHtml += `<td><strong>${p.name}</strong><br><span style="font-size:10px; color:#64748b;">${p.role}</span></td>`;
+      bodyHtml += `<td><strong>${p.name}</strong><br><span style="font-size:10px; color:#64748b;">${p.role}</span><br><button class="btn-sm-action reject" type="button" onclick="removeProjectAssignment('${p.id}')">내 목록에서 제거</button></td>`;
 
       let projTotal = 0;
       for (let d = 0; d < daysInMonth; d++) {
@@ -288,7 +288,7 @@ function addProjectRowPopup() {
   const month = getTimesheetMonth();
   const monthStart = `${month}-01`;
   const monthEnd = `${month}-31`;
-  const assigned = new Set(MOCK_DB.assignedProjects.map(item => item.projectId));
+  const assigned = new Set(MOCK_DB.assignedProjects.filter(item => isAssignmentActiveForMonth(item, month)).map(item => item.projectId));
   const inactiveProjects = MOCK_DB.projects.filter(p => p.active && !assigned.has(p.id) && (!p.startedOn || p.startedOn <= monthEnd) && (!p.endedOn || p.endedOn >= monthStart));
   if (inactiveProjects.length === 0) return listContainer.innerHTML = '<p class="desc">현재 선택한 월에 추가할 수 있는 사전 등록 프로젝트가 없습니다.</p>';
 
@@ -317,12 +317,33 @@ async function activateProjectRow(projId) {
     const response = await fetch('/api/intranet-data?resource=projectAssignments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projId, yearMonth: getTimesheetMonth(), plannedMm }) });
     const result = await response.json();
     if (!response.ok) return alert(result.error || '프로젝트 추가에 실패했습니다.');
-    MOCK_DB.assignedProjects.push({ projectId: projId, plannedMm: Number(plannedMm) || 0 });
+    const existing = MOCK_DB.assignedProjects.find(item => item.projectId === projId);
+    if (existing) { existing.plannedMm = Number(plannedMm) || 0; existing.endedOn = ''; }
+    else MOCK_DB.assignedProjects.push({ projectId: projId, plannedMm: Number(plannedMm) || 0, startedOn: `${getTimesheetMonth()}-01`, endedOn: '' });
     closeModal('modal-add-project');
     initTimesheets();
     saveAppState();
     renderTimesheet();
   }
+}
+
+function isAssignmentActiveForMonth(assignment, month) {
+  const monthStart = `${month}-01`;
+  const monthEnd = `${month}-31`;
+  return assignment.startedOn <= monthEnd && (!assignment.endedOn || assignment.endedOn >= monthStart);
+}
+
+async function removeProjectAssignment(projectId) {
+  if (!window.confirm('선택한 월부터 이 프로젝트를 내 투입시간 목록에서 제거할까요? 이전 월의 기록은 유지됩니다.')) return;
+  const response = await fetch('/api/intranet-data?resource=projectAssignments', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, yearMonth: getTimesheetMonth() }) });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '프로젝트 제거에 실패했습니다.');
+  const assignment = MOCK_DB.assignedProjects.find(item => item.projectId === projectId);
+  if (assignment) {
+    const [year, month] = getTimesheetMonth().split('-').map(Number);
+    assignment.endedOn = formatLocalDate(new Date(year, month - 1, 0));
+  }
+  initTimesheets(); renderTimesheet(); alert('프로젝트를 내 목록에서 제거했습니다.');
 }
 
 async function saveTimesheet() {
@@ -1136,7 +1157,8 @@ function openDiaryModal() {
 
   const select = document.getElementById('dy-project');
   select.innerHTML = '';
-  MOCK_DB.projects.filter(p => p.active).forEach(p => {
+  const diaryMonth = formatLocalDate(diaryWeekStart || getCurrentWorkweekStart()).slice(0, 7);
+  MOCK_DB.projects.filter(p => p.active && MOCK_DB.assignedProjects.some(item => item.projectId === p.id && isAssignmentActiveForMonth(item, diaryMonth))).forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = p.name;
