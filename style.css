@@ -2747,6 +2747,13 @@ body.intranet-mode .top-public-nav { display: none; }
 .wbs-table th:nth-child(2) { min-width: 170px; }
 .wbs-table th small, .wbs-table td small { display: block; font-size: 10px; color: #64748b; font-weight: 400; margin-top: 3px; }
 .wbs-table td:nth-child(2) { text-align: left; }
+.wbs-task-list > div { min-height: 28px; padding: 3px 0; border-bottom: 1px dashed #dbe3ef; }
+.wbs-task-list > div:last-child { border-bottom: 0; }
+.wbs-cell { padding: 1px !important; vertical-align: top; }
+.wbs-mini-bar { display: block; min-height: 24px; margin: 1px 0; padding: 5px 2px; overflow: hidden; color: #fff; font-size: 10px; font-weight: 700; text-overflow: ellipsis; background: #64748b; }
+.wbs-mini-bar.progress { background: #4f46e5; }
+.wbs-mini-bar.done { background: #10b981; }
+.wbs-mini-bar.delayed { background: #ef4444; }
 .wbs-table .wbs-bar { color: #fff; font-size: 10px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; background: #64748b; }
 .wbs-table .wbs-bar.progress { background: #4f46e5; }
 .wbs-table .wbs-bar.done { background: #10b981; }

@@ -1102,16 +1102,22 @@ function renderWbs() {
   const [year, month] = monthInput.value.split('-').map(Number);
   const days = new Date(year, month, 0).getDate();
   const tasks = MOCK_DB.wbsTasks.filter(task => task.projectId === project.id && task.startedOn <= `${monthInput.value}-${String(days).padStart(2, '0')}` && task.endedOn >= `${monthInput.value}-01`);
+  const taskGroups = new Map();
+  tasks.forEach(task => {
+    const key = task.category || '미분류';
+    if (!taskGroups.has(key)) taskGroups.set(key, []);
+    taskGroups.get(key).push(task);
+  });
   let html = `<thead><tr><th>공종</th><th>작업명</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th><th>관리</th></tr></thead><tbody>`;
   if (!tasks.length) html += `<tr><td colspan="${days + 4}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
-  tasks.forEach(task => {
-    html += `<tr><td>${escapeAdminHtml(task.category || '-')}</td><td><strong>${escapeAdminHtml(task.title)}</strong><small>${task.startedOn} ~ ${task.endedOn} · ${wbsStatusLabel(task.status)}</small></td>`;
+  taskGroups.forEach((groupTasks, category) => {
+    html += `<tr><td>${escapeAdminHtml(category)}</td><td class="wbs-task-list">${groupTasks.map(task => `<div><strong>${escapeAdminHtml(task.title)}</strong><small>${task.startedOn} ~ ${task.endedOn} · ${wbsStatusLabel(task.status)}</small></div>`).join('')}</td>`;
     for (let day = 1; day <= days; day += 1) {
       const date = `${monthInput.value}-${String(day).padStart(2, '0')}`;
-      const active = date >= task.startedOn && date <= task.endedOn;
-      html += `<td class="${active ? `wbs-bar ${task.status}` : ''}">${active && (date === task.startedOn || day === 1) ? escapeAdminHtml(task.title) : ''}</td>`;
+      const activeTasks = groupTasks.filter(task => date >= task.startedOn && date <= task.endedOn);
+      html += `<td class="wbs-cell">${activeTasks.map(task => `<span class="wbs-mini-bar ${task.status}">${date === task.startedOn || day === 1 ? escapeAdminHtml(task.title) : ''}</span>`).join('')}</td>`;
     }
-    html += `<td>${escapeAdminHtml(task.note || '-')}</td><td><button class="btn-sm-action" onclick="editWbsTask('${task.id}')">수정</button><button class="btn-sm-action reject" onclick="deleteWbsTask('${task.id}')">삭제</button></td></tr>`;
+    html += `<td class="wbs-task-list">${groupTasks.map(task => `<div>${escapeAdminHtml(task.note || '-')}</div>`).join('')}</td><td class="wbs-task-list">${groupTasks.map(task => `<div><button class="btn-sm-action" onclick="editWbsTask('${task.id}')">수정</button><button class="btn-sm-action reject" onclick="deleteWbsTask('${task.id}')">삭제</button></div>`).join('')}</td></tr>`;
   });
   grid.innerHTML = `${html}</tbody>`;
   const canEdit = ['admin', 'manager'].includes(MOCK_DB.currentUser.accessRole);
