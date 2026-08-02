@@ -75,7 +75,12 @@ module.exports = async (request, response) => {
       const monthEnd = `${input.yearMonth}-31`;
       const project = await sql.query('SELECT id FROM public.projects WHERE id=$1 AND is_active=true AND (started_on IS NULL OR started_on <= $2) AND (ended_on IS NULL OR ended_on >= $3)', [input.projectId, monthEnd, monthStart]);
       if (!project[0]) return response.status(400).json({ error: '선택한 월에 투입할 수 없는 프로젝트입니다.' });
-      const rows = await sql.query('INSERT INTO public.project_assignments (user_id, project_id, planned_mm, started_on, ended_on) VALUES ($1,$2,COALESCE($3, 0),$4,NULL) ON CONFLICT (user_id, project_id) DO UPDATE SET planned_mm=COALESCE($3, project_assignments.planned_mm), started_on=LEAST(project_assignments.started_on, EXCLUDED.started_on), ended_on=NULL RETURNING *', [user.id, input.projectId, input.plannedMm === undefined ? null : Number(input.plannedMm), monthStart]);
+      // 프로젝트 관리의 원본은 건드리지 않고, 로그인한 사용자의 배정만 생성/재개한다.
+      // 기존 배정이 종료된 뒤 다시 추가하는 경우에는 새로 선택한 월부터 다시 표시한다.
+      const existing = await sql.query('SELECT started_on, ended_on FROM public.project_assignments WHERE user_id=$1 AND project_id=$2', [user.id, input.projectId]);
+      const rows = existing[0]
+        ? await sql.query('UPDATE public.project_assignments SET started_on=CASE WHEN ended_on IS NULL THEN LEAST(COALESCE(started_on, $3::date), $3::date) ELSE $3::date END, ended_on=NULL WHERE user_id=$1 AND project_id=$2 RETURNING *', [user.id, input.projectId, monthStart])
+        : await sql.query('INSERT INTO public.project_assignments (user_id, project_id, planned_mm, started_on, ended_on) VALUES ($1,$2,0,$3::date,NULL) RETURNING *', [user.id, input.projectId, monthStart]);
       return response.status(201).json({ resource, record: rows[0] });
     }
     if (request.method === 'DELETE' && resource === 'projectAssignments') {
