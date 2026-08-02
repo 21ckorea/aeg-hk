@@ -971,11 +971,17 @@ async function performCheckIn() {
   MOCK_DB.attendance.status = 'in';
   MOCK_DB.attendance.checkInTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   MOCK_DB.attendance.checkOutTime = null;
+  const todayKey = now.toISOString().slice(0, 10);
+  const index = MOCK_DB.attendance.records.findIndex(item => item.workDate === todayKey);
+  const record = { workDate: todayKey, checkedInAt: result.record.checked_in_at, checkedOutAt: result.record.checked_out_at };
+  if (index >= 0) MOCK_DB.attendance.records[index] = record;
+  else MOCK_DB.attendance.records.push(record);
   saveAppState();
 
   alert(`출근 등록이 완료되었습니다. (등록시간: ${MOCK_DB.attendance.checkInTime})`);
 
   updateAttendanceUI();
+  renderAttendanceStatistics();
   renderDashboardApprovals();
 }
 
@@ -986,6 +992,11 @@ async function performCheckOut() {
   if (!response.ok) return alert(result.error || '퇴근 등록에 실패했습니다.');
   MOCK_DB.attendance.status = 'out';
   MOCK_DB.attendance.checkOutTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const todayKey = now.toISOString().slice(0, 10);
+  const index = MOCK_DB.attendance.records.findIndex(item => item.workDate === todayKey);
+  const record = { workDate: todayKey, checkedInAt: result.record.checked_in_at, checkedOutAt: result.record.checked_out_at };
+  if (index >= 0) MOCK_DB.attendance.records[index] = record;
+  else MOCK_DB.attendance.records.push(record);
   MOCK_DB.attendance.log.push({
     date: now.toLocaleDateString('ko-KR'),
     in: MOCK_DB.attendance.checkInTime,
@@ -996,6 +1007,7 @@ async function performCheckOut() {
   alert(`퇴근 등록이 완료되었습니다. (등록시간: ${MOCK_DB.attendance.checkOutTime})`);
 
   updateAttendanceUI();
+  renderAttendanceStatistics();
   renderDashboardApprovals();
 }
 
@@ -1046,6 +1058,42 @@ function updateAttendanceUI() {
 
 function renderAttendancePageClock() {
   updateAttendanceUI();
+  renderAttendanceStatistics();
+}
+
+function renderAttendanceStatistics() {
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const attendance = (MOCK_DB.attendance.records || []).filter(item => item.workDate.startsWith(monthKey));
+  const attendanceDays = attendance.filter(item => item.checkedInAt).length;
+  // 별도 근태 규정이 등록되기 전에는 오전 9시 이후 출근을 지각으로 계산한다.
+  const lateDays = attendance.filter(item => {
+    if (!item.checkedInAt) return false;
+    const time = new Date(item.checkedInAt);
+    return time.getHours() > 9 || (time.getHours() === 9 && time.getMinutes() > 0);
+  }).length;
+  const entries = (MOCK_DB.timesheetRecords || []).filter(item => item.workDate.startsWith(monthKey));
+  const vacationHours = entries.filter(item => item.entryType === 'vacation').reduce((sum, item) => sum + item.hours, 0);
+  const vacationDays = vacationHours / 8;
+
+  const attendanceTarget = document.getElementById('stat-attendance-days');
+  const lateTarget = document.getElementById('stat-late-days');
+  const vacationTarget = document.getElementById('stat-vacation-days');
+  if (attendanceTarget) attendanceTarget.textContent = `${attendanceDays}일`;
+  if (lateTarget) lateTarget.textContent = `${lateDays}일`;
+  if (vacationTarget) vacationTarget.textContent = `${Number.isInteger(vacationDays) ? vacationDays : vacationDays.toFixed(1)}일`;
+
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const weeks = Array.from({ length: Math.ceil(daysInMonth / 7) }, (_, index) => ({ label: `${index + 1}주차`, overtime: 0 }));
+  const totalsByDate = new Map();
+  entries.forEach(item => totalsByDate.set(item.workDate, (totalsByDate.get(item.workDate) || 0) + item.hours));
+  totalsByDate.forEach((hours, date) => {
+    const weekIndex = Math.floor((Number(date.slice(-2)) - 1) / 7);
+    if (weeks[weekIndex]) weeks[weekIndex].overtime += Math.max(0, hours - 8);
+  });
+  const maxOvertime = Math.max(...weeks.map(item => item.overtime), 1);
+  const chart = document.getElementById('attendance-overtime-chart');
+  if (chart) chart.innerHTML = weeks.map(week => `<div class="bar-row"><span class="week-lbl">${week.label}</span><div class="bar-track"><div class="bar-fill" style="width: ${Math.round((week.overtime / maxOvertime) * 100)}%;"></div></div><span class="hours">${week.overtime.toFixed(1)}H</span></div>`).join('');
 }
 
 function escapeAdminHtml(value) {

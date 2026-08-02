@@ -20,6 +20,7 @@ function createDefaultAppState() {
       { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
     ],
     timesheets: {},
+    timesheetRecords: [],
     approvals: [],
     notices: [],
     projectsSummary: [],
@@ -28,7 +29,8 @@ function createDefaultAppState() {
       status: 'out',
       checkInTime: null,
       checkOutTime: null,
-      log: []
+      log: [],
+      records: []
     }
   };
 }
@@ -46,6 +48,7 @@ function normalizeAppState(state) {
       { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
     ],
     timesheets: state?.timesheets && typeof state.timesheets === 'object' ? state.timesheets : {},
+    timesheetRecords: Array.isArray(state?.timesheetRecords) ? state.timesheetRecords : [],
     approvals: Array.isArray(state?.approvals) ? state.approvals : [],
     notices: Array.isArray(state?.notices) ? state.notices : [],
     projectsSummary: Array.isArray(state?.projectsSummary) ? state.projectsSummary : [],
@@ -73,7 +76,9 @@ function ensureStateShape() {
   if (!MOCK_DB.projectsSummary) MOCK_DB.projectsSummary = [];
   if (!MOCK_DB.diaries) MOCK_DB.diaries = [];
   if (!MOCK_DB.timesheets) MOCK_DB.timesheets = {};
-  if (!MOCK_DB.attendance) MOCK_DB.attendance = { status: 'out', checkInTime: null, checkOutTime: null, log: [] };
+  if (!MOCK_DB.timesheetRecords) MOCK_DB.timesheetRecords = [];
+  if (!MOCK_DB.attendance) MOCK_DB.attendance = { status: 'out', checkInTime: null, checkOutTime: null, log: [], records: [] };
+  if (!MOCK_DB.attendance.records) MOCK_DB.attendance.records = [];
   if (!MOCK_DB.employees || MOCK_DB.employees.length === 0) {
     MOCK_DB.employees = [
       { id: 'emp01', name: MOCK_DB.currentUser?.name || '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }

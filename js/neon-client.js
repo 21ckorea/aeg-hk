@@ -92,6 +92,16 @@ async function hydrateWorkflowsFromNeon() {
     }));
     MOCK_DB.diaries = diaries.map(item => ({ id: item.id, userId: item.user_id, authorName: directoryById.get(item.user_id)?.name || item.user_id, attachmentCount: Number(item.attachment_count || 0), date: String(item.work_date).slice(0, 10), projectId: item.project_id, hours: Number(item.hours), content: item.content }));
     const userId = MOCK_DB.currentUser.id;
+    MOCK_DB.timesheetRecords = timesheets.map(item => ({
+      workDate: String(item.work_date).slice(0, 10),
+      hours: Number(item.hours || 0),
+      entryType: item.entry_type || 'project'
+    }));
+    MOCK_DB.attendance.records = attendance.map(item => ({
+      workDate: String(item.work_date).slice(0, 10),
+      checkedInAt: item.checked_in_at || null,
+      checkedOutAt: item.checked_out_at || null
+    }));
     const monthEntries = {};
     timesheets.forEach(item => {
       const date = String(item.work_date).slice(0, 10);
