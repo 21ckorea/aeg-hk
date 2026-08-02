@@ -1484,8 +1484,11 @@ body.intranet-mode .top-public-nav { display: none; }
 .notice-center button:hover { color: var(--primary); }
 .notice-center-empty { display: block; padding: 10px 4px; color: var(--text-muted); font-size: 12px; }
 
-.checkbox-label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--text-dark); cursor: pointer; }
-.notice-popup-period { display: grid; grid-template-columns: 86px 1fr; gap: 8px; align-items: center; margin-top: 10px; }
+.checkbox-label { display: inline-flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-dark); cursor: pointer; }
+.checkbox-label input[type="checkbox"] { width: 16px !important; height: 16px; margin: 0; flex: 0 0 auto; accent-color: var(--primary); }
+.notice-popup-setting { padding: 12px; border: 1px solid #dbe4ff; border-radius: 8px; background: #f8faff; }
+.notice-popup-setting .form-help { margin-top: 2px; }
+.notice-popup-period { display: grid; grid-template-columns: 86px minmax(0, 1fr); gap: 8px 10px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #dbe4ff; }
 .notice-popup-period label { font-size: 12px; color: var(--text-muted); }
 .notice-popup-period input { min-width: 0; }
 .notice-popup-card { max-width: 520px; }
