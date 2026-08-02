@@ -3078,6 +3078,8 @@ body.intranet-mode .top-public-nav { display: none; }
   #sub-approval .timesheet-actions .btn-action { width: 100%; }
   .data-table { width: 100%; }
   #sub-approval .panel-body, .manpower-table-section { overflow: visible; }
+  /* 데스크톱 표의 최소 너비가 남으면 카드형 행의 값이 화면 밖으로 밀린다. */
+  #approval-list-table { min-width: 0; }
   #approval-list-table, #approval-list-table tbody, #approval-list-table tr, #approval-list-table td, #manpower-allocation-table, #manpower-allocation-table tbody, #manpower-allocation-table tr, #manpower-allocation-table td { display: block; width: 100%; }
   #approval-list-table thead, #manpower-allocation-table thead { display: none; }
   #approval-list-table tr, #manpower-allocation-table tr { margin: 0 12px 12px; padding: 14px; border: 1px solid var(--border-light); border-radius: 12px; background: var(--bg-white); box-shadow: var(--shadow-sm); }
