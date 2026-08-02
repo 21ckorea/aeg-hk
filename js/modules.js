@@ -1211,11 +1211,11 @@ function updateDiaryProjectOptions(workDate, selectedProjectId = '') {
   }
   select.disabled = false;
   if (help) help.textContent = '작성일이 속한 월에 추가된 프로젝트만 선택할 수 있습니다.';
-  available.forEach(p => {
+  available.forEach((p, index) => {
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = p.name;
-    opt.selected = p.id === selectedProjectId;
+    opt.selected = selectedProjectId ? p.id === selectedProjectId : index === 0;
     select.appendChild(opt);
   });
 }
