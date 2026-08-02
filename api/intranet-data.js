@@ -34,6 +34,14 @@ module.exports = async (request, response) => {
     const sql = neon(process.env.DATABASE_URL);
     const isPrivileged = user.role === 'admin' || user.role === 'manager';
     if (request.method === 'GET') {
+      if (resource === 'diaries') {
+        const where = isPrivileged ? '' : ' WHERE d.user_id = $1';
+        const rows = await sql.query(
+          `SELECT d.*, (SELECT count(*) FROM public.diary_attachments a WHERE a.diary_id = d.id)::int AS attachment_count FROM public.diary_entries d${where} ORDER BY d.created_at DESC`,
+          isPrivileged ? [] : [user.id]
+        );
+        return response.status(200).json({ resource, records: rows });
+      }
       const where = config.owner && !isPrivileged ? ` WHERE ${config.owner} = $1` : '';
       const rows = await sql.query(`SELECT * FROM public.${config.table}${where} ORDER BY created_at DESC`, config.owner && !isPrivileged ? [user.id] : []);
       return response.status(200).json({ resource, records: rows });

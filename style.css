@@ -1812,6 +1812,16 @@ ul {
   border-color: var(--accent-red);
 }
 
+.existing-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 
 /* ==================== SUB-VIEW 2: TIMESHEET INPUT (SECTION A) ==================== */
 .timesheet-header-area {

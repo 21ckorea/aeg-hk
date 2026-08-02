@@ -952,7 +952,7 @@ function renderDiaryWeekView() {
           <span class="project">${proj ? proj.name : '기타과업'}</span>
           <span class="time">${item.hours}H</span>
           <p>${item.content}</p>
-          <button class="btn-sm-action" type="button" onclick="openDiaryAttachments('${item.id}')">첨부파일</button>
+          <button class="btn-sm-action" type="button" onclick="openDiaryAttachments('${item.id}')">첨부파일 (${item.attachmentCount || 0})</button>
           ${canManage ? `<button class="btn-sm-action" type="button" onclick="editDiary('${item.id}')">수정</button><button class="btn-sm-action reject" type="button" onclick="deleteDiary('${item.id}')">삭제</button>` : ''}
         </div>
       `;
@@ -1005,6 +1005,8 @@ function openDiaryModal() {
   document.getElementById('dy-date').value = formatLocalDate(diaryWeekStart || getCurrentWorkweekStart());
   document.querySelector('#modal-create-diary h3').textContent = '업무일지 기록 작성';
   document.querySelector('#diary-form button[type="submit"]').textContent = '일지 저장';
+  document.getElementById('dy-existing-attachments').hidden = true;
+  document.getElementById('dy-existing-attachments').innerHTML = '';
 }
 
 function editDiary(diaryId) {
@@ -1019,6 +1021,23 @@ function editDiary(diaryId) {
   document.getElementById('dy-content').value = item.content;
   document.querySelector('#modal-create-diary h3').textContent = '업무일지 수정';
   document.querySelector('#diary-form button[type="submit"]').textContent = '수정 저장';
+  loadDiaryAttachmentList(diaryId);
+}
+
+async function loadDiaryAttachmentList(diaryId) {
+  const panel = document.getElementById('dy-existing-attachments');
+  panel.hidden = false;
+  panel.textContent = '기존 첨부파일을 불러오는 중…';
+  try {
+    const response = await fetch(`/api/attachments?diaryId=${encodeURIComponent(diaryId)}`, { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    panel.innerHTML = data.attachments.length
+      ? `<strong>기존 첨부파일</strong>${data.attachments.map(file => `<button type="button" class="btn-sm-action" onclick="window.open('/api/attachments?fileId=${encodeURIComponent(file.id)}', '_blank', 'noopener')">${file.file_name}</button>`).join('')}`
+      : '<span>기존 첨부파일이 없습니다.</span>';
+  } catch (error) {
+    panel.textContent = error.message || '기존 첨부파일을 불러오지 못했습니다.';
+  }
 }
 
 async function deleteDiary(diaryId) {
@@ -1057,21 +1076,28 @@ async function submitDiaryForm(e) {
     if (!response.ok) throw new Error(result.error || '업무일지 등록에 실패했습니다.');
     for (let index = 0; index < attachments.length; index += 1) {
       const file = attachments[index];
-      await window.uploadDiaryBlob(result.record.id, file, ({ percentage }) => {
+      const uploaded = await window.uploadDiaryBlob(result.record.id, file, ({ percentage }) => {
         const rounded = Math.round(percentage || 0);
         if (submitButton) submitButton.textContent = `파일 업로드 중 (${index + 1}/${attachments.length}, ${rounded}%)`;
       });
+      const attachmentResponse = await fetch('/api/attachments', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ diaryId: result.record.id, pathname: uploaded.pathname, fileName: file.name, contentType: file.type, byteSize: file.size })
+      });
+      const attachmentResult = await attachmentResponse.json();
+      if (!attachmentResponse.ok) throw new Error(attachmentResult.error || '첨부파일 등록에 실패했습니다.');
     }
     const newDiary = {
       id: result.record.id,
       userId: result.record.user_id || MOCK_DB.currentUser.id,
+      attachmentCount: isEditing ? undefined : attachments.length,
       date,
       projectId,
       hours,
       content
     };
 
-    if (isEditing) MOCK_DB.diaries = MOCK_DB.diaries.map(item => item.id === newDiary.id ? { ...item, ...newDiary } : item);
+    if (isEditing) MOCK_DB.diaries = MOCK_DB.diaries.map(item => item.id === newDiary.id ? { ...item, ...newDiary, attachmentCount: (item.attachmentCount || 0) + attachments.length } : item);
     else MOCK_DB.diaries.push(newDiary);
     saveAppState();
     closeModal('modal-create-diary');

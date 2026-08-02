@@ -1,5 +1,6 @@
 const { Readable } = require('node:stream');
-const { get } = require('@vercel/blob');
+const crypto = require('node:crypto');
+const { get, head } = require('@vercel/blob');
 const { neon } = require('@neondatabase/serverless');
 const { requireSession } = require('./_session');
 
@@ -39,6 +40,20 @@ module.exports = async (request, response) => {
       if (!owner[0] || (owner[0].user_id !== user.id && user.role !== 'admin')) return response.status(403).json({ error: '첨부파일 조회 권한이 없습니다.' });
       const attachments = await sql.query('SELECT id, file_name, content_type, byte_size, created_at FROM public.diary_attachments WHERE diary_id = $1 ORDER BY created_at DESC', [diaryId]);
       return response.status(200).json({ attachments });
+    }
+    if (request.method === 'POST') {
+      const input = typeof request.body === 'string' ? JSON.parse(request.body) : (request.body || {});
+      if (!input.diaryId || !input.pathname || !input.fileName) return response.status(400).json({ error: '업무일지와 첨부파일 정보가 필요합니다.' });
+      if (!String(input.pathname).startsWith(`diary/${input.diaryId}/`)) return response.status(400).json({ error: '잘못된 첨부파일 경로입니다.' });
+      const owner = await sql.query('SELECT id FROM public.diary_entries WHERE id = $1 AND (user_id = $2 OR $3 = true)', [input.diaryId, user.id, user.role === 'admin']);
+      if (!owner[0]) return response.status(403).json({ error: '첨부파일 등록 권한이 없습니다.' });
+      const blob = await head(input.pathname, { access: 'private' });
+      if (!blob) return response.status(404).json({ error: '업로드된 파일을 찾을 수 없습니다.' });
+      const rows = await sql.query(
+        'INSERT INTO public.diary_attachments (id, diary_id, uploader_id, file_name, content_type, byte_size, storage_path) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (storage_path) DO UPDATE SET file_name = EXCLUDED.file_name RETURNING id, file_name, content_type, byte_size',
+        [`blob-${crypto.randomUUID()}`, input.diaryId, user.id, input.fileName, blob.contentType || input.contentType || null, blob.size || Number(input.byteSize) || 0, input.pathname]
+      );
+      return response.status(201).json({ attachment: rows[0] });
     }
     return response.status(405).json({ error: 'Method not allowed.' });
   } catch (error) {
