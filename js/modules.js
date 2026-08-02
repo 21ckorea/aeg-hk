@@ -315,9 +315,17 @@ async function activateProjectRow(projId) {
     const response = await fetch('/api/intranet-data?resource=projectAssignments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: projId, yearMonth: getTimesheetMonth() }) });
     const result = await response.json();
     if (!response.ok) return alert(result.error || '프로젝트 추가에 실패했습니다.');
-    const existing = MOCK_DB.assignedProjects.find(item => item.projectId === projId);
-    if (existing) existing.endedOn = '';
-    else MOCK_DB.assignedProjects.push({ projectId: projId, plannedMm: 0, startedOn: `${getTimesheetMonth()}-01`, endedOn: '' });
+    // 서버가 확정한 기간을 그대로 반영한다. 이전 화면 상태가 남아 있어도 즉시 행이 표시된다.
+    const record = result.record;
+    const assignment = {
+      projectId: record.project_id,
+      plannedMm: Number(record.planned_mm || 0),
+      startedOn: String(record.started_on || `${getTimesheetMonth()}-01`).slice(0, 10),
+      endedOn: record.ended_on ? String(record.ended_on).slice(0, 10) : ''
+    };
+    const existingIndex = MOCK_DB.assignedProjects.findIndex(item => item.projectId === projId);
+    if (existingIndex >= 0) MOCK_DB.assignedProjects.splice(existingIndex, 1, assignment);
+    else MOCK_DB.assignedProjects.push(assignment);
     closeModal('modal-add-project');
     initTimesheets();
     saveAppState();
