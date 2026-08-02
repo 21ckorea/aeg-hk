@@ -803,12 +803,20 @@
 
             <!-- SUB-VIEW 4: ELECTRONIC APPROVAL (전자결재) -->
             <div id="sub-approval" class="sub-view">
-              <div class="timesheet-header-area">
+              <div class="approval-hero">
+                <div class="approval-hero-copy"><span class="approval-eyebrow"><i data-lucide="file-check-2"></i> DOCUMENT WORKFLOW</span><h3>전자결재 문서함</h3><p>결재 진행 상황을 확인하고 문서 내용을 빠르게 처리하세요.</p></div>
+                <div class="approval-summary">
+                  <div><span>결재 대기</span><strong id="approval-waiting-summary">0</strong></div>
+                  <div><span>상신 문서</span><strong id="approval-sent-summary">0</strong></div>
+                  <div><span>처리 완료</span><strong id="approval-completed-summary">0</strong></div>
+                </div>
+              </div>
+              <div class="timesheet-header-area approval-toolbar">
                 <div class="timesheet-filters">
                   <div class="tab-buttons">
-                    <button class="tab-btn active" onclick="switchApprovalTab('waiting')">결재 대기함</button>
-                    <button class="tab-btn" onclick="switchApprovalTab('sent')">상신함</button>
-                    <button class="tab-btn" onclick="switchApprovalTab('completed')">결재 완료함</button>
+                    <button class="tab-btn active" onclick="switchApprovalTab('waiting', event)">결재 대기함</button>
+                    <button class="tab-btn" onclick="switchApprovalTab('sent', event)">상신함</button>
+                    <button class="tab-btn" onclick="switchApprovalTab('completed', event)">결재 완료함</button>
                   </div>
                 </div>
                 <div class="timesheet-actions">
@@ -818,7 +826,8 @@
               </div>
 
               <!-- Approvals Listing -->
-              <div class="dash-panel mt-6">
+              <div class="dash-panel mt-6 approval-table-panel">
+                <div class="panel-header"><div><h3 id="approval-list-heading">결재 대기 문서</h3><p>문서를 선택해 상세 내용을 확인한 뒤 결재할 수 있습니다.</p></div></div>
                 <div class="panel-body">
                   <table class="data-table" id="approval-list-table">
                     <thead>

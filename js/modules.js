@@ -674,6 +674,8 @@ function renderApprovalsTable() {
   }
 
   const pendingCount = MOCK_DB.approvals.filter(a => a.status === 'waiting').length;
+  const sentCount = MOCK_DB.approvals.filter(a => a.drafter === MOCK_DB.currentUser.name).length;
+  const completedCount = MOCK_DB.approvals.filter(a => a.status === 'approved' || a.status === 'rejected').length;
   const pendingBadge = document.getElementById('pending-approval-count');
   if (pendingBadge) {
     pendingBadge.textContent = pendingCount;
@@ -681,6 +683,17 @@ function renderApprovalsTable() {
   }
   const dashCount = document.getElementById('dashboard-pending-approvals');
   if (dashCount) dashCount.textContent = `${pendingCount}건`;
+  const summaryValues = {
+    'approval-waiting-summary': pendingCount,
+    'approval-sent-summary': sentCount,
+    'approval-completed-summary': completedCount
+  };
+  Object.entries(summaryValues).forEach(([id, count]) => {
+    const target = document.getElementById(id);
+    if (target) target.textContent = count;
+  });
+  const listHeading = document.getElementById('approval-list-heading');
+  if (listHeading) listHeading.textContent = ({ waiting: '결재 대기 문서', sent: '내가 상신한 문서', completed: '결재 완료 문서' })[activeApprovalTab] || '전자결재 문서';
 
   if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:30px;">결재 문서가 아직 없습니다. 새 문서를 작성해 주세요.</td></tr>';
@@ -695,18 +708,18 @@ function renderApprovalsTable() {
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td data-label="문서번호">${ap.id}</td>
-      <td data-label="문서유형"><span class="badge" style="background:#e2e8f0; color:var(--text-dark);">${ap.type}</span></td>
-      <td data-label="제목"><strong>${ap.title}</strong></td>
-      <td data-label="기안자">${ap.drafter}</td>
-      <td data-label="기안일자">${ap.date}</td>
+      <td data-label="문서번호"><span class="approval-document-id">${ap.id}</span></td>
+      <td data-label="문서유형"><span class="approval-type-pill">${ap.type}</span></td>
+      <td data-label="제목"><button class="approval-title-button" onclick="openApprovalDetail('${ap.id}')">${ap.title}</button></td>
+      <td data-label="기안자"><span class="approval-drafter">${ap.drafter}</span></td>
+      <td data-label="기안일자"><span class="approval-date">${ap.date}</span></td>
       <td data-label="결재상태"><span class="badge-status ${badgeClass}">${statusText}</span></td>
       <td data-label="작업">
         <button class="btn-sm-action" onclick="openApprovalDetail('${ap.id}')">내용 보기</button>
         ${ap.status === 'waiting' ? `
           <button class="btn-sm-action approve" onclick="processApproval('${ap.id}', 'approved')">승인</button>
           <button class="btn-sm-action reject" onclick="processApproval('${ap.id}', 'rejected')">반려</button>
-        ` : '<span style="color:var(--text-muted); font-size:11px;">처리완료</span>'}
+        ` : '<span class="approval-completed-text">처리 완료</span>'}
       </td>
     `;
     tbody.appendChild(row);
