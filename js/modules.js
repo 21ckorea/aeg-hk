@@ -918,8 +918,11 @@ async function renderAdminPanel() {
   const countEl = document.getElementById('admin-user-count');
   const approvalEl = document.getElementById('admin-approval-count');
   const listEl = document.getElementById('admin-user-list');
+  const pendingListEl = document.getElementById('admin-pending-user-list');
+  const pendingCountEl = document.getElementById('admin-pending-user-count');
+  const pendingBadgeEl = document.getElementById('pending-user-count');
 
-  if (!countEl || !approvalEl || !listEl) return;
+  if (!countEl || !approvalEl || !listEl || !pendingListEl) return;
 
   let users = [];
   try {
@@ -933,6 +936,19 @@ async function renderAdminPanel() {
   }
   countEl.textContent = `${users.length}명`;
   approvalEl.textContent = `${MOCK_DB.approvals.filter(item => item.status === 'waiting').length}건`;
+  const pendingUsers = users.filter(user => user.status === 'inactive');
+  if (pendingCountEl) pendingCountEl.textContent = `${pendingUsers.length}명`;
+  if (pendingBadgeEl) pendingBadgeEl.textContent = pendingUsers.length;
+
+  pendingListEl.innerHTML = pendingUsers.length ? '' : '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">가입 승인 대기자가 없습니다.</td></tr>';
+  pendingUsers.forEach(user => {
+    const row = document.createElement('tr');
+    const position = [user.job_rank, user.job_title].filter(Boolean).join(' / ') || '-';
+    row.innerHTML = `
+      <td>${escapeAdminHtml(user.name)}</td><td>${escapeAdminHtml(user.email)}</td><td>${escapeAdminHtml(position)}</td>
+      <td><button class="btn-sm-action approve" onclick="updateUserAccess('${escapeAdminHtml(user.id)}', { status: 'active' })">승인</button></td>`;
+    pendingListEl.appendChild(row);
+  });
 
   listEl.innerHTML = '';
   users.forEach(user => {

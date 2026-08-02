@@ -54,7 +54,7 @@
         <i data-lucide="globe"></i> 공개 홈페이지
       </button>
       <button class="dev-btn" id="btn-toggle-intranet" onclick="switchMainView('intranet')">
-        <i data-lucide="layout-dashboard"></i> 사내 인트라넷
+        <i data-lucide="layout-dashboard"></i> 인트라넷
       </button>
       <span class="dev-divider">|</span>
       <button class="dev-btn secondary admin-only" id="btn-view-blueprint" onclick="toggleBlueprintDrawer()" hidden>
@@ -484,7 +484,7 @@
           <nav class="sidebar-menu">
             <ul>
               <li class="menu-item active" id="menu-dashboard" onclick="switchSubView('dashboard')">
-                <i data-lucide="layout-dashboard"></i> <span>인트라넷 대시보드</span>
+                <i data-lucide="layout-dashboard"></i> <span>대시보드</span>
               </li>
               <li class="menu-item" id="menu-timesheet" onclick="switchSubView('timesheet')">
                 <i data-lucide="calendar-range"></i> <span>투입시간 관리 (Timesheet)</span>
@@ -504,9 +504,13 @@
               <li class="menu-item" id="menu-diary" onclick="switchSubView('diary')">
                 <i data-lucide="book-open"></i> <span>업무일지</span>
               </li>
+              <li class="menu-item admin-only" id="menu-admin" onclick="switchSubView('admin')" style="display:none">
+                <i data-lucide="user-round-check"></i> <span>사용자 승인</span>
+                <span class="badge-count" id="pending-user-count">0</span>
+              </li>
               <li class="menu-divider"></li>
               <li class="menu-item logout" onclick="logout()">
-                <i data-lucide="log-out"></i> <span>로그아웃 (GNB 복귀)</span>
+                <i data-lucide="log-out"></i> <span>로그아웃</span>
               </li>
             </ul>
           </nav>
@@ -933,6 +937,13 @@
                         </div>
                       </div>
                       <div class="stat-card">
+                        <div class="card-icon orange"><i data-lucide="user-round-check"></i></div>
+                        <div class="card-data">
+                          <span class="num" id="admin-pending-user-count">0명</span>
+                          <span class="lbl">가입 승인 대기</span>
+                        </div>
+                      </div>
+                      <div class="stat-card">
                         <div class="card-icon green"><i data-lucide="clipboard-check"></i></div>
                         <div class="card-data">
                           <span class="num" id="admin-approval-count">0건</span>
@@ -941,6 +952,18 @@
                       </div>
                     </div>
                     <p style="margin-top:14px; color:var(--text-muted); font-size:13px;">관리자 계정으로 로그인된 상태라면 이 패널에서 운영 현황을 확인하고 사용자 계정을 관리할 수 있습니다.</p>
+                  </div>
+                </div>
+
+                <div class="dash-panel">
+                  <div class="panel-header">
+                    <h3>가입 승인 대기</h3>
+                  </div>
+                  <div class="panel-body">
+                    <table class="data-table">
+                      <thead><tr><th>이름</th><th>이메일</th><th>직급 / 직책</th><th>처리</th></tr></thead>
+                      <tbody id="admin-pending-user-list"></tbody>
+                    </table>
                   </div>
                 </div>
 
