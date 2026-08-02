@@ -1350,21 +1350,21 @@ function updateDiaryProjectOptions(workDate, selectedProjectId = '') {
   const help = document.getElementById('dy-project-help');
   if (!select) return;
   select.innerHTML = '';
-  const diaryMonth = String(workDate || formatLocalDate(diaryWeekStart || getCurrentWorkweekStart())).slice(0, 7);
-  const available = MOCK_DB.projects.filter(p => p.active && MOCK_DB.assignedProjects.some(item => item.projectId === p.id && isAssignmentActiveForMonth(item, diaryMonth)));
-  const selectedProject = selectedProjectId && MOCK_DB.projects.find(project => project.id === selectedProjectId);
-  if (selectedProject && !available.some(project => project.id === selectedProjectId)) available.push(selectedProject);
+  const targetDate = String(workDate || formatLocalDate(diaryWeekStart || getCurrentWorkweekStart())).slice(0, 10);
+  // 업무일지는 선택한 '작성일'에 실제로 투입 가능한 프로젝트만 연결한다.
+  // 월 단위 배정만으로 판단하면 프로젝트 시작 전 날짜가 노출되는 문제가 생긴다.
+  const available = MOCK_DB.projects.filter(project => isProjectInputAllowed(project, targetDate));
   if (!available.length) {
     const option = new Option('선택 가능한 프로젝트가 없습니다.', '');
     option.disabled = true;
     option.selected = true;
     select.appendChild(option);
     select.disabled = true;
-    if (help) help.textContent = `${diaryMonth}에 내 투입 프로젝트가 없습니다. 투입시간 관리에서 해당 월의 프로젝트를 먼저 추가해 주세요.`;
+    if (help) help.textContent = `${targetDate}에 작성 가능한 프로젝트가 없습니다. 프로젝트 기간과 내 투입 기간을 확인해 주세요.`;
     return;
   }
   select.disabled = false;
-  if (help) help.textContent = '작성일이 속한 월에 추가된 프로젝트만 선택할 수 있습니다.';
+  if (help) help.textContent = '작성일이 프로젝트 기간 및 내 투입 기간 안인 프로젝트만 선택할 수 있습니다.';
   available.forEach((p, index) => {
     const opt = document.createElement('option');
     opt.value = p.id;

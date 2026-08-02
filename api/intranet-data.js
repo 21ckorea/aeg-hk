@@ -32,6 +32,25 @@ function dateKey(value) {
   return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : new Date(text).toISOString().slice(0, 10);
 }
 
+async function validateDiaryProject(sql, userId, projectId, workDate) {
+  if (!projectId) return null;
+  const rows = await sql.query(
+    'SELECT p.name, p.is_active, p.started_on, p.ended_on, pa.started_on AS assignment_started_on, pa.ended_on AS assignment_ended_on FROM public.projects p LEFT JOIN public.project_assignments pa ON pa.project_id = p.id AND pa.user_id = $1 WHERE p.id = $2',
+    [userId, projectId]
+  );
+  const project = rows[0];
+  if (!project) return '선택한 프로젝트를 찾을 수 없습니다. 목록을 새로고침한 뒤 다시 선택해 주세요.';
+  const projectStart = dateKey(project.started_on);
+  const projectEnd = dateKey(project.ended_on);
+  const assignmentStart = dateKey(project.assignment_started_on);
+  const assignmentEnd = dateKey(project.assignment_ended_on);
+  if (!project.is_active) return `${project.name}: 종료 또는 비활성 프로젝트에는 업무일지를 작성할 수 없습니다.`;
+  if ((projectStart && workDate < projectStart) || (projectEnd && workDate > projectEnd)) return `${project.name}: ${workDate}은 프로젝트 기간(${projectStart || '시작일 미정'} ~ ${projectEnd || '종료일 미정'}) 밖입니다. 프로젝트 기간 안의 날짜로 선택해 주세요.`;
+  if (!assignmentStart) return `${project.name}: 내 투입 프로젝트에 추가되지 않았습니다. 투입시간 관리에서 먼저 프로젝트를 추가해 주세요.`;
+  if (workDate < assignmentStart || (assignmentEnd && workDate > assignmentEnd)) return `${project.name}: ${workDate}은 내 프로젝트 투입 기간(${assignmentStart} ~ ${assignmentEnd || '진행 중'}) 밖입니다. 투입 기간 안의 날짜로 선택해 주세요.`;
+  return null;
+}
+
 module.exports = async (request, response) => {
   response.setHeader('Cache-Control', 'no-store, max-age=0');
   try {
@@ -136,6 +155,10 @@ module.exports = async (request, response) => {
     if (request.method === 'PATCH' && resource === 'diaries') {
       const input = body(request);
       requireFields(input, ['id', 'workDate', 'hours', 'content']);
+      const owners = await sql.query('SELECT user_id FROM public.diary_entries WHERE id = $1 AND (user_id = $2 OR $3 = true)', [input.id, user.id, user.role === 'admin']);
+      if (!owners[0]) return response.status(403).json({ error: '업무일지 수정 권한이 없거나 항목을 찾을 수 없습니다.' });
+      const projectError = await validateDiaryProject(sql, owners[0].user_id, input.projectId, input.workDate);
+      if (projectError) return response.status(400).json({ error: projectError });
       const rows = await sql.query(
         'UPDATE public.diary_entries SET project_id = $2, work_date = $3, hours = $4, content = $5, updated_at = now() WHERE id = $1 AND (user_id = $6 OR $7 = true) RETURNING *',
         [input.id, input.projectId || null, input.workDate, input.hours, input.content, user.id, user.role === 'admin']
@@ -197,6 +220,8 @@ module.exports = async (request, response) => {
       rows = await sql.query('INSERT INTO public.notices (id, author_id, category, title, content, is_pinned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [id('notice'), user.id, input.category || '공지', input.title, input.content, Boolean(input.isPinned)]);
     } else {
       requireFields(input, ['workDate', 'hours', 'content']);
+      const projectError = await validateDiaryProject(sql, user.id, input.projectId, input.workDate);
+      if (projectError) return response.status(400).json({ error: projectError });
       rows = await sql.query('INSERT INTO public.diary_entries (id, user_id, project_id, work_date, hours, content) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [id('diary'), user.id, input.projectId || null, input.workDate, input.hours, input.content]);
     }
     return response.status(201).json({ resource, record: rows[0] });
