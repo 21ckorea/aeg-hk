@@ -71,6 +71,11 @@ module.exports = async (request, response) => {
     if (request.method === 'POST' && resource === 'projectAssignments') {
       const input = body(request);
       if (!input.projectId || !input.yearMonth) return response.status(400).json({ error: '프로젝트와 기준 월이 필요합니다.' });
+      // 이전 스키마가 남아 있는 연결 DB에서도 개인 배정을 즉시 사용할 수 있게 한다.
+      // 원본 projects 테이블의 행에는 전혀 영향을 주지 않는다.
+      await sql.query('ALTER TABLE public.project_assignments ADD COLUMN IF NOT EXISTS started_on date');
+      await sql.query('ALTER TABLE public.project_assignments ADD COLUMN IF NOT EXISTS ended_on date');
+      await sql.query('UPDATE public.project_assignments SET started_on = CURRENT_DATE WHERE started_on IS NULL');
       const monthStart = `${input.yearMonth}-01`;
       const monthEnd = `${input.yearMonth}-31`;
       const project = await sql.query('SELECT id FROM public.projects WHERE id=$1 AND is_active=true AND (started_on IS NULL OR started_on <= $2) AND (ended_on IS NULL OR ended_on >= $3)', [input.projectId, monthEnd, monthStart]);

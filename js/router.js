@@ -88,7 +88,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (isAuthenticated) {
     await verifyDatabaseHealth();
     await hydrateWorkflowsFromNeon();
+    switchMainView('intranet');
+  } else {
+    switchMainView('public');
   }
-  switchMainView('public');
   lucide.createIcons();
 });
