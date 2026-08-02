@@ -575,7 +575,10 @@ function renderApprovalsTable() {
 
   const pendingCount = MOCK_DB.approvals.filter(a => a.status === 'waiting').length;
   const pendingBadge = document.getElementById('pending-approval-count');
-  if (pendingBadge) pendingBadge.textContent = pendingCount;
+  if (pendingBadge) {
+    pendingBadge.textContent = pendingCount;
+    pendingBadge.hidden = pendingCount === 0;
+  }
   const dashCount = document.getElementById('dashboard-pending-approvals');
   if (dashCount) dashCount.textContent = `${pendingCount}건`;
 
@@ -708,6 +711,13 @@ function renderDashboardApprovals() {
 
   container.innerHTML = '';
   const pending = MOCK_DB.approvals.filter(a => a.status === 'waiting');
+  const pendingBadge = document.getElementById('pending-approval-count');
+  const dashboardCount = document.getElementById('dashboard-pending-approvals');
+  if (pendingBadge) {
+    pendingBadge.textContent = pending.length;
+    pendingBadge.hidden = pending.length === 0;
+  }
+  if (dashboardCount) dashboardCount.textContent = `${pending.length}건`;
 
   if (pending.length === 0) {
     container.innerHTML = '<p style="padding:30px; text-align:center; font-size:13px; color:var(--text-muted);">대기 중인 결재가 없습니다.</p>';
