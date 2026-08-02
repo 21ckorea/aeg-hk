@@ -2792,10 +2792,20 @@ body.intranet-mode .top-public-nav { display: none; }
 .wbs-toolbar select, .wbs-toolbar input { min-width: 180px; padding: 9px 10px; border: 1px solid var(--border-light); border-radius: 6px; }
 .wbs-toolbar p { margin: 0 0 8px; color: var(--text-muted); font-size: 12px; }
 .wbs-scroll { overflow-x: auto; padding: 16px 24px 24px !important; }
-.wbs-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
-.wbs-table th, .wbs-table td { border: 1px solid #cbd5e1; height: 34px; width: 38px; min-width: 38px; padding: 4px; text-align: center; white-space: nowrap; }
-.wbs-table th { background: #f1f5f9; color: #475569; font-weight: 700; }
-.wbs-table th:nth-child(1) { min-width: 88px; }
+.wbs-table { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; table-layout: fixed; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 10px; }
+.wbs-table th, .wbs-table td { border-right: 1px solid #d7e0ed; border-bottom: 1px solid #d7e0ed; height: 36px; width: 38px; min-width: 38px; padding: 4px; text-align: center; white-space: nowrap; }
+.wbs-table th { background: linear-gradient(180deg, #f8fafc 0%, #eaf0f8 100%); color: #475569; font-weight: 800; }
+.wbs-table tr:last-child td { border-bottom: 0; }
+.wbs-table th:last-child, .wbs-table td:last-child { border-right: 0; }
+.wbs-table th:nth-child(1) { min-width: 96px; }
+.wbs-table th:first-child, .wbs-table td:first-child { position: sticky; left: 0; z-index: 2; background: #f8fafc; box-shadow: 5px 0 10px rgba(51, 65, 85, .07); font-weight: 700; }
+.wbs-table thead th:first-child { z-index: 4; background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%); color: #3730a3; }
+.wbs-table tbody tr:nth-child(even) td { background-color: #fbfdff; }
+.wbs-table tbody tr:hover td { background-color: #f5f8ff; }
+.wbs-table th.wbs-saturday { color: #2563eb; background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); }
+.wbs-table th.wbs-holiday { color: #dc2626; background: linear-gradient(180deg, #fff5f5 0%, #fee2e2 100%); }
+.wbs-table td.wbs-saturday { background-color: #f8fbff; }
+.wbs-table td.wbs-holiday { background-color: #fffafb; }
 .wbs-table th small, .wbs-table td small { display: block; font-size: 10px; color: #64748b; font-weight: 400; margin-top: 3px; }
 .wbs-task-list > div { min-height: 28px; padding: 3px 0; border-bottom: 1px dashed #dbe3ef; }
 .wbs-task-list > div:last-child { border-bottom: 0; }
@@ -2803,13 +2813,13 @@ body.intranet-mode .top-public-nav { display: none; }
 .wbs-mini-bar { display: block; min-height: 32px; margin: 1px 0; padding: 4px 2px; overflow: hidden; color: #fff; font-size: 10px; text-overflow: ellipsis; background: #64748b; }
 .wbs-mini-bar b, .wbs-mini-bar small { display: block; overflow: hidden; color: inherit; font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
 .wbs-mini-bar small { opacity: .9; font-weight: 500; }
-.wbs-span { overflow: hidden; color: #fff; font-size: 11px; font-weight: 700; text-align: center; text-overflow: ellipsis; background: #64748b; }
+.wbs-span { overflow: hidden; color: #fff; font-size: 11px; font-weight: 700; text-align: center; text-overflow: ellipsis; background: linear-gradient(135deg, #64748b 0%, #475569 100%); border-radius: 6px; box-shadow: 0 3px 7px rgba(51, 65, 85, .22); }
 .wbs-span { cursor: pointer; }
 .wbs-span:focus { outline: 2px solid #1d4ed8; outline-offset: -2px; }
 .wbs-span small { display: block; color: #fff !important; font-size: 10px; font-weight: 500; line-height: 1.25; opacity: .92; }
-.wbs-span.progress { background: #4f46e5; }
-.wbs-span.done { background: #10b981; }
-.wbs-span.delayed { background: #ef4444; }
+.wbs-span.progress { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); }
+.wbs-span.done { background: linear-gradient(135deg, #34d399 0%, #059669 100%); }
+.wbs-span.delayed { background: linear-gradient(135deg, #fb7185 0%, #dc2626 100%); }
 .wbs-mini-bar.progress { background: #4f46e5; }
 .wbs-mini-bar.done { background: #10b981; }
 .wbs-mini-bar.delayed { background: #ef4444; }

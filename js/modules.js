@@ -1293,6 +1293,14 @@ function wbsShortRange(task) {
   return start === end ? `(${start})` : `(${start}~${end})`;
 }
 
+function wbsDateClass(year, month, day) {
+  const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const weekday = new Date(year, month - 1, day).getDay();
+  if (KOREAN_HOLIDAYS.has(dateKey) || weekday === 0) return 'wbs-holiday';
+  if (weekday === 6) return 'wbs-saturday';
+  return '';
+}
+
 function renderWbs() {
   const projectSelect = document.getElementById('wbs-project-select');
   const monthInput = document.getElementById('wbs-month');
@@ -1319,7 +1327,7 @@ function renderWbs() {
     if (!taskGroups.has(key)) taskGroups.set(key, []);
     taskGroups.get(key).push(task);
   });
-  let html = `<thead><tr><th>공정</th>${Array.from({ length: days }, (_, index) => `<th>${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th></tr></thead><tbody>`;
+  let html = `<thead><tr><th>공정</th>${Array.from({ length: days }, (_, index) => `<th class="${wbsDateClass(year, month, index + 1)}">${index + 1}<small>${['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, index + 1).getDay()]}</small></th>`).join('')}<th>비고</th></tr></thead><tbody>`;
   if (!tasks.length) html += `<tr><td colspan="${days + 2}" class="wbs-empty">등록된 공정 작업이 없습니다. 아래에서 작업을 등록해 주세요.</td></tr>`;
   taskGroups.forEach((groupTasks, category) => {
     html += `<tr><td>${escapeAdminHtml(category)}</td>`;
@@ -1328,7 +1336,7 @@ function renderWbs() {
       const date = `${monthInput.value}-${String(day).padStart(2, '0')}`;
       const task = orderedTasks.find(item => item.startedOn <= date && item.endedOn >= date);
       if (!task) {
-        html += '<td class="wbs-cell"></td>';
+        html += `<td class="wbs-cell ${wbsDateClass(year, month, day)}"></td>`;
         day += 1;
         continue;
       }
