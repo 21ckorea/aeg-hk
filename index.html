@@ -537,10 +537,11 @@
                 <i data-lucide="clock-alarm"></i>
                 <span id="live-time">09:00 AM</span>
               </div>
-              <div class="notification-bell">
+              <button class="notification-bell" type="button" aria-label="공지 알림 보기" onclick="toggleNoticeCenter()">
                 <i data-lucide="bell"></i>
-                <span class="bell-badge"></span>
-              </div>
+                <span class="bell-badge" id="notice-bell-badge" hidden></span>
+              </button>
+              <div class="notice-center" id="notice-center" hidden></div>
             </div>
           </header>
 
@@ -1178,6 +1179,16 @@
             <label for="notice-content">상세 내용</label>
             <textarea id="notice-content" rows="4" placeholder="공지 내용을 입력하세요" required></textarea>
           </div>
+          <div class="form-group notice-popup-setting">
+            <label class="checkbox-label"><input type="checkbox" id="notice-popup-enabled" onchange="toggleNoticePopupFields()"> 팝업 공지로 노출</label>
+            <small class="form-help">체크하면 설정한 기간에 로그인한 직원에게 공지 팝업이 표시됩니다.</small>
+            <div class="notice-popup-period" id="notice-popup-period" hidden>
+              <label for="notice-popup-start">팝업 시작일</label>
+              <input type="date" id="notice-popup-start">
+              <label for="notice-popup-end">팝업 종료일</label>
+              <input type="date" id="notice-popup-end">
+            </div>
+          </div>
           <div class="modal-footer">
             <button type="button" class="btn-action secondary" onclick="closeModal('modal-create-notice')">취소</button>
             <button type="submit" class="btn-action primary">공지 저장</button>
@@ -1225,6 +1236,23 @@
             <button type="submit" class="btn-action primary">일지 저장</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-notice-popup">
+    <div class="modal-card notice-popup-card">
+      <div class="modal-header">
+        <h3 id="notice-popup-title">공지사항</h3>
+        <button class="close-btn" type="button" aria-label="공지 닫기" onclick="closeNoticePopup()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <span id="notice-popup-category" class="badge-notice"></span>
+        <div id="notice-popup-content" class="notice-popup-content"></div>
+        <label class="checkbox-label notice-dismiss-option"><input type="checkbox" id="notice-dismiss-today"> 오늘은 이 공지 보지 않기</label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action primary" onclick="closeNoticePopup()">확인</button>
       </div>
     </div>
   </div>

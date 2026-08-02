@@ -51,6 +51,12 @@ async function validateDiaryProject(sql, userId, projectId, workDate) {
   return null;
 }
 
+async function ensureNoticePopupSchema(sql) {
+  await sql.query('ALTER TABLE public.notices ADD COLUMN IF NOT EXISTS popup_enabled boolean NOT NULL DEFAULT false');
+  await sql.query('ALTER TABLE public.notices ADD COLUMN IF NOT EXISTS popup_start date');
+  await sql.query('ALTER TABLE public.notices ADD COLUMN IF NOT EXISTS popup_end date');
+}
+
 module.exports = async (request, response) => {
   response.setHeader('Cache-Control', 'no-store, max-age=0');
   try {
@@ -61,6 +67,7 @@ module.exports = async (request, response) => {
     if (!process.env.DATABASE_URL) return response.status(503).json({ error: 'DATABASE_URL is not configured.' });
     const sql = neon(process.env.DATABASE_URL);
     const isPrivileged = user.role === 'admin' || user.role === 'manager';
+    if (resource === 'notices') await ensureNoticePopupSchema(sql);
     if (request.method === 'GET') {
       if (resource === 'projectAssignments') {
         const rows = await sql.query('SELECT project_id, planned_mm, started_on, ended_on FROM public.project_assignments WHERE user_id = $1', [user.id]);
@@ -217,7 +224,10 @@ module.exports = async (request, response) => {
     } else if (resource === 'notices') {
       if (!isPrivileged) return response.status(403).json({ error: 'PM 또는 관리자만 공지를 등록할 수 있습니다.' });
       requireFields(input, ['title', 'content']);
-      rows = await sql.query('INSERT INTO public.notices (id, author_id, category, title, content, is_pinned) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [id('notice'), user.id, input.category || '공지', input.title, input.content, Boolean(input.isPinned)]);
+      const popupEnabled = Boolean(input.popupEnabled);
+      if (popupEnabled && (!input.popupStart || !input.popupEnd)) return response.status(400).json({ error: '팝업 공지의 시작일과 종료일을 모두 입력해 주세요.' });
+      if (popupEnabled && input.popupStart > input.popupEnd) return response.status(400).json({ error: '팝업 종료일은 시작일 이후여야 합니다.' });
+      rows = await sql.query('INSERT INTO public.notices (id, author_id, category, title, content, is_pinned, popup_enabled, popup_start, popup_end) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *', [id('notice'), user.id, input.category || '공지', input.title, input.content, Boolean(input.isPinned), popupEnabled, popupEnabled ? input.popupStart : null, popupEnabled ? input.popupEnd : null]);
     } else {
       requireFields(input, ['workDate', 'hours', 'content']);
       const projectError = await validateDiaryProject(sql, user.id, input.projectId, input.workDate);

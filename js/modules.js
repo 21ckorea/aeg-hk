@@ -830,14 +830,104 @@ function renderDashboardNotices() {
     const li = document.createElement('li');
     li.innerHTML = `
       <span class="badge-notice ${item.category === '긴급' ? 'urgent' : ''}">${item.category}</span>
-      <a href="#">${item.title}</a>
+      <a href="#" onclick="showNoticePopup('${item.id}'); return false;">${item.title}</a>
       <span class="date">${item.date}</span>
     `;
     list.appendChild(li);
   });
 }
 
+let currentNoticePopupId = null;
+
+function getNoticeTodayKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function noticeDismissKey(noticeId) {
+  return `aeg-notice-dismissed-${MOCK_DB.currentUser.id}-${noticeId}`;
+}
+
+function isNoticeDismissedToday(notice) {
+  return localStorage.getItem(noticeDismissKey(notice.id)) === getNoticeTodayKey();
+}
+
+function isPopupNoticeActive(notice) {
+  const today = getNoticeTodayKey();
+  return Boolean(notice.popupEnabled && notice.popupStart && notice.popupEnd && notice.popupStart <= today && notice.popupEnd >= today);
+}
+
+function getActivePopupNotices() {
+  return MOCK_DB.notices.filter(isPopupNoticeActive);
+}
+
+function renderNoticeNotifications(showPopup = false) {
+  const active = getActivePopupNotices();
+  const unread = active.filter(notice => !isNoticeDismissedToday(notice));
+  const badge = document.getElementById('notice-bell-badge');
+  if (badge) badge.hidden = unread.length === 0;
+
+  const center = document.getElementById('notice-center');
+  if (center) {
+    center.innerHTML = active.length
+      ? `<strong>공지 알림</strong>${active.map(notice => `<button type="button" onclick="showNoticePopup('${notice.id}')"><span class="badge-notice ${notice.category === '긴급' ? 'urgent' : ''}">${escapeAdminHtml(notice.category)}</span><span>${escapeAdminHtml(notice.title)}</span></button>`).join('')}`
+      : '<span class="notice-center-empty">현재 팝업 공지가 없습니다.</span>';
+  }
+
+  if (showPopup && unread.length) showNoticePopup(unread[0].id);
+}
+
+function toggleNoticeCenter() {
+  const center = document.getElementById('notice-center');
+  if (!center) return;
+  const willShow = center.hidden;
+  center.hidden = !willShow;
+  if (willShow) renderNoticeNotifications(false);
+}
+
+function showNoticePopup(noticeId) {
+  const notice = MOCK_DB.notices.find(item => item.id === noticeId);
+  if (!notice) return;
+  currentNoticePopupId = noticeId;
+  const modal = document.getElementById('modal-notice-popup');
+  document.getElementById('notice-popup-title').textContent = notice.title;
+  const category = document.getElementById('notice-popup-category');
+  category.textContent = notice.category;
+  category.className = `badge-notice ${notice.category === '긴급' ? 'urgent' : ''}`;
+  document.getElementById('notice-popup-content').innerHTML = escapeAdminHtml(notice.content).replace(/\n/g, '<br>');
+  document.getElementById('notice-dismiss-today').checked = isNoticeDismissedToday(notice);
+  document.querySelector('.notice-dismiss-option').hidden = !isPopupNoticeActive(notice);
+  modal.classList.add('active');
+  document.getElementById('notice-center').hidden = true;
+  lucide.createIcons();
+}
+
+function closeNoticePopup() {
+  const notice = MOCK_DB.notices.find(item => item.id === currentNoticePopupId);
+  if (notice && document.getElementById('notice-dismiss-today').checked) localStorage.setItem(noticeDismissKey(notice.id), getNoticeTodayKey());
+  document.getElementById('modal-notice-popup').classList.remove('active');
+  currentNoticePopupId = null;
+  renderNoticeNotifications(false);
+}
+
+function toggleNoticePopupFields() {
+  const enabled = document.getElementById('notice-popup-enabled').checked;
+  const period = document.getElementById('notice-popup-period');
+  const start = document.getElementById('notice-popup-start');
+  const end = document.getElementById('notice-popup-end');
+  period.hidden = !enabled;
+  start.required = enabled;
+  end.required = enabled;
+  if (enabled && !start.value) {
+    const today = getNoticeTodayKey();
+    start.value = today;
+    end.value = today;
+  }
+}
+
 function openNoticeModal() {
+  document.getElementById('notice-form').reset();
+  toggleNoticePopupFields();
   document.getElementById('modal-create-notice').classList.add('active');
 }
 
@@ -846,24 +936,31 @@ async function submitNoticeForm(e) {
   const title = document.getElementById('notice-title').value.trim();
   const category = document.getElementById('notice-category').value;
   const content = document.getElementById('notice-content').value.trim();
+  const popupEnabled = document.getElementById('notice-popup-enabled').checked;
+  const popupStart = document.getElementById('notice-popup-start').value;
+  const popupEnd = document.getElementById('notice-popup-end').value;
 
   if (!title || !content) return;
 
-  const response = await fetch('/api/intranet-data?resource=notices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, category, content }) });
+  const response = await fetch('/api/intranet-data?resource=notices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, category, content, popupEnabled, popupStart, popupEnd }) });
   const result = await response.json();
   if (!response.ok) return alert(result.error || '공지 등록에 실패했습니다.');
   MOCK_DB.notices.unshift({
-    id: `N${Date.now()}`,
-    title,
-    category,
-    date: new Date().toLocaleDateString('ko-KR').slice(5),
-    content
+    id: result.record.id,
+    title: result.record.title,
+    category: result.record.category,
+    date: String(result.record.created_at).slice(0, 10),
+    content: result.record.content,
+    popupEnabled: Boolean(result.record.popup_enabled),
+    popupStart: result.record.popup_start ? String(result.record.popup_start).slice(0, 10) : '',
+    popupEnd: result.record.popup_end ? String(result.record.popup_end).slice(0, 10) : ''
   });
   saveAppState();
   closeModal('modal-create-notice');
   document.getElementById('notice-form').reset();
   alert('공지사항이 등록되었습니다.');
   renderDashboardApprovals();
+  renderNoticeNotifications(Boolean(result.record.popup_enabled));
 }
 
 async function performCheckIn() {
