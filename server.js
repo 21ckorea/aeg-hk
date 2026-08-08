@@ -40,7 +40,8 @@ function createServer(port) {
 
       const ext = path.extname(filePath).toLowerCase();
       const contentType = mimeTypes[ext] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': contentType });
+      // 로컬 개발 중에는 이전 인증 스크립트가 브라우저 캐시에 남지 않도록 한다.
+      res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-store, max-age=0' });
       res.end(content);
     });
   });
