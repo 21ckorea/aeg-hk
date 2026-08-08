@@ -38,6 +38,18 @@
   <script src="./js/ui.js"></script>
   <script src="./js/modules.js"></script>
   <script src="./js/router.js"></script>
+  <script>
+    // 이전 PWA 버전이 남긴 로그인 스크립트 캐시를 한 번에 정리한다.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistrations()
+          .then(registrations => Promise.all(registrations.map(registration => registration.unregister())))
+          .then(() => caches.keys())
+          .then(keys => Promise.all(keys.filter(key => key.startsWith('aeg-hk-')).map(key => caches.delete(key))))
+          .catch(() => {});
+      });
+    }
+  </script>
   <script type="module">
     import { upload } from 'https://esm.sh/@vercel/blob@2.6.1/client';
 
