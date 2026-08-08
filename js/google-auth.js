@@ -67,6 +67,13 @@ window.renderGoogleButton = async () => {
   try {
     const width = Math.max(220, Math.min(320, target.getBoundingClientRect().width || 320));
     window.google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', width: Math.floor(width), text: 'continue_with' });
+    // Google 라이브러리가 예외 없이 끝나도 iframe을 만들지 못하는 경우가 있다.
+    // 빈 영역을 남기지 말고 사용자가 바로 재시도할 수 있게 안내한다.
+    window.setTimeout(() => {
+      if (!target.querySelector('iframe')) {
+        showGoogleButtonError('Google 로그인 버튼을 표시하지 못했습니다. 다시 불러와 주세요.');
+      }
+    }, 1000);
   } catch {
     showGoogleButtonError('Google 로그인 버튼을 표시하지 못했습니다. 다시 불러와 주세요.');
   }

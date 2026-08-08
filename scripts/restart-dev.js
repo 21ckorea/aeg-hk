@@ -55,11 +55,22 @@ async function freePort() {
 
 async function restart() {
   await freePort();
-  console.log(`http://localhost:${port} 에서 개발 서버를 시작합니다.`);
-  const child = spawn(process.execPath, ['server.js'], {
-    cwd: path.resolve(__dirname, '..'),
+  const projectRoot = path.resolve(__dirname, '..');
+  const vercelCommand = process.platform === 'win32'
+    ? path.join(projectRoot, 'node_modules', '.bin', 'vercel.cmd')
+    : path.join(projectRoot, 'node_modules', '.bin', 'vercel');
+
+  console.log(`http://localhost:${port} 에서 Vercel 개발 서버를 시작합니다.`);
+  console.log('홈페이지, API, 환경 변수를 함께 실행합니다.');
+  const child = spawn(vercelCommand, ['dev', '--listen', String(port)], {
+    cwd: projectRoot,
     stdio: 'inherit',
     env: { ...process.env, PORT: String(port) }
+  });
+
+  child.on('error', error => {
+    console.error(`Vercel 개발 서버를 시작하지 못했습니다: ${error.message}`);
+    process.exit(1);
   });
   child.on('exit', code => process.exit(code ?? 0));
 }
