@@ -106,8 +106,7 @@ async function hydrateWorkflowsFromNeon() {
     }));
     // 실제 월별 배열 구성은 현재 선택 월을 기준으로 renderTimesheet에서 처리한다.
     // 여기서 모든 월을 일자(1~31)만으로 합치면 7월 31일이 8월 31일에 섞일 수 있다.
-    if (directory.users?.length) {
-      MOCK_DB.employees = directory.users.map(item => ({
+    const loadedEmployees = (directory.users || []).map(item => ({
         id: item.id,
         name: item.name,
         dept: item.job_title || '',
@@ -116,7 +115,16 @@ async function hydrateWorkflowsFromNeon() {
         avatar: item.avatar_url || item.name.charAt(0),
         joinDate: ''
       }));
-    }
+    // 디렉터리 조회가 잠시 실패해도 가상의 직원 대신 현재 로그인한 사용자만 표시한다.
+    MOCK_DB.employees = loadedEmployees.length ? loadedEmployees : [{
+      id: MOCK_DB.currentUser.id,
+      name: MOCK_DB.currentUser.name,
+      dept: MOCK_DB.currentUser.role || '',
+      rank: '',
+      status: 'normal',
+      avatar: MOCK_DB.currentUser.avatar || MOCK_DB.currentUser.name.charAt(0),
+      joinDate: ''
+    }].filter(item => item.id);
     const today = new Date().toISOString().slice(0, 10);
     const todayAttendance = attendance.find(item => String(item.work_date).slice(0, 10) === today);
     if (todayAttendance) {
@@ -126,7 +134,10 @@ async function hydrateWorkflowsFromNeon() {
     }
     // 로그인 직후에는 현재 노출 기간의 팝업 공지를 한 번 안내한다.
     if (typeof renderNoticeNotifications === 'function') setTimeout(() => renderNoticeNotifications(true), 0);
-    if (failedResources.length) console.info('Some workflow resources could not be loaded:', failedResources);
+    if (failedResources.length) {
+      console.info('Some workflow resources could not be loaded:', failedResources);
+      showDataStatus('일부 업무 데이터를 불러오지 못했습니다. 새로고침 후에도 반복되면 관리자에게 알려 주세요.', 'error');
+    }
     return true;
   } catch (error) {
     console.info('Workflow data hydration skipped.', error);

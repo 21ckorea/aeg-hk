@@ -4,11 +4,11 @@ let MOCK_DB = createDefaultAppState();
 
 function createDefaultAppState() {
   const defaultUser = {
-    id: 'emp01',
-    name: '홍길동',
+    id: '',
+    name: '',
     accessRole: 'staff',
-    role: 'AA부서 / 과장',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'
+    role: '',
+    avatar: './assets/profile-placeholder.svg'
   };
 
   return {
@@ -16,9 +16,7 @@ function createDefaultAppState() {
     projects: [],
     wbsTasks: [],
     assignedProjects: [],
-    employees: [
-      { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
-    ],
+    employees: [],
     timesheets: {},
     timesheetRecords: [],
     manpowerRecords: [],
@@ -45,9 +43,7 @@ function normalizeAppState(state) {
     projects: Array.isArray(state?.projects) ? state.projects : [],
     wbsTasks: Array.isArray(state?.wbsTasks) ? state.wbsTasks : [],
     assignedProjects: Array.isArray(state?.assignedProjects) ? state.assignedProjects : [],
-    employees: Array.isArray(state?.employees) && state.employees.length > 0 ? state.employees : [
-      { id: 'emp01', name: '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
-    ],
+    employees: Array.isArray(state?.employees) ? state.employees : [],
     timesheets: state?.timesheets && typeof state.timesheets === 'object' ? state.timesheets : {},
     timesheetRecords: Array.isArray(state?.timesheetRecords) ? state.timesheetRecords : [],
     manpowerRecords: Array.isArray(state?.manpowerRecords) ? state.manpowerRecords : [],
@@ -58,8 +54,8 @@ function normalizeAppState(state) {
     attendance: { ...base.attendance, ...(state?.attendance || {}) }
   };
 
-  if (!normalized.currentUser.id) normalized.currentUser.id = normalized.employees[0].id;
-  if (!normalized.currentUser.name) normalized.currentUser.name = normalized.employees[0].name;
+  if (!normalized.currentUser.id && normalized.employees[0]) normalized.currentUser.id = normalized.employees[0].id;
+  if (!normalized.currentUser.name && normalized.employees[0]) normalized.currentUser.name = normalized.employees[0].name;
 
   return normalized;
 }
@@ -82,14 +78,8 @@ function ensureStateShape() {
   if (!MOCK_DB.manpowerRecords) MOCK_DB.manpowerRecords = [];
   if (!MOCK_DB.attendance) MOCK_DB.attendance = { status: 'out', checkInTime: null, checkOutTime: null, log: [], records: [] };
   if (!MOCK_DB.attendance.records) MOCK_DB.attendance.records = [];
-  if (!MOCK_DB.employees || MOCK_DB.employees.length === 0) {
-    MOCK_DB.employees = [
-      { id: 'emp01', name: MOCK_DB.currentUser?.name || '홍길동', dept: 'AA부서', rank: '과장', status: 'normal', avatar: 'H', joinDate: '오늘 등록' }
-    ];
-  }
-  if (!MOCK_DB.currentUser?.id) {
-    MOCK_DB.currentUser = { ...MOCK_DB.employees[0], role: 'AA부서 / 과장' };
-  }
+  if (!Array.isArray(MOCK_DB.employees)) MOCK_DB.employees = [];
+  if (!MOCK_DB.currentUser) MOCK_DB.currentUser = { id: '', name: '', accessRole: 'staff', role: '', avatar: './assets/profile-placeholder.svg' };
 }
 
 function clearStoredSession() {}
