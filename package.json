@@ -4,6 +4,7 @@
   "private": true,
   "description": "Homepage and intranet prototype for AEG HK",
   "scripts": {
+    "build": "node scripts/sync-brand.js",
     "dev": "node server.js",
     "start": "node server.js",
     "restart": "node scripts/restart-dev.js"
