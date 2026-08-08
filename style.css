@@ -36,6 +36,83 @@
   --dev-bar-height: 48px;
 }
 
+/* ==================== 2026 ARCHITECTURAL EDITORIAL REFRESH ==================== */
+/* 차분한 건축적 여백 위에 선명한 디지털 포인트를 더한 공통 시각 언어 */
+:root {
+  --bg-primary: #151923;
+  --bg-secondary: #232a38;
+  --bg-light: #f4f6fa;
+  --primary: #635bff;
+  --primary-hover: #4f46e5;
+  --accent: #15b886;
+  --border-light: #e3e8f1;
+  --border-dark: #313b4e;
+  --shadow-sm: 0 2px 8px rgba(24, 32, 50, .045);
+  --shadow-md: 0 10px 24px rgba(24, 32, 50, .08);
+  --shadow-lg: 0 20px 45px rgba(24, 32, 50, .12);
+  --shadow-premium: 0 28px 70px rgba(24, 32, 50, .20);
+}
+
+body { background: radial-gradient(circle at 80% -10%, #e7e9ff 0, transparent 30%), #f4f6fa; letter-spacing: -.015em; }
+::selection { background: #dcd9ff; color: #24206b; }
+.dev-control-bar { background: rgba(21, 25, 35, .96); border-bottom-color: rgba(255,255,255,.08); box-shadow: 0 7px 28px rgba(9, 12, 20, .22); }
+.dev-logo { font-weight: 800; letter-spacing: -.025em; }
+.dev-btn { border-radius: 9px; font-weight: 650; }
+.dev-btn.active { background: linear-gradient(135deg, #776dff, #5146e5); box-shadow: 0 8px 18px rgba(99, 91, 255, .3); }
+
+.pub-header-container { max-width: 1280px; }
+.pub-header { border-bottom: 1px solid rgba(21,25,35,.07); box-shadow: 0 10px 30px rgba(24,32,50,.04); }
+.pub-logo { letter-spacing: -.045em; }
+.pub-nav a { font-size: 14px; font-weight: 650; }
+.btn-intranet-login { border-radius: 10px; background: linear-gradient(135deg, #222938, #141925); box-shadow: 0 8px 18px rgba(21,25,35,.14); }
+
+.intra-sidebar { background: linear-gradient(180deg, #161c2b 0%, #101622 100%); border-right-color: rgba(255,255,255,.08); }
+.sidebar-header, .profile-card, .quick-role-switcher { border-bottom-color: rgba(255,255,255,.09); }
+.sidebar-header { padding-top: 28px; }
+.profile-card .avatar img { border-color: rgba(255,255,255,.18); box-shadow: 0 6px 14px rgba(0,0,0,.2); }
+.menu-item { margin: 2px 2px; border-radius: 11px; font-weight: 600; }
+.menu-item:hover { background: rgba(255,255,255,.08); transform: translateX(2px); }
+.menu-item.active { background: linear-gradient(135deg, #7066ff, #4f46e5); box-shadow: 0 8px 18px rgba(62, 55, 194, .28); }
+.profile-edit-button { border-color: rgba(255,255,255,.16); border-radius: 9px; }
+
+.intra-header { height: 76px; background: rgba(255,255,255,.88); backdrop-filter: blur(18px); border-bottom-color: rgba(208,216,229,.8); }
+.intra-header h2 { letter-spacing: -.055em; font-size: 25px; }
+.clock-display { border-radius: 14px; background: #f8faff; border-color: #e1e7f1; box-shadow: 0 3px 10px rgba(24,32,50,.04); }
+.intra-content { padding: 34px; }
+
+.dash-panel, .timesheet-container-wrapper, .timesheet-header-area, .timesheet-mobile-editor { border-color: #e2e7f0; border-radius: 16px; box-shadow: 0 10px 28px rgba(24,32,50,.055); }
+.dash-panel { background: rgba(255,255,255,.94); }
+.panel-header { padding: 19px 24px; background: linear-gradient(180deg, rgba(255,255,255,.95), #fafbfe); }
+.panel-header h3 { letter-spacing: -.035em; }
+.stat-card { border: 1px solid #e5e9f2; border-radius: 14px; box-shadow: 0 7px 18px rgba(24,32,50,.045); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 13px 26px rgba(24,32,50,.09); }
+.card-icon { border-radius: 13px !important; }
+
+.btn-action { min-height: 39px; border-radius: 10px; font-weight: 700; border-color: #dde4ef; background: #fff; }
+.btn-action:hover { background: #f3f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
+.btn-action.primary { background: linear-gradient(135deg, #746aff, #5146e5); border-color: transparent; box-shadow: 0 8px 18px rgba(82,70,229,.20); }
+.btn-action.primary:hover { background: linear-gradient(135deg, #6258ef, #4237cb); }
+.btn-sm-action { border-radius: 8px; }
+
+.form-group select, .form-group input, .form-group textarea, .project-management-form input, .project-management-form select { border-color: #dce3ee; border-radius: 10px; background: #fbfcfe; }
+.form-group select:focus, .form-group input:focus, .form-group textarea:focus, .project-management-form input:focus, .project-management-form select:focus { outline: 3px solid rgba(99,91,255,.12); border-color: #8b84ff; box-shadow: none; }
+.data-table th { background: #f5f7fb; color: #64748b; letter-spacing: .01em; }
+.data-table tr { transition: background-color .16s ease; }
+.data-table tbody tr:hover { background: #f8f9ff; }
+
+.modal-backdrop { background: rgba(16, 22, 34, .66); backdrop-filter: blur(8px); }
+.modal-card { border-radius: 18px; border: 1px solid rgba(255,255,255,.65); box-shadow: 0 30px 75px rgba(8,12,20,.28); }
+.modal-header { background: linear-gradient(180deg, #fff, #f7f9fd); }
+.tab-buttons { border-radius: 12px; padding: 5px; background: #f4f6fa; }
+.tab-btn { border-radius: 9px; font-weight: 700; }
+
+@media (max-width: 768px) {
+  .intra-content { padding: 16px; }
+  .intra-header { height: 64px; }
+  .dash-panel, .timesheet-header-area, .timesheet-mobile-editor { border-radius: 14px; }
+  .btn-action { border-radius: 9px; }
+}
+
 /* --- BASE STYLES & RESET --- */
 * {
   box-sizing: border-box;
@@ -3103,4 +3180,57 @@ body.intranet-mode .top-public-nav { display: none; }
   .stats-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* 최종 테마 레이어: 기존 모듈 스타일 뒤에서 일관된 브랜드 경험을 만든다. */
+body { background: radial-gradient(circle at 80% -10%, #e7e9ff 0, transparent 30%), #f4f6fa; letter-spacing: -.015em; }
+::selection { background: #dcd9ff; color: #24206b; }
+.dev-control-bar { background: rgba(21, 25, 35, .96); border-bottom-color: rgba(255,255,255,.08); box-shadow: 0 7px 28px rgba(9, 12, 20, .22); }
+.dev-logo { font-weight: 800; letter-spacing: -.025em; }
+.dev-btn { border-radius: 9px; font-weight: 650; }
+.dev-btn.active { background: linear-gradient(135deg, #776dff, #5146e5); box-shadow: 0 8px 18px rgba(99, 91, 255, .3); }
+.pub-header-container { max-width: 1280px; }
+.pub-header { border-bottom: 1px solid rgba(21,25,35,.07); box-shadow: 0 10px 30px rgba(24,32,50,.04); }
+.pub-logo { letter-spacing: -.045em; }
+.pub-nav a { font-size: 14px; font-weight: 650; }
+.btn-intranet-login { border-radius: 10px; background: linear-gradient(135deg, #222938, #141925); box-shadow: 0 8px 18px rgba(21,25,35,.14); }
+.intra-sidebar { background: linear-gradient(180deg, #161c2b 0%, #101622 100%); border-right-color: rgba(255,255,255,.08); }
+.sidebar-header, .profile-card, .quick-role-switcher { border-bottom-color: rgba(255,255,255,.09); }
+.sidebar-header { padding-top: 28px; }
+.profile-card .avatar img { border-color: rgba(255,255,255,.18); box-shadow: 0 6px 14px rgba(0,0,0,.2); }
+.menu-item { margin: 2px 2px; border-radius: 11px; font-weight: 600; }
+.menu-item:hover { background: rgba(255,255,255,.08); transform: translateX(2px); }
+.menu-item.active { background: linear-gradient(135deg, #7066ff, #4f46e5); box-shadow: 0 8px 18px rgba(62, 55, 194, .28); }
+.profile-edit-button { border-color: rgba(255,255,255,.16); border-radius: 9px; }
+.intra-header { height: 76px; background: rgba(255,255,255,.88); backdrop-filter: blur(18px); border-bottom-color: rgba(208,216,229,.8); }
+.intra-header h2 { letter-spacing: -.055em; font-size: 25px; }
+.clock-display { border-radius: 14px; background: #f8faff; border-color: #e1e7f1; box-shadow: 0 3px 10px rgba(24,32,50,.04); }
+.intra-content { padding: 34px; }
+.dash-panel, .timesheet-container-wrapper, .timesheet-header-area, .timesheet-mobile-editor { border-color: #e2e7f0; border-radius: 16px; box-shadow: 0 10px 28px rgba(24,32,50,.055); }
+.dash-panel { background: rgba(255,255,255,.94); }
+.panel-header { padding: 19px 24px; background: linear-gradient(180deg, rgba(255,255,255,.95), #fafbfe); }
+.panel-header h3 { letter-spacing: -.035em; }
+.stat-card { border: 1px solid #e5e9f2; border-radius: 14px; box-shadow: 0 7px 18px rgba(24,32,50,.045); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 13px 26px rgba(24,32,50,.09); }
+.card-icon { border-radius: 13px !important; }
+.btn-action { min-height: 39px; border-radius: 10px; font-weight: 700; border-color: #dde4ef; background: #fff; }
+.btn-action:hover { background: #f3f5f9; border-color: #cbd5e1; transform: translateY(-1px); }
+.btn-action.primary { background: linear-gradient(135deg, #746aff, #5146e5); border-color: transparent; box-shadow: 0 8px 18px rgba(82,70,229,.20); }
+.btn-action.primary:hover { background: linear-gradient(135deg, #6258ef, #4237cb); }
+.btn-sm-action { border-radius: 8px; }
+.form-group select, .form-group input, .form-group textarea, .project-management-form input, .project-management-form select { border-color: #dce3ee; border-radius: 10px; background: #fbfcfe; }
+.form-group select:focus, .form-group input:focus, .form-group textarea:focus, .project-management-form input:focus, .project-management-form select:focus { outline: 3px solid rgba(99,91,255,.12); border-color: #8b84ff; box-shadow: none; }
+.data-table th { background: #f5f7fb; color: #64748b; letter-spacing: .01em; }
+.data-table tr { transition: background-color .16s ease; }
+.data-table tbody tr:hover { background: #f8f9ff; }
+.modal-backdrop { background: rgba(16, 22, 34, .66); backdrop-filter: blur(8px); }
+.modal-card { border-radius: 18px; border: 1px solid rgba(255,255,255,.65); box-shadow: 0 30px 75px rgba(8,12,20,.28); }
+.modal-header { background: linear-gradient(180deg, #fff, #f7f9fd); }
+.tab-buttons { border-radius: 12px; padding: 5px; background: #f4f6fa; }
+.tab-btn { border-radius: 9px; font-weight: 700; }
+@media (max-width: 768px) {
+  .intra-content { padding: 16px; }
+  .intra-header { height: 64px; }
+  .dash-panel, .timesheet-header-area, .timesheet-mobile-editor { border-radius: 14px; }
+  .btn-action { border-radius: 9px; }
 }
