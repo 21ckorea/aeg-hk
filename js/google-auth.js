@@ -1,4 +1,7 @@
 const GOOGLE_LIBRARY_TIMEOUT = 7000;
+// OAuth Client ID는 공개 식별자이므로, 인증 설정 API를 일시적으로 읽지 못해도
+// 로그인 버튼 자체는 계속 표시할 수 있도록 안전한 클라이언트 측 대체값을 둔다.
+const GOOGLE_CLIENT_ID_FALLBACK = '992638904289-8garnu91ps371qpcoa23gv0skk4fppkv.apps.googleusercontent.com';
 
 function waitForGoogleLibrary(timeout = GOOGLE_LIBRARY_TIMEOUT) {
   return new Promise(resolve => {
@@ -26,10 +29,16 @@ function showGoogleButtonError(message) {
 }
 
 async function initializeGoogleAuth({ retry = false } = {}) {
-  const response = await fetch('/api/auth-config', { cache: 'no-store' });
-  if (!response.ok) throw new Error('Google 로그인 설정을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');
-  const { clientId } = await response.json();
-  if (!clientId) throw new Error('Google 로그인 설정이 비어 있습니다. 관리자에게 문의해 주세요.');
+  let clientId = GOOGLE_CLIENT_ID_FALLBACK;
+  try {
+    const response = await fetch('/api/auth-config', { cache: 'no-store' });
+    if (response.ok) {
+      const config = await response.json();
+      clientId = config.clientId || GOOGLE_CLIENT_ID_FALLBACK;
+    }
+  } catch {
+    // 네트워크/서비스 워커의 일시 오류는 공개 OAuth 식별자로 복구한다.
+  }
 
   if (retry && !window.google?.accounts?.id) {
     const script = document.createElement('script');

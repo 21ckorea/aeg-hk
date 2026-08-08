@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aeg-hk-prototype-v1';
+const CACHE_NAME = 'aeg-hk-app-v2';
 const ASSETS = ['./', './index.html', './style.css', './app.js', './manifest.json'];
 
 self.addEventListener('install', event => {
