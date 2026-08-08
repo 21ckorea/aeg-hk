@@ -5,7 +5,8 @@
   "description": "Homepage and intranet prototype for AEG HK",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "restart": "node scripts/restart-dev.js"
   },
   "engines": {
     "node": ">=20"
