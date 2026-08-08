@@ -1,12 +1,13 @@
-// 시연 또는 고객사별 적용 시 이 파일의 회사명만 바꾸면 됩니다.
+// 시연 또는 고객사별 적용 시 이 파일의 회사명과 연락처만 바꾸면 됩니다.
 window.COMPANY_CONFIG = {
   name: '토담산업개발주식회사',
   shortName: '토담',
-  intranetName: '토담'
+  intranetName: '토담',
+  contactEmail: 'contact@todam.com'
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-  const { name, shortName, intranetName } = window.COMPANY_CONFIG;
+  const { name, shortName, intranetName, contactEmail } = window.COMPANY_CONFIG;
   const replacements = [
     ['(주)그룹환경종합건축사사무소', name],
     ['㈜그룹환경종합건축사사무소', name],
@@ -30,4 +31,8 @@ window.addEventListener('DOMContentLoaded', () => {
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', name);
   document.querySelector('meta[property="og:image:alt"]')?.setAttribute('content', `${name} 건축 프로젝트`);
   document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', name);
+  document.querySelectorAll('[data-brand-contact-email]').forEach(element => {
+    element.href = `mailto:${contactEmail}`;
+    element.textContent = contactEmail;
+  });
 });

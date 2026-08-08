@@ -46,29 +46,72 @@ async function loadWorkflowResource(resource) {
   return (await response.json()).records || [];
 }
 
+function workflowCacheKey() {
+  return `intranet-workflow-cache:${MOCK_DB.currentUser.id || 'anonymous'}`;
+}
+
+function readWorkflowCache() {
+  try {
+    const cached = sessionStorage.getItem(workflowCacheKey());
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveWorkflowCache(records) {
+  try {
+    sessionStorage.setItem(workflowCacheKey(), JSON.stringify(records));
+  } catch {
+    // 브라우저 저장소를 사용할 수 없어도 API 데이터 조회 자체에는 영향이 없다.
+  }
+}
+
+async function loadLegacyWorkflowBootstrap() {
+  const resourceNames = ['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets', 'projectAssignments', 'wbs', 'manpower'];
+  const values = await Promise.all(resourceNames.map(loadWorkflowResource));
+  const directoryResponse = await fetch('/api/directory', { cache: 'no-store' });
+  if (!directoryResponse.ok) throw new Error('directory load failed');
+  const directory = await directoryResponse.json();
+  return Object.fromEntries(resourceNames.map((resource, index) => [resource, values[index]]).concat([['users', directory.users || []]]));
+}
+
+async function loadWorkflowBootstrap() {
+  try {
+    const response = await fetch('/api/intranet-data?resource=bootstrap', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`bootstrap load failed (${response.status})`);
+    const payload = await response.json();
+    if (!payload.records || typeof payload.records !== 'object') throw new Error('bootstrap response is invalid');
+    return payload.records;
+  } catch (bootstrapError) {
+    // 운영 API가 새 버전으로 배포되기 전인 로컬 개발 환경도 안전하게 지원한다.
+    return loadLegacyWorkflowBootstrap();
+  }
+}
+
 async function hydrateWorkflowsFromNeon() {
   try {
-    // 하나의 보조 데이터 요청이 실패해도 프로젝트 등 나머지 화면 데이터까지 비우지 않는다.
-    const resourceNames = ['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets', 'projectAssignments', 'wbs', 'manpower'];
-    const results = await Promise.allSettled([
-      ...resourceNames.map(loadWorkflowResource),
-      fetch('/api/directory', { cache: 'no-store' }).then(response => response.ok ? response.json() : { users: [] })
-    ]);
-    const failedResources = results
-      .slice(0, resourceNames.length)
-      .map((result, index) => result.status === 'rejected' ? resourceNames[index] : null)
-      .filter(Boolean);
-    const records = index => results[index].status === 'fulfilled' ? results[index].value : [];
-    const projects = records(0);
-    const approvals = records(1);
-    const notices = records(2);
-    const diaries = records(3);
-    const attendance = records(4);
-    const timesheets = records(5);
-    const assignments = records(6);
-    const wbs = records(7);
-    const manpower = records(8);
-    const directory = results[9].status === 'fulfilled' ? results[9].value : { users: [] };
+    // 응답 전체를 받은 뒤에만 화면 상태를 교체한다. 중간 요청 실패로 기존 데이터를
+    // 빈 배열로 덮어쓰지 않으며, 같은 탭에서는 마지막 정상 조회 결과도 보존한다.
+    let snapshot;
+    try {
+      snapshot = await loadWorkflowBootstrap();
+      saveWorkflowCache(snapshot);
+    } catch (error) {
+      snapshot = readWorkflowCache();
+      if (!snapshot) throw error;
+      showDataStatus('서버 응답이 지연되어 마지막으로 정상 조회한 데이터를 표시합니다. 잠시 후 새로고침해 주세요.', 'error');
+    }
+    const projects = Array.isArray(snapshot.projects) ? snapshot.projects : [];
+    const approvals = Array.isArray(snapshot.approvals) ? snapshot.approvals : [];
+    const notices = Array.isArray(snapshot.notices) ? snapshot.notices : [];
+    const diaries = Array.isArray(snapshot.diaries) ? snapshot.diaries : [];
+    const attendance = Array.isArray(snapshot.attendance) ? snapshot.attendance : [];
+    const timesheets = Array.isArray(snapshot.timesheets) ? snapshot.timesheets : [];
+    const assignments = Array.isArray(snapshot.projectAssignments) ? snapshot.projectAssignments : [];
+    const wbs = Array.isArray(snapshot.wbs) ? snapshot.wbs : [];
+    const manpower = Array.isArray(snapshot.manpower) ? snapshot.manpower : [];
+    const directory = { users: Array.isArray(snapshot.users) ? snapshot.users : [] };
     MOCK_DB.projects = projects.map(item => ({ id: item.id, name: item.name, role: item.work_role || '', active: item.is_active, startedOn: item.started_on ? String(item.started_on).slice(0, 10) : '', endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '', plannedMm: Number(item.planned_mm || 0), cost: Number(item.contract_amount || 0), clientName: item.client_name || '', code: item.project_code || '' }));
     MOCK_DB.assignedProjects = assignments.map(item => ({ projectId: item.project_id, plannedMm: Number(item.planned_mm || 0), startedOn: String(item.started_on || '1900-01-01').slice(0, 10), endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '' }));
     MOCK_DB.wbsTasks = wbs.map(item => ({ id: item.id, projectId: item.project_id, category: item.category || '', title: item.title, startedOn: String(item.started_on).slice(0, 10), endedOn: String(item.ended_on).slice(0, 10), status: item.status || 'planned', note: item.note || '' }));
@@ -134,10 +177,6 @@ async function hydrateWorkflowsFromNeon() {
     }
     // 로그인 직후에는 현재 노출 기간의 팝업 공지를 한 번 안내한다.
     if (typeof renderNoticeNotifications === 'function') setTimeout(() => renderNoticeNotifications(true), 0);
-    if (failedResources.length) {
-      console.info('Some workflow resources could not be loaded:', failedResources);
-      showDataStatus('일부 업무 데이터를 불러오지 못했습니다. 새로고침 후에도 반복되면 관리자에게 알려 주세요.', 'error');
-    }
     return true;
   } catch (error) {
     console.info('Workflow data hydration skipped.', error);

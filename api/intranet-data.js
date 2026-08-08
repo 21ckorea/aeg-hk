@@ -3,6 +3,7 @@ const { del } = require('@vercel/blob');
 const { requireSession } = require('./_session');
 
 const RESOURCES = {
+  bootstrap: { table: null, owner: null },
   projects: { table: 'projects', owner: null },
   timesheets: { table: 'timesheet_entries', owner: 'user_id' },
   attendance: { table: 'attendance_records', owner: 'user_id' },
@@ -31,6 +32,38 @@ function dateKey(value) {
   if (value instanceof Date) return value.toISOString().slice(0, 10);
   const text = String(value);
   return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : new Date(text).toISOString().slice(0, 10);
+}
+
+async function loadBootstrapData(sql, user, isPrivileged) {
+  // 초기 진입 시 여러 API를 동시에 호출하면 한 요청의 일시적 실패가 빈 화면으로
+  // 이어질 수 있다. 관련 데이터를 한 응답으로 묶어 일관된 화면 상태를 만든다.
+  const own = [user.id];
+  const users = await sql.query(
+    `SELECT id, name, email, job_rank, job_title, role, avatar_url
+     FROM public.app_users WHERE status = 'active' ${isPrivileged ? '' : 'AND id = $1'} ORDER BY name ASC`,
+    isPrivileged ? [] : own
+  );
+  const projects = await sql.query('SELECT * FROM public.projects ORDER BY created_at DESC');
+  const approvals = await sql.query(
+    `SELECT * FROM public.approval_documents${isPrivileged ? '' : ' WHERE requester_id = $1'} ORDER BY created_at DESC`,
+    isPrivileged ? [] : own
+  );
+  const notices = await sql.query('SELECT * FROM public.notices ORDER BY created_at DESC');
+  const diaries = await sql.query(
+    `SELECT d.*, (SELECT count(*) FROM public.diary_attachments a WHERE a.diary_id = d.id)::int AS attachment_count
+     FROM public.diary_entries d${isPrivileged ? '' : ' WHERE d.user_id = $1'} ORDER BY d.created_at DESC`,
+    isPrivileged ? [] : own
+  );
+  const attendance = await sql.query('SELECT * FROM public.attendance_records WHERE user_id = $1 ORDER BY created_at DESC', own);
+  const timesheets = await sql.query('SELECT * FROM public.timesheet_entries WHERE user_id = $1 ORDER BY created_at DESC', own);
+  const projectAssignments = await sql.query('SELECT project_id, planned_mm, started_on, ended_on FROM public.project_assignments WHERE user_id = $1', own);
+  const wbs = await sql.query('SELECT t.*, p.name AS project_name FROM public.project_wbs_tasks t JOIN public.projects p ON p.id = t.project_id ORDER BY t.started_on ASC, t.created_at ASC');
+  const manpower = await sql.query(
+    `SELECT user_id, project_id, work_date, hours, entry_type FROM public.timesheet_entries${isPrivileged ? '' : ' WHERE user_id = $1'} ORDER BY work_date ASC`,
+    isPrivileged ? [] : own
+  );
+
+  return { projects, approvals, notices, diaries, attendance, timesheets, projectAssignments, wbs, manpower, users };
 }
 
 async function validateDiaryProject(sql, userId, projectId, workDate) {
@@ -68,8 +101,12 @@ module.exports = async (request, response) => {
     if (!process.env.DATABASE_URL) return response.status(503).json({ error: 'DATABASE_URL is not configured.' });
     const sql = neon(process.env.DATABASE_URL);
     const isPrivileged = user.role === 'admin' || user.role === 'manager';
-    if (resource === 'notices') await ensureNoticePopupSchema(sql);
+    if (resource === 'notices' || resource === 'bootstrap') await ensureNoticePopupSchema(sql);
     if (request.method === 'GET') {
+      if (resource === 'bootstrap') {
+        const records = await loadBootstrapData(sql, user, isPrivileged);
+        return response.status(200).json({ resource, records });
+      }
       if (resource === 'projectAssignments') {
         const rows = await sql.query('SELECT project_id, planned_mm, started_on, ended_on FROM public.project_assignments WHERE user_id = $1', [user.id]);
         return response.status(200).json({ resource, records: rows });
