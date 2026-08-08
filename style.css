@@ -111,6 +111,17 @@ body { background: radial-gradient(circle at 80% -10%, #e7e9ff 0, transparent 30
   .intra-header { height: 64px; }
   .dash-panel, .timesheet-header-area, .timesheet-mobile-editor { border-radius: 14px; }
   .btn-action { border-radius: 9px; }
+  .profile-modal-card { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; }
+  .profile-modal-card .modal-body { padding: 18px; }
+  .profile-editor-identity { gap: 14px; padding: 16px; margin-bottom: 18px; }
+  .profile-photo-editor { width: 76px; height: 76px; flex-basis: 76px; }
+  .profile-photo-change { right: -7px; padding: 6px 7px; }
+  .profile-photo-change span { display: none; }
+  .profile-editor-copy h4 { font-size: 17px; }
+  .profile-editor-copy p { font-size: 10px; }
+  .profile-form-grid { grid-template-columns: 1fr; }
+  .profile-form-grid .profile-field-name { grid-column: auto; }
+  .profile-modal-actions .btn-action { flex: 1; justify-content: center; }
 }
 
 /* --- BASE STYLES & RESET --- */
@@ -344,14 +355,6 @@ body.intranet-mode .top-public-nav { display: none; }
 /* For footer or inverse views */
 .pub-footer .pub-logo {
   font-size: 18px;
-}
-
-.intra-sidebar .pub-logo {
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
 }
 
 .pub-nav {
@@ -2463,7 +2466,7 @@ body.intranet-mode .top-public-nav { display: none; }
   transform: scale(1.08);
 }
 
-.heatmap-cell.level-0 { background-color: #e2e8f0; color: transparent; } /* 0 hours */
+.heatmap-cell.level-0 { background-color: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; } /* 0 hours */
 .heatmap-cell.level-1 { background-color: #c7d2fe; } /* 1-3 hours */
 .heatmap-cell.level-2 { background-color: #818cf8; } /* 4-6 hours */
 .heatmap-cell.level-3 { background-color: #4f46e5; color: rgba(255,255,255,0.9); } /* 7-8 hours */
@@ -2890,6 +2893,30 @@ body.intranet-mode .top-public-nav { display: none; }
   color: var(--text-muted);
   margin-bottom: 20px;
 }
+
+/* Profile editor */
+.profile-modal-card { width: min(680px, calc(100vw - 32px)); }
+.profile-modal-card .modal-header { padding: 18px 24px; }
+.profile-modal-eyebrow { display: block; margin-bottom: 4px; color: #635bff; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.profile-editor-identity { display: flex; align-items: center; gap: 20px; padding: 20px; margin-bottom: 24px; border: 1px solid #e0e7ff; border-radius: 16px; background: linear-gradient(120deg, #f8faff, #f3f1ff); }
+.profile-photo-editor { position: relative; width: 92px; height: 92px; flex: 0 0 92px; }
+.profile-photo-editor img { width: 100%; height: 100%; border: 3px solid #fff; border-radius: 50%; object-fit: cover; background: #e0e7ff; box-shadow: 0 10px 24px rgba(79, 70, 229, .2); }
+.profile-photo-change { position: absolute; right: -10px; bottom: 0; display: inline-flex; align-items: center; gap: 4px; padding: 7px 9px; border: 0; border-radius: 999px; background: #4338ca; color: #fff; font-size: 10px; font-weight: 800; box-shadow: 0 7px 14px rgba(67, 56, 202, .28); cursor: pointer; }
+.profile-photo-change:hover { background: #312e81; transform: translateY(-1px); }
+.profile-photo-change .lucide { width: 12px; height: 12px; }
+.profile-photo-change input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.profile-editor-copy > span { color: #635bff; font-size: 11px; font-weight: 800; letter-spacing: .05em; }
+.profile-editor-copy h4 { margin: 4px 0 6px; color: #172033; font-size: 19px; }
+.profile-editor-copy p { margin: 0; color: #64748b; font-size: 12px; line-height: 1.6; }
+.profile-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+.profile-form-grid .profile-field-name { grid-column: 1 / -1; }
+.profile-form-grid label { display: flex; align-items: center; gap: 6px; color: #334155; font-size: 12px; font-weight: 800; }
+.profile-form-grid label em { padding: 2px 6px; border-radius: 999px; background: #eef2ff; color: #4f46e5; font-size: 9px; font-style: normal; }
+.profile-form-grid label small { color: #94a3b8; font-size: 10px; font-weight: 600; }
+.profile-upload-status { min-height: 18px; margin-top: 2px; color: #6366f1; font-size: 11px; font-weight: 600; }
+.profile-modal-actions { justify-content: flex-end; margin-top: 16px; }
+.profile-modal-actions .btn-action { min-height: 42px; }
+.profile-modal-actions .primary { box-shadow: 0 10px 20px rgba(79, 70, 229, .2); }
 
 .form-group {
   display: flex;

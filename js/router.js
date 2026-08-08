@@ -47,13 +47,13 @@ function switchSubView(subViewId) {
   const titleDisplay = document.getElementById('intra-page-title');
   const titles = {
     dashboard: '대시보드',
-    timesheet: '투입시간 관리 (Timesheet Input)',
-    manpower: '인력 투입 분석 (Manpower Allocation)',
+    timesheet: '투입시간 관리',
+    manpower: '인력 투입 분석',
     approval: '전자결재 문서함',
     attendance: '사내 근태 관리',
     admin: '사용자 승인',
     projects: '프로젝트 관리',
-    wbs: '프로젝트 공정표 (WBS)',
+    wbs: '프로젝트 공정표',
     diary: '주간 업무일지'
   };
   titleDisplay.textContent = titles[subViewId] || '사내 시스템';

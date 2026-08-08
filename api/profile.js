@@ -26,10 +26,19 @@ module.exports = async (request, response) => {
       const name = clean(input.name, 80);
       const jobRank = clean(input.jobRank, 80);
       const jobTitle = clean(input.jobTitle, 120);
+      const avatarUrl = input.avatarUrl === undefined ? null : String(input.avatarUrl || '').trim();
       if (!name) return response.status(400).json({ error: '이름은 필수 입력입니다.' });
+      if (avatarUrl && !avatarUrl.startsWith(`profile/${session.id}/`)) {
+        return response.status(400).json({ error: '올바르지 않은 프로필 사진 경로입니다.' });
+      }
       const rows = await sql.query(
-        'UPDATE public.app_users SET name = $2, job_rank = $3, job_title = $4, updated_at = now() WHERE id = $1 RETURNING id, email, name, job_rank, job_title, role, status, avatar_url',
-        [session.id, name, jobRank || null, jobTitle || null]
+        `UPDATE public.app_users
+         SET name = $2, job_rank = $3, job_title = $4,
+             avatar_url = CASE WHEN $5::text IS NULL THEN avatar_url ELSE NULLIF($5, '') END,
+             updated_at = now()
+         WHERE id = $1
+         RETURNING id, email, name, job_rank, job_title, role, status, avatar_url`,
+        [session.id, name, jobRank || null, jobTitle || null, avatarUrl]
       );
       return response.status(rows[0] ? 200 : 404).json(rows[0] ? { user: rows[0] } : { error: '사용자 정보를 찾을 수 없습니다.' });
     }

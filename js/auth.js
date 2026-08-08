@@ -45,9 +45,15 @@ function applyAuthenticatedUser(user, { navigateToIntranet = true } = {}) {
   MOCK_DB.currentUser.accessRole = user.role || 'staff';
   const position = [user.jobRank, user.jobTitle].filter(Boolean).join(' / ');
   MOCK_DB.currentUser.role = user.role === 'admin' ? (position || '관리자') : (position || '직원');
-  MOCK_DB.currentUser.avatar = user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
+  MOCK_DB.currentUser.avatar = user.avatar || './assets/profile-placeholder.svg';
   const avatarImage = document.getElementById('current-user-avatar');
-  if (avatarImage) avatarImage.src = MOCK_DB.currentUser.avatar;
+  if (avatarImage) {
+    avatarImage.onerror = () => {
+      avatarImage.onerror = null;
+      avatarImage.src = './assets/profile-placeholder.svg';
+    };
+    avatarImage.src = profileAvatarSource(MOCK_DB.currentUser.avatar);
+  }
 
   if (!MOCK_DB.employees.some(emp => emp.id === MOCK_DB.currentUser.id)) {
     MOCK_DB.employees.unshift({
@@ -107,7 +113,17 @@ function updateRoleAwareUI(role) {
 
 async function initializeAuth() {
   const session = await window.getGoogleSession?.();
-  if (session?.user) applyAuthenticatedUser({ ...session.user, avatar: session.user.picture }, { navigateToIntranet: false });
+  if (session?.user) {
+    let user = { ...session.user, avatar: session.user.picture };
+    try {
+      const response = await fetch('/api/profile', { cache: 'no-store' });
+      const data = await response.json();
+      if (response.ok && data.user) {
+        user = { ...user, name: data.user.name, jobRank: data.user.job_rank, jobTitle: data.user.job_title, role: data.user.role, avatar: data.user.avatar_url || user.avatar };
+      }
+    } catch (_) {}
+    applyAuthenticatedUser(user, { navigateToIntranet: false });
+  }
 }
 
 function handleEmailLogin(event) {
@@ -146,26 +162,93 @@ async function openProfileModal() {
   document.getElementById('profile-name').value = data.user.name || '';
   document.getElementById('profile-rank').value = data.user.job_rank || '';
   document.getElementById('profile-title').value = data.user.job_title || '';
+  const savedAvatar = data.user.avatar_url || '';
+  window.profileAvatarPath = savedAvatar.startsWith('profile/') ? savedAvatar : null;
+  const preview = document.getElementById('profile-avatar-preview');
+  if (preview) preview.src = profileAvatarSource(savedAvatar || MOCK_DB.currentUser.avatar);
+  const input = document.getElementById('profile-avatar-input');
+  if (input) input.value = '';
+  const status = document.getElementById('profile-upload-status');
+  if (status) status.textContent = '';
+  syncProfileNamePreview();
   document.getElementById('modal-profile')?.classList.add('active');
+  lucide.createIcons();
+}
+
+let profilePreviewObjectUrl = '';
+
+function profileAvatarSource(avatar) {
+  if (String(avatar || '').startsWith('profile/')) return `/api/attachments?profile=1&v=${Date.now()}`;
+  return avatar || './assets/profile-placeholder.svg';
+}
+
+function syncProfileNamePreview() {
+  const name = document.getElementById('profile-name')?.value.trim();
+  const previewName = document.getElementById('profile-preview-name');
+  if (previewName) previewName.textContent = name || '이름을 입력해 주세요';
+}
+
+function handleProfileAvatarSelection(event) {
+  const file = event.target.files?.[0];
+  const status = document.getElementById('profile-upload-status');
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+    event.target.value = '';
+    if (status) status.textContent = 'JPG, PNG, WEBP, GIF 이미지만 선택할 수 있습니다.';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    event.target.value = '';
+    if (status) status.textContent = '프로필 사진은 5MB 이하만 업로드할 수 있습니다.';
+    return;
+  }
+  if (profilePreviewObjectUrl) URL.revokeObjectURL(profilePreviewObjectUrl);
+  profilePreviewObjectUrl = URL.createObjectURL(file);
+  const preview = document.getElementById('profile-avatar-preview');
+  if (preview) preview.src = profilePreviewObjectUrl;
+  if (status) status.textContent = `${file.name} · 저장하면 프로필 사진이 변경됩니다.`;
 }
 
 async function saveProfile(event) {
   event.preventDefault();
-  const response = await fetch('/api/profile', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: document.getElementById('profile-name').value,
-      jobRank: document.getElementById('profile-rank').value,
-      jobTitle: document.getElementById('profile-title').value
-    })
-  });
-  const data = await response.json();
-  if (!response.ok) return alert(data.error || '프로필 저장에 실패했습니다.');
+  const saveButton = event.submitter;
+  const photoInput = document.getElementById('profile-avatar-input');
+  const status = document.getElementById('profile-upload-status');
+  let avatarPath = window.profileAvatarPath;
+  try {
+    if (photoInput?.files?.[0]) {
+      if (typeof window.uploadProfileBlob !== 'function') throw new Error('사진 업로드 기능을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+      if (saveButton) saveButton.disabled = true;
+      if (status) status.textContent = '프로필 사진을 업로드하고 있습니다…';
+      const uploaded = await window.uploadProfileBlob(MOCK_DB.currentUser.id, photoInput.files[0], ({ percentage }) => {
+        if (status) status.textContent = `프로필 사진 업로드 중… ${Math.round(percentage || 0)}%`;
+      });
+      avatarPath = uploaded.pathname;
+    }
+    const response = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('profile-name').value,
+        jobRank: document.getElementById('profile-rank').value,
+        jobTitle: document.getElementById('profile-title').value,
+        ...(avatarPath ? { avatarUrl: avatarPath } : {})
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || '프로필 저장에 실패했습니다.');
   applyAuthenticatedUser({
     id: data.user.id, email: data.user.email, name: data.user.name,
     jobRank: data.user.job_rank, jobTitle: data.user.job_title,
     role: data.user.role, avatar: data.user.avatar_url
   }, { navigateToIntranet: false });
+    if (profilePreviewObjectUrl) URL.revokeObjectURL(profilePreviewObjectUrl);
+    profilePreviewObjectUrl = '';
   closeModal('modal-profile');
+  } catch (error) {
+    if (status) status.textContent = error.message || '프로필 저장에 실패했습니다.';
+    alert(error.message || '프로필 저장에 실패했습니다.');
+  } finally {
+    if (saveButton) saveButton.disabled = false;
+  }
 }

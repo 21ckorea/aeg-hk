@@ -393,8 +393,8 @@ function switchSubView(subViewId) {
   const titleDisplay = document.getElementById("intra-page-title");
   const titles = {
     dashboard: "인트라넷 대시보드",
-    timesheet: "투입시간 관리 (Timesheet Input)",
-    manpower: "인력 투입 분석 (Manpower Allocation)",
+    timesheet: "투입시간 관리",
+    manpower: "인력 투입 분석",
     approval: "전자결재 문서함",
     attendance: "사내 근태 관리",
     admin: "관리자 설정",

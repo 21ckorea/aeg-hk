@@ -10,6 +10,21 @@ module.exports = async (request, response) => {
     const user = await requireSession(request);
     const sql = neon(process.env.DATABASE_URL);
     if (request.method === 'GET') {
+      if (request.query?.profile === '1') {
+        const rows = await sql.query('SELECT avatar_url FROM public.app_users WHERE id = $1', [user.id]);
+        const pathname = rows[0]?.avatar_url;
+        if (!pathname || !pathname.startsWith(`profile/${user.id}/`)) return response.status(404).json({ error: '등록된 프로필 사진이 없습니다.' });
+        const result = await get(pathname, { access: 'private', ifNoneMatch: request.headers['if-none-match'] || undefined });
+        if (!result) return response.status(404).json({ error: '프로필 사진을 찾을 수 없습니다.' });
+        response.setHeader('Cache-Control', 'private, no-store');
+        response.setHeader('X-Content-Type-Options', 'nosniff');
+        response.setHeader('ETag', result.blob.etag);
+        if (result.statusCode === 304) return response.status(304).end();
+        response.setHeader('Content-Type', result.blob.contentType || 'image/jpeg');
+        response.setHeader('Content-Disposition', 'inline');
+        Readable.fromWeb(result.stream).pipe(response);
+        return;
+      }
       const fileId = request.query?.fileId;
       if (fileId) {
         const rows = await sql.query(

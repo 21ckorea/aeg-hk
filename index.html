@@ -30,6 +30,7 @@
     rel="stylesheet">
   <!-- Lucide Icons for beautiful layout elements -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="./js/brand-config.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="./js/google-auth.js?v=20260808b"></script>
   <script src="./js/state.js"></script>
@@ -61,6 +62,18 @@
         handleUploadUrl: '/api/blob-upload',
         clientPayload: JSON.stringify({ diaryId, fileName: file.name }),
         multipart: true,
+        onUploadProgress: onProgress
+      }
+    );
+
+    window.uploadProfileBlob = (userId, file, onProgress) => upload(
+      `profile/${userId}/${file.name}`,
+      file,
+      {
+        access: 'private',
+        handleUploadUrl: '/api/blob-upload',
+        clientPayload: JSON.stringify({ type: 'profile', fileName: file.name }),
+        multipart: false,
         onUploadProgress: onProgress
       }
     );
@@ -98,7 +111,7 @@
     <div class="auth-backdrop" id="auth-backdrop">
       <div class="auth-modal">
         <div class="auth-header">
-          <h3>AEG HK 인트라넷 인증</h3>
+              <h3>그룹환경 인트라넷 인증</h3>
           <p id="auth-description">가입된 Google 계정으로 로그인하세요.</p>
         </div>
         <div class="auth-tabs">
@@ -481,18 +494,11 @@
 
         <!-- Sidebar Navigation -->
         <aside class="intra-sidebar">
-          <div class="sidebar-header">
-            <div class="pub-logo" onclick="switchMainView('public')">
-              <span class="logo-bold">(주)그룹환경종합건축사사무소</span>
-              <span class="sub-tag">INTRANET</span>
-            </div>
-          </div>
-
           <!-- User Profile Card -->
           <div class="profile-card">
             <div class="avatar">
-              <img id="current-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                alt="프로필 사진">
+              <img id="current-user-avatar" src="./assets/profile-placeholder.svg" alt="프로필 사진"
+                onerror="this.onerror=null; this.src='./assets/profile-placeholder.svg';">
               <span class="status-indicator online"></span>
             </div>
             <div class="user-info">
@@ -511,10 +517,10 @@
                 <i data-lucide="layout-dashboard"></i> <span>대시보드</span>
               </li>
               <li class="menu-item" id="menu-timesheet" onclick="switchSubView('timesheet')">
-                <i data-lucide="calendar-range"></i> <span>투입시간 관리 (Timesheet)</span>
+                <i data-lucide="calendar-range"></i> <span>투입시간 관리</span>
               </li>
               <li class="menu-item" id="menu-manpower" onclick="switchSubView('manpower')">
-                <i data-lucide="bar-chart-3"></i> <span>인력 투입 분석 (Manpower)</span>
+                <i data-lucide="bar-chart-3"></i> <span>인력 투입 분석</span>
               </li>
               <li class="menu-item" id="menu-approval" onclick="switchSubView('approval')">
                 <i data-lucide="file-check"></i> <span>전자결재</span>
@@ -527,7 +533,7 @@
                 <i data-lucide="book-open"></i> <span>업무일지</span>
               </li>
               <li class="menu-item" id="menu-wbs" onclick="switchSubView('wbs')">
-                <i data-lucide="gantt-chart"></i> <span>공정표 (WBS)</span>
+                <i data-lucide="gantt-chart"></i> <span>공정표</span>
               </li>
               <li class="menu-item admin-only" id="menu-admin" onclick="switchSubView('admin')" style="display:none">
                 <i data-lucide="user-round-check"></i> <span>사용자 승인</span>
@@ -778,7 +784,7 @@
 
                       <!-- Calendar Heatmap Grid Widget -->
                       <div class="analytic-panel">
-                        <h4><i data-lucide="grid-3x3"></i> 일자별 투입 강도 (Heatmap)</h4>
+                        <h4><i data-lucide="grid-3x3"></i> 일자별 투입 강도</h4>
                         <div class="calendar-heatmap-wrapper">
                           <div class="heatmap-days-header">
                             <span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="saturday">토</span><span class="sunday">일</span>
@@ -830,7 +836,7 @@
             <!-- SUB-VIEW 4: ELECTRONIC APPROVAL (전자결재) -->
             <div id="sub-approval" class="sub-view">
               <div class="approval-hero">
-                <div class="approval-hero-copy"><span class="approval-eyebrow"><i data-lucide="file-check-2"></i> DOCUMENT WORKFLOW</span><h3>전자결재 문서함</h3><p>결재 진행 상황을 확인하고 문서 내용을 빠르게 처리하세요.</p></div>
+                <div class="approval-hero-copy"><h3>전자결재 문서함</h3><p>결재 진행 상황을 확인하고 문서 내용을 빠르게 처리하세요.</p></div>
                 <div class="approval-summary">
                   <div><span>결재 대기</span><strong id="approval-waiting-summary">0</strong></div>
                   <div><span>상신 문서</span><strong id="approval-sent-summary">0</strong></div>
@@ -1098,16 +1104,33 @@
   <!-- ==================== MODALS ==================== -->
 
   <div class="modal-backdrop" id="modal-profile">
-    <div class="modal-card">
+    <div class="modal-card profile-modal-card">
       <div class="modal-header">
-        <h3>내 프로필 수정</h3>
+        <div><span class="profile-modal-eyebrow">MY PROFILE</span><h3>내 프로필 수정</h3></div>
         <button class="close-btn" type="button" onclick="closeModal('modal-profile')"><i data-lucide="x"></i></button>
       </div>
       <form class="modal-body" onsubmit="saveProfile(event)">
-        <div class="form-group"><label for="profile-name">이름 *</label><input id="profile-name" required maxlength="80"></div>
-        <div class="form-group"><label for="profile-rank">직급 <small>예: 직원 · 대리 · 과장</small></label><input id="profile-rank" maxlength="80"></div>
-        <div class="form-group"><label for="profile-title">직책 <small>예: 팀장 · PM · 본부장</small></label><input id="profile-title" maxlength="120"></div>
-        <div class="modal-actions"><button class="btn-action primary" type="submit">저장</button></div>
+        <section class="profile-editor-identity">
+          <div class="profile-photo-editor">
+            <img id="profile-avatar-preview" src="./assets/profile-placeholder.svg" alt="프로필 사진 미리보기">
+            <label class="profile-photo-change" for="profile-avatar-input" title="프로필 사진 변경">
+              <i data-lucide="camera"></i><span>사진 변경</span>
+              <input id="profile-avatar-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleProfileAvatarSelection(event)">
+            </label>
+          </div>
+          <div class="profile-editor-copy">
+            <span>사내 프로필</span>
+            <h4 id="profile-preview-name">이름을 입력해 주세요</h4>
+            <p>사진은 사내 서비스에서만 표시됩니다.<br>JPG, PNG, WEBP, GIF 파일을 5MB 이하로 올려주세요.</p>
+          </div>
+        </section>
+        <div class="profile-form-grid">
+          <div class="form-group profile-field-name"><label for="profile-name">이름 <em>필수</em></label><input id="profile-name" required maxlength="80" placeholder="이름을 입력해 주세요" oninput="syncProfileNamePreview()"></div>
+          <div class="form-group"><label for="profile-rank">직급 <small>예: 직원 · 대리 · 과장</small></label><input id="profile-rank" maxlength="80" placeholder="직급을 입력해 주세요"></div>
+          <div class="form-group"><label for="profile-title">직책 <small>예: 팀장 · PM · 본부장</small></label><input id="profile-title" maxlength="120" placeholder="직책을 입력해 주세요"></div>
+        </div>
+        <div class="profile-upload-status" id="profile-upload-status" aria-live="polite"></div>
+        <div class="modal-actions profile-modal-actions"><button class="btn-action" type="button" onclick="closeModal('modal-profile')">취소</button><button class="btn-action primary" type="submit"><i data-lucide="check"></i> 변경사항 저장</button></div>
       </form>
     </div>
   </div>

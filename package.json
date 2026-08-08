@@ -4,7 +4,7 @@
   "private": true,
   "description": "Homepage and intranet prototype for AEG HK",
   "scripts": {
-    "dev": "vercel dev --listen 3000",
+    "dev": "node server.js",
     "start": "node server.js",
     "restart": "node scripts/restart-dev.js"
   },
@@ -15,8 +15,5 @@
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/blob": "^2.6.1",
     "google-auth-library": "^11.0.0"
-  },
-  "devDependencies": {
-    "vercel": "^58.9.0"
   }
 }

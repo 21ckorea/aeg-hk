@@ -1,11 +1,15 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
 const root = __dirname;
-const host = process.env.HOST || '0.0.0.0';
+// 로컬 개발은 IPv4 loopback에만 바인딩한다. 다른 도구가 IPv6 localhost:3000을
+// 쓰는 경우에도 브라우저의 localhost 요청이 프로젝트 서버로 올 수 있게 한다.
+const host = process.env.HOST || '127.0.0.1';
 const requestedPort = Number(process.env.PORT || 3000);
 const maxPortAttempts = 10;
+const apiOrigin = new URL(process.env.API_ORIGIN || 'https://aeg-hk.vercel.app');
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -19,9 +23,52 @@ const mimeTypes = {
   '.ico': 'image/x-icon'
 };
 
+function proxyApiRequest(req, res) {
+  const targetPath = req.url || '/api';
+  const requestHeaders = { ...req.headers, host: apiOrigin.host };
+  delete requestHeaders.connection;
+
+  const proxyRequest = https.request({
+    protocol: apiOrigin.protocol,
+    hostname: apiOrigin.hostname,
+    port: apiOrigin.port || 443,
+    method: req.method,
+    path: targetPath,
+    headers: requestHeaders
+  }, proxyResponse => {
+    const responseHeaders = { ...proxyResponse.headers };
+    // 운영 서버의 세션 쿠키는 HTTPS 전용(Secure)이다. 로컬 HTTP 프록시에서는
+    // 브라우저가 해당 쿠키를 보관하지 않으므로 개발 환경에 한해 Secure 속성만 제거한다.
+    if (Array.isArray(responseHeaders['set-cookie'])) {
+      responseHeaders['set-cookie'] = responseHeaders['set-cookie'].map(cookie =>
+        cookie.replace(/;\s*Secure/ig, '').replace(/;\s*Domain=[^;]*/ig, '')
+      );
+    }
+    res.writeHead(proxyResponse.statusCode || 502, responseHeaders);
+    proxyResponse.pipe(res);
+  });
+
+  proxyRequest.on('error', error => {
+    console.error(`API proxy error: ${error.message}`);
+    if (!res.headersSent) {
+      res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+    }
+    res.end(JSON.stringify({ error: '서버 API에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.' }));
+  });
+
+  req.pipe(proxyRequest);
+}
+
 function createServer(port) {
   const server = http.createServer((req, res) => {
-    let urlPath = req.url === '/' ? '/index.html' : req.url;
+    if (req.url === '/api' || req.url?.startsWith('/api/')) {
+      proxyApiRequest(req, res);
+      return;
+    }
+
+    // 캐시 무효화용 ?v=... 같은 쿼리 문자열은 실제 파일 경로에서 제외한다.
+    const requestUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+    let urlPath = requestUrl.pathname === '/' ? '/index.html' : requestUrl.pathname;
     const safePath = path.normalize(urlPath).replace(/^\/+/, '');
     const filePath = path.join(root, safePath);
 

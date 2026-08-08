@@ -6,7 +6,7 @@ const port = 3000;
 function listeningPids() {
   try {
     return [...new Set(
-      execFileSync('lsof', ['-tiTCP:' + port, '-sTCP:LISTEN'], { encoding: 'utf8' })
+      execFileSync('lsof', ['-ti4TCP:' + port, '-sTCP:LISTEN'], { encoding: 'utf8' })
         .trim()
         .split(/\s+/)
         .filter(Boolean)
@@ -55,22 +55,12 @@ async function freePort() {
 
 async function restart() {
   await freePort();
-  const projectRoot = path.resolve(__dirname, '..');
-  const vercelCommand = process.platform === 'win32'
-    ? path.join(projectRoot, 'node_modules', '.bin', 'vercel.cmd')
-    : path.join(projectRoot, 'node_modules', '.bin', 'vercel');
-
-  console.log(`http://localhost:${port} 에서 Vercel 개발 서버를 시작합니다.`);
-  console.log('홈페이지, API, 환경 변수를 함께 실행합니다.');
-  const child = spawn(vercelCommand, ['dev', '--listen', String(port)], {
-    cwd: projectRoot,
+  console.log(`http://localhost:${port} 에서 개발 서버를 시작합니다.`);
+  console.log('화면은 로컬에서 실행하고 API는 Vercel 서버를 사용합니다.');
+  const child = spawn(process.execPath, ['server.js'], {
+    cwd: path.resolve(__dirname, '..'),
     stdio: 'inherit',
     env: { ...process.env, PORT: String(port) }
-  });
-
-  child.on('error', error => {
-    console.error(`Vercel 개발 서버를 시작하지 못했습니다: ${error.message}`);
-    process.exit(1);
   });
   child.on('exit', code => process.exit(code ?? 0));
 }
