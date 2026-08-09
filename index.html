@@ -21,7 +21,7 @@
   <meta name="twitter:description" content="건축 프로젝트와 사내 업무를 연결하는 통합 홈페이지">
   <meta name="twitter:image" content="https://aeg-hk.vercel.app/assets/aeg-hk-social-preview.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=20260809d">
+  <link rel="stylesheet" href="style.css?v=20260809e">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Outfit and Inter Fonts for Premium Architectural Feel -->
@@ -33,11 +33,11 @@
   <script src="./js/brand-config.js?v=20260809b"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="./js/google-auth.js?v=20260809c"></script>
-  <script src="./js/state.js?v=20260809a"></script>
-  <script src="./js/neon-client.js?v=20260809b"></script>
+  <script src="./js/state.js?v=20260809b"></script>
+  <script src="./js/neon-client.js?v=20260809c"></script>
   <script src="./js/auth.js?v=20260809c"></script>
   <script src="./js/ui.js?v=20260809a"></script>
-  <script src="./js/modules.js?v=20260809b"></script>
+  <script src="./js/modules.js?v=20260809c"></script>
   <script src="./js/router.js?v=20260809c"></script>
   <script>
     // 이전 PWA 버전이 남긴 로그인 스크립트 캐시를 한 번에 정리한다.
@@ -705,11 +705,13 @@
                   </div>
                 </div>
                 <div class="timesheet-actions">
-                  <button class="btn-action secondary" onclick="addProjectRowPopup()"><i data-lucide="plus"></i> 프로젝트
+                  <span id="ts-lock-status" class="timesheet-lock-status" hidden></span>
+                  <button id="btn-ts-add-project" class="btn-action secondary" onclick="addProjectRowPopup()"><i data-lucide="plus"></i> 프로젝트
                     추가</button>
-                  <button class="btn-action" onclick="saveTimesheet()"><i data-lucide="save"></i> 임시 저장</button>
-                  <button class="btn-action primary" onclick="submitTimesheet()"><i data-lucide="send"></i> 월 마감
+                  <button id="btn-ts-save" class="btn-action" onclick="saveTimesheet()"><i data-lucide="save"></i> 임시 저장</button>
+                  <button id="btn-ts-submit" class="btn-action primary" onclick="submitTimesheet()"><i data-lucide="send"></i> 월 마감
                     제출</button>
+                  <button id="btn-ts-unlock" class="btn-action secondary" type="button" onclick="unlockTimesheetMonth()" hidden>마감 해제</button>
                 </div>
               </div>
 

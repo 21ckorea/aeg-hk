@@ -68,7 +68,7 @@ function saveWorkflowCache(records) {
 }
 
 async function loadLegacyWorkflowBootstrap() {
-  const resourceNames = ['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets', 'projectAssignments', 'wbs', 'manpower'];
+  const resourceNames = ['projects', 'approvals', 'notices', 'diaries', 'attendance', 'timesheets', 'projectAssignments', 'wbs', 'manpower', 'timesheetClosures'];
   const values = await Promise.all(resourceNames.map(loadWorkflowResource));
   const directoryResponse = await fetch('/api/directory', { cache: 'no-store' });
   if (!directoryResponse.ok) throw new Error('directory load failed');
@@ -111,6 +111,7 @@ async function hydrateWorkflowsFromNeon() {
     const assignments = Array.isArray(snapshot.projectAssignments) ? snapshot.projectAssignments : [];
     const wbs = Array.isArray(snapshot.wbs) ? snapshot.wbs : [];
     const manpower = Array.isArray(snapshot.manpower) ? snapshot.manpower : [];
+    const timesheetClosures = Array.isArray(snapshot.timesheetClosures) ? snapshot.timesheetClosures : [];
     const directory = { users: Array.isArray(snapshot.users) ? snapshot.users : [] };
     MOCK_DB.projects = projects.map(item => ({ id: item.id, name: item.name, role: item.work_role || '', active: item.is_active, startedOn: item.started_on ? String(item.started_on).slice(0, 10) : '', endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '', plannedMm: Number(item.planned_mm || 0), cost: Number(item.contract_amount || 0), clientName: item.client_name || '', code: item.project_code || '' }));
     MOCK_DB.assignedProjects = assignments.map(item => ({ projectId: item.project_id, plannedMm: Number(item.planned_mm || 0), startedOn: String(item.started_on || '1900-01-01').slice(0, 10), endedOn: item.ended_on ? String(item.ended_on).slice(0, 10) : '' }));
@@ -142,6 +143,7 @@ async function hydrateWorkflowsFromNeon() {
       projectId: item.project_id || null
     }));
     MOCK_DB.manpowerRecords = manpower.map(item => ({ userId: item.user_id, projectId: item.project_id, workDate: String(item.work_date).slice(0, 10), hours: Number(item.hours || 0), entryType: item.entry_type || 'project' }));
+    MOCK_DB.timesheetClosures = timesheetClosures.map(item => ({ yearMonth: String(item.year_month).slice(0, 7), locked: Boolean(item.is_locked) }));
     MOCK_DB.attendance.records = attendance.map(item => ({
       workDate: String(item.work_date).slice(0, 10),
       checkedInAt: item.checked_in_at || null,

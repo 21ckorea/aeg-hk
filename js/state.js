@@ -20,6 +20,7 @@ function createDefaultAppState() {
     timesheets: {},
     timesheetRecords: [],
     manpowerRecords: [],
+    timesheetClosures: [],
     approvals: [],
     notices: [],
     projectsSummary: [],
@@ -47,6 +48,7 @@ function normalizeAppState(state) {
     timesheets: state?.timesheets && typeof state.timesheets === 'object' ? state.timesheets : {},
     timesheetRecords: Array.isArray(state?.timesheetRecords) ? state.timesheetRecords : [],
     manpowerRecords: Array.isArray(state?.manpowerRecords) ? state.manpowerRecords : [],
+    timesheetClosures: Array.isArray(state?.timesheetClosures) ? state.timesheetClosures : [],
     approvals: Array.isArray(state?.approvals) ? state.approvals : [],
     notices: Array.isArray(state?.notices) ? state.notices : [],
     projectsSummary: Array.isArray(state?.projectsSummary) ? state.projectsSummary : [],
@@ -76,6 +78,7 @@ function ensureStateShape() {
   if (!MOCK_DB.timesheets) MOCK_DB.timesheets = {};
   if (!MOCK_DB.timesheetRecords) MOCK_DB.timesheetRecords = [];
   if (!MOCK_DB.manpowerRecords) MOCK_DB.manpowerRecords = [];
+  if (!Array.isArray(MOCK_DB.timesheetClosures)) MOCK_DB.timesheetClosures = [];
   if (!MOCK_DB.attendance) MOCK_DB.attendance = { status: 'out', checkInTime: null, checkOutTime: null, log: [], records: [] };
   if (!MOCK_DB.attendance.records) MOCK_DB.attendance.records = [];
   if (!Array.isArray(MOCK_DB.employees)) MOCK_DB.employees = [];

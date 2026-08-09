@@ -4,6 +4,7 @@ const { requireSession } = require('./_session');
 
 const RESOURCES = {
   bootstrap: { table: null, owner: null },
+  timesheetClosures: { table: 'timesheet_month_closures', owner: 'user_id' },
   projects: { table: 'projects', owner: null },
   timesheets: { table: 'timesheet_entries', owner: 'user_id' },
   attendance: { table: 'attendance_records', owner: 'user_id' },
@@ -62,8 +63,33 @@ async function loadBootstrapData(sql, user, isPrivileged) {
     `SELECT user_id, project_id, work_date, hours, entry_type FROM public.timesheet_entries${isPrivileged ? '' : ' WHERE user_id = $1'} ORDER BY work_date ASC`,
     isPrivileged ? [] : own
   );
+  const timesheetClosures = await sql.query('SELECT * FROM public.timesheet_month_closures WHERE user_id = $1 ORDER BY year_month DESC', own);
 
-  return { projects, approvals, notices, diaries, attendance, timesheets, projectAssignments, wbs, manpower, users };
+  return { projects, approvals, notices, diaries, attendance, timesheets, projectAssignments, wbs, manpower, timesheetClosures, users };
+}
+
+async function ensureTimesheetClosureSchema(sql) {
+  await sql.query(`CREATE TABLE IF NOT EXISTS public.timesheet_month_closures (
+    user_id text NOT NULL REFERENCES public.app_users(id) ON DELETE CASCADE,
+    year_month date NOT NULL,
+    is_locked boolean NOT NULL DEFAULT true,
+    closed_at timestamptz,
+    closed_by text REFERENCES public.app_users(id),
+    reopened_at timestamptz,
+    reopened_by text REFERENCES public.app_users(id),
+    PRIMARY KEY (user_id, year_month)
+  )`);
+}
+
+function monthStart(value) { return `${String(value || '').slice(0, 7)}-01`; }
+
+async function assertTimesheetMonthEditable(sql, userId, workDate) {
+  const rows = await sql.query('SELECT is_locked FROM public.timesheet_month_closures WHERE user_id=$1 AND year_month=$2::date', [userId, monthStart(workDate)]);
+  if (rows[0]?.is_locked) {
+    const error = new Error(`${String(workDate).slice(0, 7)} 월은 마감 제출되어 수정할 수 없습니다. 프로젝트 PM 또는 관리자에게 마감 해제를 요청해 주세요.`);
+    error.status = 423;
+    throw error;
+  }
 }
 
 async function validateDiaryProject(sql, userId, projectId, workDate) {
@@ -102,10 +128,15 @@ module.exports = async (request, response) => {
     const sql = neon(process.env.DATABASE_URL);
     const isPrivileged = user.role === 'admin' || user.role === 'manager';
     if (resource === 'notices' || resource === 'bootstrap') await ensureNoticePopupSchema(sql);
+    if (resource === 'timesheetClosures' || resource === 'bootstrap' || resource === 'timesheets' || resource === 'projectAssignments') await ensureTimesheetClosureSchema(sql);
     if (request.method === 'GET') {
       if (resource === 'bootstrap') {
         const records = await loadBootstrapData(sql, user, isPrivileged);
         return response.status(200).json({ resource, records });
+      }
+      if (resource === 'timesheetClosures') {
+        const rows = await sql.query('SELECT * FROM public.timesheet_month_closures WHERE user_id=$1 ORDER BY year_month DESC', [user.id]);
+        return response.status(200).json({ resource, records: rows });
       }
       if (resource === 'projectAssignments') {
         const rows = await sql.query('SELECT project_id, planned_mm, started_on, ended_on FROM public.project_assignments WHERE user_id = $1', [user.id]);
@@ -161,6 +192,26 @@ module.exports = async (request, response) => {
       const rows = await sql.query('UPDATE public.projects SET project_code=$2, name=$3, client_name=$4, work_role=$5, started_on=$6, ended_on=$7, contract_amount=$8, planned_mm=$9, is_active=$10, updated_at=now() WHERE id=$1 RETURNING *', [input.id, input.projectCode || null, input.name, input.clientName || null, input.workRole || null, input.startedOn, input.endedOn, input.contractAmount || null, input.plannedMm || null, input.isActive !== false]);
       return response.status(rows[0] ? 200 : 404).json(rows[0] ? { resource, record: rows[0] } : { error: '프로젝트를 찾을 수 없습니다.' });
     }
+    if (request.method === 'POST' && resource === 'timesheetClosures') {
+      const input = body(request);
+      if (!/^\d{4}-\d{2}$/.test(String(input.yearMonth || ''))) return response.status(400).json({ error: '마감할 연월이 필요합니다.' });
+      const rows = await sql.query(`INSERT INTO public.timesheet_month_closures (user_id, year_month, is_locked, closed_at, closed_by, reopened_at, reopened_by)
+        VALUES ($1,$2::date,true,now(),$1,null,null) ON CONFLICT (user_id,year_month)
+        DO UPDATE SET is_locked=true, closed_at=now(), closed_by=$1, reopened_at=null, reopened_by=null RETURNING *`, [user.id, monthStart(input.yearMonth)]);
+      return response.status(200).json({ resource, record: rows[0] });
+    }
+    if (request.method === 'PATCH' && resource === 'timesheetClosures') {
+      const input = body(request);
+      if (!input.userId || !/^\d{4}-\d{2}$/.test(String(input.yearMonth || ''))) return response.status(400).json({ error: '해제할 직원과 연월이 필요합니다.' });
+      if (user.role !== 'admin') {
+        if (user.role !== 'manager') return response.status(403).json({ error: '프로젝트 PM 또는 관리자만 마감을 해제할 수 있습니다.' });
+        const permitted = await sql.query(`SELECT 1 FROM public.project_assignments pa JOIN public.projects p ON p.id=pa.project_id
+          WHERE pa.user_id=$1 AND p.manager_id=$2 AND pa.started_on <= $4::date AND (pa.ended_on IS NULL OR pa.ended_on >= $3::date) LIMIT 1`, [input.userId, user.id, monthStart(input.yearMonth), `${input.yearMonth}-31`]);
+        if (!permitted[0]) return response.status(403).json({ error: '해당 직원의 프로젝트 PM만 마감을 해제할 수 있습니다.' });
+      }
+      const rows = await sql.query('UPDATE public.timesheet_month_closures SET is_locked=false, reopened_at=now(), reopened_by=$3 WHERE user_id=$1 AND year_month=$2::date RETURNING *', [input.userId, monthStart(input.yearMonth), user.id]);
+      return response.status(rows[0] ? 200 : 404).json(rows[0] ? { resource, record: rows[0] } : { error: '마감 기록을 찾을 수 없습니다.' });
+    }
     if (request.method === 'PATCH' && resource === 'wbs') {
       if (!isPrivileged) return response.status(403).json({ error: '관리자 또는 PM만 공정표를 수정할 수 있습니다.' });
       const input = body(request);
@@ -179,6 +230,7 @@ module.exports = async (request, response) => {
     if (request.method === 'POST' && resource === 'projectAssignments') {
       const input = body(request);
       if (!input.projectId || !input.yearMonth) return response.status(400).json({ error: '프로젝트와 기준 월이 필요합니다.' });
+      await assertTimesheetMonthEditable(sql, user.id, `${input.yearMonth}-01`);
       // 이전 스키마가 남아 있는 연결 DB에서도 개인 배정을 즉시 사용할 수 있게 한다.
       // 원본 projects 테이블의 행에는 전혀 영향을 주지 않는다.
       await sql.query('ALTER TABLE public.project_assignments ADD COLUMN IF NOT EXISTS started_on date');
@@ -199,6 +251,7 @@ module.exports = async (request, response) => {
     if (request.method === 'DELETE' && resource === 'projectAssignments') {
       const input = body(request);
       if (!input.projectId || !input.yearMonth) return response.status(400).json({ error: '프로젝트와 종료 월이 필요합니다.' });
+      await assertTimesheetMonthEditable(sql, user.id, `${input.yearMonth}-01`);
       const monthStart = `${input.yearMonth}-01`;
       const rows = await sql.query('UPDATE public.project_assignments SET ended_on = ($3::date - interval \'1 day\')::date WHERE user_id=$1 AND project_id=$2 AND started_on < $3::date RETURNING *', [user.id, input.projectId, monthStart]);
       if (!rows[0]) await sql.query('DELETE FROM public.project_assignments WHERE user_id=$1 AND project_id=$2', [user.id, input.projectId]);
@@ -207,6 +260,7 @@ module.exports = async (request, response) => {
     if (request.method === 'DELETE' && resource === 'timesheets') {
       const input = body(request);
       if (!input.workDate || !input.entryType) return response.status(400).json({ error: '삭제할 타임시트 날짜와 유형이 필요합니다.' });
+      await assertTimesheetMonthEditable(sql, user.id, input.workDate);
       const rows = await sql.query(
         'DELETE FROM public.timesheet_entries WHERE user_id = $1 AND work_date = $2 AND entry_type = $3 AND project_id IS NOT DISTINCT FROM $4 RETURNING id',
         [user.id, input.workDate, input.entryType, input.projectId || null]
@@ -255,6 +309,7 @@ module.exports = async (request, response) => {
       rows = await sql.query('INSERT INTO public.project_wbs_tasks (id, project_id, category, title, started_on, ended_on, status, note, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [id('wbs'), input.projectId, input.category || null, input.title, input.startedOn, input.endedOn, input.status || 'planned', input.note || null, user.id]);
     } else if (resource === 'timesheets') {
       requireFields(input, ['workDate', 'hours']);
+      await assertTimesheetMonthEditable(sql, user.id, input.workDate);
       if (input.entryType !== 'vacation') {
         const rows = await sql.query('SELECT p.name, p.is_active, p.started_on, p.ended_on, pa.started_on AS assignment_started_on, pa.ended_on AS assignment_ended_on FROM public.projects p LEFT JOIN public.project_assignments pa ON pa.project_id=p.id AND pa.user_id=$1 WHERE p.id=$2', [user.id, input.projectId]);
         const project = rows[0];

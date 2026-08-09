@@ -2009,6 +2009,8 @@ body.intranet-mode .top-public-nav { display: none; }
   white-space: nowrap;
 }
 
+.timesheet-lock-status { color: #b45309; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 700; }
+
 .attachment-picker-card { width: min(440px, calc(100vw - 32px)); }
 .attachment-picker-guide { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
 .attachment-picker-list { display: flex; flex-direction: column; gap: 8px; }

@@ -99,6 +99,12 @@ function renderTimesheet() {
   rebuildTimesheetForSelectedMonth();
   initTimesheets();
   const ts = MOCK_DB.timesheets[activeUserId] || {};
+  const isLocked = (MOCK_DB.timesheetClosures || []).some(item => item.yearMonth === getTimesheetMonth() && item.locked);
+  const lockStatus = document.getElementById('ts-lock-status');
+  if (lockStatus) { lockStatus.hidden = !isLocked; lockStatus.textContent = isLocked ? '마감 완료 · PM/관리자 해제 후 수정 가능' : ''; }
+  ['btn-ts-add-project', 'btn-ts-save', 'btn-ts-submit'].forEach(id => { const button = document.getElementById(id); if (button) button.disabled = isLocked; });
+  const unlockButton = document.getElementById('btn-ts-unlock');
+  if (unlockButton) unlockButton.hidden = !['admin', 'manager'].includes(MOCK_DB.currentUser.accessRole);
 
   let headHtml = `
     <thead>
@@ -123,7 +129,7 @@ function renderTimesheet() {
   } else {
     activeProjects.forEach(p => {
       bodyHtml += '<tr>';
-      bodyHtml += `<td><strong>${p.name}</strong><br><span style="font-size:10px; color:#64748b;">${p.role}</span><br><button class="btn-sm-action reject" type="button" onclick="removeProjectAssignment('${p.id}')">내 목록에서 제거</button></td>`;
+      bodyHtml += `<td><strong>${p.name}</strong><br><span style="font-size:10px; color:#64748b;">${p.role}</span><br><button class="btn-sm-action reject" type="button" onclick="removeProjectAssignment('${p.id}')" ${isLocked ? 'disabled' : ''}>내 목록에서 제거</button></td>`;
 
       let projTotal = 0;
       for (let d = 0; d < daysInMonth; d++) {
@@ -133,7 +139,7 @@ function renderTimesheet() {
         const val = canInput ? (ts[p.id]?.[d] || 0) : 0;
         projTotal += val;
         bodyHtml += canInput
-          ? `<td class="day-cell ${dateClass}"><input type="number" min="0" max="8" value="${val}" class="input-cell" onchange="updateCellHours('${activeUserId}', '${p.id}', ${d}, this.value)"></td>`
+          ? `<td class="day-cell ${dateClass}"><input type="number" min="0" max="8" value="${val}" class="input-cell" onchange="updateCellHours('${activeUserId}', '${p.id}', ${d}, this.value)" ${isLocked ? 'disabled' : ''}></td>`
           : `<td class="day-cell ${dateClass}" title="프로젝트 또는 개인 배정 기간 전/후에는 입력할 수 없습니다."><span class="timesheet-unavailable">-</span></td>`;
       }
 
@@ -154,7 +160,7 @@ function renderTimesheet() {
     bodyHtml += `
       <td class="day-cell ${dateClass}">
         <input type="number" min="0" max="8" step="4" value="${val}" class="input-cell" style="color:var(--primary); font-weight:700;"
-               onchange="updateCellHours('${activeUserId}', 'vacation', ${d}, this.value)">
+               onchange="updateCellHours('${activeUserId}', 'vacation', ${d}, this.value)" ${isLocked ? 'disabled' : ''}>
       </td>
     `;
   }
@@ -235,6 +241,11 @@ function getDayTotal(empId, dayIdx) {
 }
 
 function updateCellHours(empId, projId, dayIdx, value) {
+  if ((MOCK_DB.timesheetClosures || []).some(item => item.yearMonth === getTimesheetMonth() && item.locked)) {
+    alert('이 달은 마감 제출되어 수정할 수 없습니다. PM 또는 관리자에게 마감 해제를 요청해 주세요.');
+    renderTimesheet();
+    return;
+  }
   const parsedVal = Math.max(0, Math.min(8, parseInt(value) || 0));
   MOCK_DB.timesheets[empId][projId][dayIdx] = parsedVal;
 
@@ -313,6 +324,9 @@ function closeModal(modalId) {
 }
 
 function addProjectRowPopup() {
+  if ((MOCK_DB.timesheetClosures || []).some(item => item.yearMonth === getTimesheetMonth() && item.locked)) {
+    return alert('이 달은 마감 제출되어 프로젝트를 추가할 수 없습니다. PM 또는 관리자에게 마감 해제를 요청해 주세요.');
+  }
   const modal = document.getElementById('modal-add-project');
   modal.classList.add('active');
 
@@ -374,6 +388,9 @@ function isAssignmentActiveForMonth(assignment, month) {
 }
 
 async function removeProjectAssignment(projectId) {
+  if ((MOCK_DB.timesheetClosures || []).some(item => item.yearMonth === getTimesheetMonth() && item.locked)) {
+    return alert('이 달은 마감 제출되어 프로젝트를 제거할 수 없습니다. PM 또는 관리자에게 마감 해제를 요청해 주세요.');
+  }
   if (!window.confirm('선택한 월부터 이 프로젝트를 내 투입시간 목록에서 제거할까요? 이전 월의 기록은 유지됩니다.')) return;
   const response = await fetch('/api/intranet-data?resource=projectAssignments', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, yearMonth: getTimesheetMonth() }) });
   const data = await response.json();
@@ -386,7 +403,11 @@ async function removeProjectAssignment(projectId) {
   initTimesheets(); renderTimesheet(); alert('프로젝트를 내 목록에서 제거했습니다.');
 }
 
-async function saveTimesheet() {
+async function saveTimesheet(options = {}) {
+  if ((MOCK_DB.timesheetClosures || []).some(item => item.yearMonth === getTimesheetMonth() && item.locked)) {
+    if (!options.silent) alert('이 달은 마감 제출되어 수정할 수 없습니다. 프로젝트 PM 또는 관리자에게 마감 해제를 요청해 주세요.');
+    return false;
+  }
   const current = MOCK_DB.timesheets[MOCK_DB.currentUser.id] || MOCK_DB.timesheets.emp01 || {};
   const requests = [];
   const month = getTimesheetMonth();
@@ -423,10 +444,10 @@ async function saveTimesheet() {
       failures.push(`${requests[index].projectName} · ${requests[index].workDate}: ${data.error || '저장할 수 없습니다.'}`);
     }
   }
-  if (failures.length) return alert(`다음 항목을 저장하지 못했습니다.\n\n${failures.join('\n\n')}`);
+  if (failures.length) { if (!options.silent) alert(`다음 항목을 저장하지 못했습니다.\n\n${failures.join('\n\n')}`); return false; }
   const refreshedResponse = await fetch('/api/intranet-data?resource=timesheets', { cache: 'no-store' });
   const refreshedData = await refreshedResponse.json();
-  if (!refreshedResponse.ok) return alert(refreshedData.error || '저장 후 타임시트 기록을 다시 불러오지 못했습니다. 새로고침 후 확인해 주세요.');
+  if (!refreshedResponse.ok) { if (!options.silent) alert(refreshedData.error || '저장 후 타임시트 기록을 다시 불러오지 못했습니다. 새로고침 후 확인해 주세요.'); return false; }
   MOCK_DB.timesheetRecords = (refreshedData.records || []).map(item => ({
     workDate: String(item.work_date).slice(0, 10),
     hours: Number(item.hours || 0),
@@ -442,10 +463,11 @@ async function saveTimesheet() {
   initTimesheets();
   renderTimesheet();
   saveAppState();
-  alert('타임시트가 저장되었습니다.');
+  if (!options.silent) alert('타임시트가 저장되었습니다.');
+  return true;
 }
 
-function submitTimesheet() {
+async function submitTimesheet() {
   let errorFound = false;
   const activeUserId = MOCK_DB.currentUser.id;
   const daysInMonth = getTimesheetDays();
@@ -461,15 +483,38 @@ function submitTimesheet() {
     grandTotal += getDayTotal(activeUserId, d);
   }
 
-  saveAppState();
-
   if (errorFound) {
     alert('⚠️ 입력오류: 하루 최대 8시간을 초과하여 배분된 날짜가 있습니다. 수정 후 제출해주세요.');
   } else if (grandTotal > 176) {
     alert(`⚠️ 입력오류: 1달 총 투입시간 합계가 1 M/M (176시간)을 초과할 수 없습니다. 현재 투입합계: ${grandTotal}H (${(grandTotal / 176).toFixed(3)} M/M)`);
   } else {
-    alert('✅ 제출성공: 타임시트가 저장되고 마감 처리되었습니다.');
+    if (!await saveTimesheet({ silent: true })) return;
+    const response = await fetch('/api/intranet-data?resource=timesheetClosures', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ yearMonth: getTimesheetMonth() }) });
+    const data = await response.json();
+    if (!response.ok) return alert(data.error || '월 마감 처리에 실패했습니다.');
+    const month = getTimesheetMonth();
+    MOCK_DB.timesheetClosures = (MOCK_DB.timesheetClosures || []).filter(item => item.yearMonth !== month);
+    MOCK_DB.timesheetClosures.push({ yearMonth: month, locked: true });
+    renderTimesheet();
+    alert('월 마감이 완료되었습니다. 프로젝트 PM 또는 관리자가 해제하기 전까지 수정할 수 없습니다.');
   }
+}
+
+async function unlockTimesheetMonth() {
+  const month = getTimesheetMonth();
+  const lockedUsers = (MOCK_DB.employees || []).filter(employee => employee.id === MOCK_DB.currentUser.id || employee.status === 'normal');
+  const input = window.prompt(`마감을 해제할 직원 이름을 입력하세요.\n대상 월: ${month}\n가능한 직원: ${lockedUsers.map(item => item.name).join(', ')}`, MOCK_DB.currentUser.name);
+  if (input === null) return;
+  const target = lockedUsers.find(employee => employee.name === input.trim());
+  if (!target) return alert('직원 이름을 정확히 입력해 주세요.');
+  const response = await fetch('/api/intranet-data?resource=timesheetClosures', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: target.id, yearMonth: month }) });
+  const data = await response.json();
+  if (!response.ok) return alert(data.error || '월 마감 해제에 실패했습니다.');
+  if (target.id === MOCK_DB.currentUser.id) {
+    MOCK_DB.timesheetClosures = (MOCK_DB.timesheetClosures || []).map(item => item.yearMonth === month ? { ...item, locked: false } : item);
+    renderTimesheet();
+  }
+  alert(`${target.name} 직원의 ${month} 월 마감을 해제했습니다.`);
 }
 
 let manpowerViewMode = 'employee';
