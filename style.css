@@ -2011,6 +2011,14 @@ body.intranet-mode .top-public-nav { display: none; }
 
 .timesheet-lock-status { color: #b45309; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 700; }
 
+.app-alert-backdrop { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .5); backdrop-filter: blur(4px); }
+.app-alert-dialog { width: min(430px, 100%); display: grid; grid-template-columns: 42px 1fr auto; gap: 14px; align-items: start; padding: 24px; border: 1px solid rgba(255,255,255,.7); border-radius: 20px; background: #fff; box-shadow: 0 25px 70px rgba(15,23,42,.28); }
+.app-alert-icon { display:grid; place-items:center; width:36px; height:36px; border-radius: 12px; color:#4f46e5; background:#eef2ff; font-weight:900; font-family: Georgia, serif; }
+.app-alert-content strong { display:block; color:var(--text-dark); font-size:16px; }
+.app-alert-content p { margin:6px 0 0; color:var(--text-muted); line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+.app-alert-close { border:0; background:transparent; color:#64748b; font-size:26px; line-height:1; cursor:pointer; }
+.app-alert-actions { grid-column: 1 / -1; display:flex; justify-content:flex-end; margin-top:4px; }
+
 .attachment-picker-card { width: min(440px, calc(100vw - 32px)); }
 .attachment-picker-guide { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
 .attachment-picker-list { display: flex; flex-direction: column; gap: 8px; }

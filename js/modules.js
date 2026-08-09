@@ -151,7 +151,7 @@ function renderTimesheet() {
   }
 
   bodyHtml += '<tr>';
-  bodyHtml += '<td><strong>개인휴가 행</strong><br><span style="font-size:10px; color:#64748b;">연차/반차 반출</span></td>';
+  bodyHtml += '<td><strong>개인휴가</strong><br><span style="font-size:10px; color:#64748b;">연차/반차 반출</span></td>';
   let vacTotal = 0;
   for (let d = 0; d < daysInMonth; d++) {
     const dateClass = getTimesheetDayClass(d + 1);

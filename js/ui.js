@@ -1,6 +1,25 @@
 let currentSlide = 0;
 let slideInterval = null;
 
+// 브라우저 기본 alert에는 도메인명이 강제로 표시된다. 사내 서비스에서는
+// 동일한 안내를 앱 내부 대화상자로 보여 주어 메시지만 간결하게 전달한다.
+function showAppAlert(message) {
+  document.getElementById('app-alert-dialog')?.remove();
+  const dialog = document.createElement('div');
+  dialog.id = 'app-alert-dialog';
+  dialog.className = 'app-alert-backdrop';
+  dialog.innerHTML = `<section class="app-alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="app-alert-title"><div class="app-alert-icon" aria-hidden="true">i</div><div class="app-alert-content"><strong id="app-alert-title">알림</strong><p></p></div><button type="button" class="app-alert-close" aria-label="닫기">×</button><div class="app-alert-actions"><button type="button" class="btn-action primary">확인</button></div></section>`;
+  dialog.querySelector('p').textContent = String(message || '');
+  const close = () => dialog.remove();
+  dialog.querySelector('.app-alert-close').onclick = close;
+  dialog.querySelector('.app-alert-actions button').onclick = close;
+  dialog.onclick = event => { if (event.target === dialog) close(); };
+  document.body.appendChild(dialog);
+  dialog.querySelector('.app-alert-actions button').focus();
+}
+
+window.alert = showAppAlert;
+
 function startHeroSlider() {
   const slides = document.querySelectorAll('.hero-slider .slide');
   if (slides.length === 0) return;
