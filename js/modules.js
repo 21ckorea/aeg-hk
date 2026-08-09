@@ -1605,6 +1605,7 @@ function updateDiaryProjectOptions(workDate, selectedProjectId = '') {
 function openDiaryModal() {
   editingDiaryId = null;
   document.getElementById('diary-form').reset();
+  updateDiaryAttachmentLabel();
   document.getElementById('modal-create-diary').classList.add('active');
 
   const dateInput = document.getElementById('dy-date');
@@ -1615,6 +1616,19 @@ function openDiaryModal() {
   document.querySelector('#diary-form button[type="submit"]').textContent = '일지 저장';
   document.getElementById('dy-existing-attachments').hidden = true;
   document.getElementById('dy-existing-attachments').innerHTML = '';
+}
+
+function updateDiaryAttachmentLabel(input = document.getElementById('dy-attachments')) {
+  const label = document.getElementById('dy-attachments-name');
+  if (!label) return;
+  const files = Array.from(input?.files || []);
+  if (!files.length) {
+    label.textContent = '선택된 파일 없음';
+    label.removeAttribute('title');
+    return;
+  }
+  label.textContent = files.length === 1 ? files[0].name : `${files[0].name} 외 ${files.length - 1}개`;
+  label.title = files.map(file => file.name).join('\n');
 }
 
 function editDiary(diaryId) {

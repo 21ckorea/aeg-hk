@@ -1960,6 +1960,55 @@ body.intranet-mode .top-public-nav { display: none; }
   color: var(--text-muted);
 }
 
+.diary-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 6px;
+  border: 1px dashed #c9d3e3;
+  border-radius: 10px;
+  background: #f8faff;
+}
+
+.diary-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.diary-file-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 7px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(79, 70, 229, 0.18);
+}
+
+.diary-file-button:hover { filter: brightness(1.06); }
+.diary-file-button svg { width: 14px; height: 14px; }
+
+.diary-file-name {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .attachment-picker-card { width: min(440px, calc(100vw - 32px)); }
 .attachment-picker-guide { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
 .attachment-picker-list { display: flex; flex-direction: column; gap: 8px; }
