@@ -90,9 +90,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initializeAuth();
   if (isAuthenticated) {
     await verifyDatabaseHealth();
-    await hydrateWorkflowsFromNeon();
+    window.workflowHydrationPromise = hydrateWorkflowsFromNeon();
+    await window.workflowHydrationPromise;
     switchMainView('intranet');
   } else {
+    window.workflowHydrationPromise = Promise.resolve();
     switchMainView('public');
   }
   lucide.createIcons();

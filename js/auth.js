@@ -147,8 +147,10 @@ function logout() {
   hideAuthModal();
 }
 
-function requestIntranetAccess() {
+async function requestIntranetAccess() {
   if (isAuthenticated) {
+    // 자동 로그인 직후에는 DB 데이터를 다 받기 전 빈 인트라넷 화면을 열지 않는다.
+    await window.workflowHydrationPromise;
     switchMainView('intranet');
     return;
   }

@@ -115,7 +115,14 @@ async function handleGoogleCredential(response) {
   if (data.pending) return setAuthMessage(data.message, 'success');
   if (data.code === 'PROFILE_REQUIRED') return switchAuthMode('signup'), setAuthMessage(data.error, 'info');
   if (!result.ok) return setAuthMessage(data.error || '승인되지 않은 계정입니다.', 'error');
-  applyAuthenticatedUser({ ...data.user, avatar: data.user.picture });
+  // 로그인 성공 직후 기본 상태를 먼저 보여주면 데이터가 없는 화면이 잠깐 나타난다.
+  // 인증 창 안에서 데이터를 준비한 뒤 완성된 인트라넷 화면으로 전환한다.
+  applyAuthenticatedUser({ ...data.user, avatar: data.user.picture }, { navigateToIntranet: false });
+  setAuthMessage('업무 데이터를 불러오는 중입니다…', 'info');
+  window.workflowHydrationPromise = hydrateWorkflowsFromNeon();
+  await window.workflowHydrationPromise;
+  hideAuthModal();
+  switchMainView('intranet');
 }
 
 window.getGoogleSession = async () => {
