@@ -1,5 +1,11 @@
 /* ==================== STYLE.CSS ==================== */
 
+/* 회사 설정을 불러오는 동안 정적 기본 회사명이 보이는 현상을 방지한다. */
+html.brand-loading body { visibility: hidden; }
+html.brand-loading::before { content: ''; position: fixed; z-index: 9999; inset: 0; background: #f8fafc; }
+html.brand-loading::after { content: ''; position: fixed; z-index: 10000; top: calc(50% - 14px); left: calc(50% - 14px); width: 28px; height: 28px; border: 3px solid #e0e7ff; border-top-color: #635bff; border-radius: 50%; animation: brand-bootstrap-spin .7s linear infinite; }
+@keyframes brand-bootstrap-spin { to { transform: rotate(360deg); } }
+
 /* --- CSS VARIABLES & DESIGN TOKENS --- */
 :root {
   --font-title: 'Outfit', 'Inter', -apple-system, sans-serif;

@@ -5,6 +5,10 @@ window.COMPANY_CONFIG = {
   contactEmail: 'contact@todam.com'
 };
 
+// DB 설정을 받기 전 기본 회사명이 잠깐 노출되는 것을 막는다.
+// 고객사 시연 중에는 잘못된 회사명이 한 프레임이라도 보이지 않아야 한다.
+document.documentElement.classList.add('brand-loading');
+
 function applyCompanyConfig(config) {
   const previous = window.COMPANY_CONFIG || {};
   window.COMPANY_CONFIG = { ...window.COMPANY_CONFIG, ...config };
@@ -42,5 +46,8 @@ window.addEventListener('DOMContentLoaded', () => {
   fetch('/api/intranet-data?resource=companySettings', { cache: 'no-store' })
     .then(response => response.ok ? response.json() : null)
     .then(data => { if (data?.record) applyCompanyConfig({ name:data.record.name, shortName:data.record.short_name, contactEmail:data.record.contact_email }); })
-    .catch(() => null);
+    .catch(() => null)
+    .finally(() => document.documentElement.classList.remove('brand-loading'));
+  // 네트워크가 비정상이어도 화면이 계속 숨겨지는 상황은 방지한다.
+  window.setTimeout(() => document.documentElement.classList.remove('brand-loading'), 3500);
 });
