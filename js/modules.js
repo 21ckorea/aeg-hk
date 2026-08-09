@@ -520,10 +520,8 @@ async function submitTimesheet() {
 async function unlockTimesheetMonth() {
   const month = getTimesheetMonth();
   const lockedUsers = (MOCK_DB.employees || []).filter(employee => employee.id === MOCK_DB.currentUser.id || employee.status === 'normal');
-  const input = window.prompt(`마감을 해제할 직원 이름을 입력하세요.\n대상 월: ${month}\n가능한 직원: ${lockedUsers.map(item => item.name).join(', ')}`, MOCK_DB.currentUser.name);
-  if (input === null) return;
-  const target = lockedUsers.find(employee => employee.name === input.trim());
-  if (!target) return alert('직원 이름을 정확히 입력해 주세요.');
+  const target = await selectTimesheetUnlockTarget(lockedUsers, month);
+  if (!target) return;
   const response = await fetch('/api/intranet-data?resource=timesheetClosures', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: target.id, yearMonth: month }) });
   const data = await response.json();
   if (!response.ok) return alert(data.error || '월 마감 해제에 실패했습니다.');
@@ -532,6 +530,24 @@ async function unlockTimesheetMonth() {
     renderTimesheet();
   }
   alert(`${target.name} 직원의 ${month} 월 마감을 해제했습니다.`);
+}
+
+function selectTimesheetUnlockTarget(employees, month) {
+  return new Promise(resolve => {
+    document.getElementById('timesheet-unlock-dialog')?.remove();
+    const dialog = document.createElement('div');
+    dialog.id = 'timesheet-unlock-dialog';
+    dialog.className = 'app-alert-backdrop';
+    dialog.innerHTML = `<section class="timesheet-unlock-dialog" role="dialog" aria-modal="true"><button type="button" class="app-alert-close" aria-label="닫기">×</button><span class="dialog-eyebrow">MONTHLY CLOSING</span><h3>마감 해제</h3><p>${month} 월의 수정 권한을 다시 열 직원을 선택하세요.</p><div class="unlock-user-list">${employees.map((employee, index) => `<label class="unlock-user-option"><input type="radio" name="unlock-target" value="${employee.id}" ${index === 0 ? 'checked' : ''}><span class="unlock-user-avatar">${employee.name.slice(0, 1)}</span><span><strong>${employee.name}</strong><small>${[employee.rank, employee.dept].filter(Boolean).join(' · ') || '직원'}</small></span></label>`).join('')}</div><div class="dialog-actions"><button type="button" class="btn-action secondary">취소</button><button type="button" class="btn-action primary">선택한 직원 마감 해제</button></div></section>`;
+    const close = () => { dialog.remove(); resolve(null); };
+    dialog.querySelector('.app-alert-close').onclick = close;
+    dialog.querySelector('.dialog-actions .secondary').onclick = close;
+    dialog.querySelector('.dialog-actions .primary').onclick = () => {
+      const id = dialog.querySelector('input[name="unlock-target"]:checked')?.value;
+      dialog.remove(); resolve(employees.find(employee => employee.id === id) || null);
+    };
+    document.body.appendChild(dialog);
+  });
 }
 
 let manpowerViewMode = 'employee';

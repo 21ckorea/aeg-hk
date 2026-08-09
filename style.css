@@ -2018,6 +2018,17 @@ body.intranet-mode .top-public-nav { display: none; }
 .app-alert-content p { margin:6px 0 0; color:var(--text-muted); line-height:1.6; white-space:pre-wrap; word-break:break-word; }
 .app-alert-close { border:0; background:transparent; color:#64748b; font-size:26px; line-height:1; cursor:pointer; }
 .app-alert-actions { grid-column: 1 / -1; display:flex; justify-content:flex-end; margin-top:4px; }
+.timesheet-unlock-dialog { position:relative; width:min(480px, 100%); padding:28px; border-radius:20px; background:#fff; box-shadow:0 25px 70px rgba(15,23,42,.28); }
+.timesheet-unlock-dialog h3 { margin:5px 0 8px; color:var(--text-dark); font-size:22px; }
+.timesheet-unlock-dialog > p { margin:0 0 18px; color:var(--text-muted); font-size:14px; }
+.dialog-eyebrow { color:#635bff; font-size:11px; font-weight:800; letter-spacing:.1em; }
+.unlock-user-list { display:grid; gap:8px; max-height:300px; overflow:auto; }
+.unlock-user-option { display:flex; gap:11px; align-items:center; padding:11px 13px; border:1px solid #e2e8f0; border-radius:12px; cursor:pointer; }
+.unlock-user-option:has(input:checked) { border-color:#635bff; background:#f5f3ff; box-shadow:0 0 0 2px rgba(99,91,255,.1); }
+.unlock-user-option input { accent-color:#635bff; }
+.unlock-user-avatar { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#fff; background:#635bff; font-weight:800; }
+.unlock-user-option strong,.unlock-user-option small { display:block; }.unlock-user-option small { margin-top:2px; color:var(--text-muted); font-size:12px; }
+.dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
 .btn-action.is-loading { cursor: wait; opacity: .78; }
 .button-spinner { width: 15px; height: 15px; display: inline-block; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: button-spin .65s linear infinite; }
 @keyframes button-spin { to { transform: rotate(360deg); } }
