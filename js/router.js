@@ -1,5 +1,17 @@
 let activeSubView = 'dashboard';
 
+window.workflowHydrationPromise = null;
+window.ensureWorkflowHydrated = () => {
+  if (!window.workflowHydrationPromise) {
+    window.workflowHydrationPromise = hydrateWorkflowsFromNeon().then(loaded => {
+      // 실패한 조회 결과를 고정하지 않고 다음 진입 시 다시 시도할 수 있게 한다.
+      if (!loaded) window.workflowHydrationPromise = null;
+      return loaded;
+    });
+  }
+  return window.workflowHydrationPromise;
+};
+
 function switchMainView(viewType) {
   const pubView = document.getElementById('view-public');
   const intraView = document.getElementById('view-intranet');
@@ -90,11 +102,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   await initializeAuth();
   if (isAuthenticated) {
     await verifyDatabaseHealth();
-    window.workflowHydrationPromise = hydrateWorkflowsFromNeon();
-    await window.workflowHydrationPromise;
+    await window.ensureWorkflowHydrated();
     switchMainView('intranet');
   } else {
-    window.workflowHydrationPromise = Promise.resolve();
+    window.workflowHydrationPromise = null;
     switchMainView('public');
   }
   lucide.createIcons();

@@ -119,8 +119,8 @@ async function handleGoogleCredential(response) {
   // 인증 창 안에서 데이터를 준비한 뒤 완성된 인트라넷 화면으로 전환한다.
   applyAuthenticatedUser({ ...data.user, avatar: data.user.picture }, { navigateToIntranet: false });
   setAuthMessage('업무 데이터를 불러오는 중입니다…', 'info');
-  window.workflowHydrationPromise = hydrateWorkflowsFromNeon();
-  await window.workflowHydrationPromise;
+  window.workflowHydrationPromise = null;
+  await window.ensureWorkflowHydrated?.();
   hideAuthModal();
   switchMainView('intranet');
 }
