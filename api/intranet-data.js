@@ -4,6 +4,7 @@ const { requireSession } = require('./_session');
 
 const RESOURCES = {
   bootstrap: { table: null, owner: null },
+  companySettings: { table: 'company_settings', owner: null },
   timesheetClosures: { table: 'timesheet_month_closures', owner: 'user_id' },
   projects: { table: 'projects', owner: null },
   timesheets: { table: 'timesheet_entries', owner: 'user_id' },
@@ -81,6 +82,14 @@ async function ensureTimesheetClosureSchema(sql) {
   )`);
 }
 
+async function ensureCompanySettingsSchema(sql) {
+  await sql.query(`CREATE TABLE IF NOT EXISTS public.company_settings (
+    id text PRIMARY KEY DEFAULT 'global' CHECK (id = 'global'),
+    name text NOT NULL, short_name text NOT NULL, intranet_name text NOT NULL,
+    contact_email text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now()
+  )`);
+}
+
 function monthStart(value) { return `${String(value || '').slice(0, 7)}-01`; }
 
 async function assertTimesheetMonthEditable(sql, userId, workDate) {
@@ -120,13 +129,19 @@ async function ensureNoticePopupSchema(sql) {
 module.exports = async (request, response) => {
   response.setHeader('Cache-Control', 'no-store, max-age=0');
   try {
-    const user = await requireSession(request);
     const resource = String(request.query?.resource || '');
     const config = RESOURCES[resource];
     if (!config) return response.status(400).json({ error: 'Unknown intranet resource.' });
     if (!process.env.DATABASE_URL) return response.status(503).json({ error: 'DATABASE_URL is not configured.' });
     const sql = neon(process.env.DATABASE_URL);
+    if (resource === 'companySettings' && request.method === 'GET') {
+      await ensureCompanySettingsSchema(sql);
+      const rows = await sql.query('SELECT name, short_name, intranet_name, contact_email FROM public.company_settings WHERE id=$1', ['global']);
+      return response.status(200).json({ resource, record: rows[0] || null });
+    }
+    const user = await requireSession(request);
     const isPrivileged = user.role === 'admin' || user.role === 'manager';
+    if (resource === 'companySettings') await ensureCompanySettingsSchema(sql);
     if (resource === 'notices' || resource === 'bootstrap') await ensureNoticePopupSchema(sql);
     if (resource === 'timesheetClosures' || resource === 'bootstrap' || resource === 'timesheets' || resource === 'projectAssignments') await ensureTimesheetClosureSchema(sql);
     if (request.method === 'GET') {
@@ -191,6 +206,14 @@ module.exports = async (request, response) => {
       if (input.startedOn > input.endedOn) return response.status(400).json({ error: '종료일은 시작일 이후여야 합니다.' });
       const rows = await sql.query('UPDATE public.projects SET project_code=$2, name=$3, client_name=$4, work_role=$5, started_on=$6, ended_on=$7, contract_amount=$8, planned_mm=$9, is_active=$10, updated_at=now() WHERE id=$1 RETURNING *', [input.id, input.projectCode || null, input.name, input.clientName || null, input.workRole || null, input.startedOn, input.endedOn, input.contractAmount || null, input.plannedMm || null, input.isActive !== false]);
       return response.status(rows[0] ? 200 : 404).json(rows[0] ? { resource, record: rows[0] } : { error: '프로젝트를 찾을 수 없습니다.' });
+    }
+    if (request.method === 'PUT' && resource === 'companySettings') {
+      if (user.role !== 'admin') return response.status(403).json({ error: '관리자만 회사 정보를 변경할 수 있습니다.' });
+      const input = body(request);
+      requireFields(input, ['name', 'shortName', 'intranetName', 'contactEmail']);
+      const rows = await sql.query(`INSERT INTO public.company_settings (id,name,short_name,intranet_name,contact_email,updated_at)
+        VALUES ('global',$1,$2,$3,$4,now()) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name,short_name=EXCLUDED.short_name,intranet_name=EXCLUDED.intranet_name,contact_email=EXCLUDED.contact_email,updated_at=now() RETURNING *`, [input.name.trim(), input.shortName.trim(), input.intranetName.trim(), input.contactEmail.trim()]);
+      return response.status(200).json({ resource, record: rows[0] });
     }
     if (request.method === 'POST' && resource === 'timesheetClosures') {
       const input = body(request);
