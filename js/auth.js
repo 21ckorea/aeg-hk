@@ -87,7 +87,8 @@ function applyAuthenticatedUser(user, { navigateToIntranet = true } = {}) {
 function updateRoleAwareUI(role) {
   const roleBadge = document.getElementById('role-badge');
   if (roleBadge) {
-    const label = role === 'admin' ? '관리자' : role === 'manager' ? '과장' : '직원';
+    // 직급(차장·과장 등)은 프로필에 표시하고, 이 배지는 시스템 권한만 표시한다.
+    const label = role === 'admin' ? '관리자' : role === 'manager' ? 'PM' : '직원';
     roleBadge.textContent = label;
   }
 
