@@ -9,6 +9,7 @@ window.COMPANY_CONFIG = {
 window.addEventListener('DOMContentLoaded', () => {
   const { name, shortName, intranetName, contactEmail } = window.COMPANY_CONFIG;
   const replacements = [
+    // 현재 배포 HTML이 동기화되기 전에도 기존 고객사명이 노출되지 않게 한다.
     ['(주)그룹환경종합건축사사무소', name],
     ['㈜그룹환경종합건축사사무소', name],
     ['AEG HK', intranetName],
