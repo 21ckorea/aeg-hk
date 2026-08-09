@@ -408,6 +408,7 @@ async function saveTimesheet(options = {}) {
     if (!options.silent) alert('이 달은 마감 제출되어 수정할 수 없습니다. 프로젝트 PM 또는 관리자에게 마감 해제를 요청해 주세요.');
     return false;
   }
+  setTimesheetSaving(true);
   const current = MOCK_DB.timesheets[MOCK_DB.currentUser.id] || MOCK_DB.timesheets.emp01 || {};
   const requests = [];
   const month = getTimesheetMonth();
@@ -444,10 +445,10 @@ async function saveTimesheet(options = {}) {
       failures.push(`${requests[index].projectName} · ${requests[index].workDate}: ${data.error || '저장할 수 없습니다.'}`);
     }
   }
-  if (failures.length) { if (!options.silent) alert(`다음 항목을 저장하지 못했습니다.\n\n${failures.join('\n\n')}`); return false; }
+  if (failures.length) { setTimesheetSaving(false); if (!options.silent) alert(`다음 항목을 저장하지 못했습니다.\n\n${failures.join('\n\n')}`); return false; }
   const refreshedResponse = await fetch('/api/intranet-data?resource=timesheets', { cache: 'no-store' });
   const refreshedData = await refreshedResponse.json();
-  if (!refreshedResponse.ok) { if (!options.silent) alert(refreshedData.error || '저장 후 타임시트 기록을 다시 불러오지 못했습니다. 새로고침 후 확인해 주세요.'); return false; }
+  if (!refreshedResponse.ok) { setTimesheetSaving(false); if (!options.silent) alert(refreshedData.error || '저장 후 타임시트 기록을 다시 불러오지 못했습니다. 새로고침 후 확인해 주세요.'); return false; }
   MOCK_DB.timesheetRecords = (refreshedData.records || []).map(item => ({
     workDate: String(item.work_date).slice(0, 10),
     hours: Number(item.hours || 0),
@@ -463,8 +464,24 @@ async function saveTimesheet(options = {}) {
   initTimesheets();
   renderTimesheet();
   saveAppState();
+  setTimesheetSaving(false);
   if (!options.silent) alert('타임시트가 저장되었습니다.');
   return true;
+}
+
+function setTimesheetSaving(isSaving) {
+  const button = document.getElementById('btn-ts-save');
+  if (!button) return;
+  if (isSaving) {
+    button.disabled = true;
+    button.classList.add('is-loading');
+    button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span> 저장 중…';
+  } else {
+    button.disabled = false;
+    button.classList.remove('is-loading');
+    button.innerHTML = '<i data-lucide="save"></i> 임시 저장';
+    lucide.createIcons();
+  }
 }
 
 async function submitTimesheet() {

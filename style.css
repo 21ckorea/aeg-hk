@@ -2018,6 +2018,9 @@ body.intranet-mode .top-public-nav { display: none; }
 .app-alert-content p { margin:6px 0 0; color:var(--text-muted); line-height:1.6; white-space:pre-wrap; word-break:break-word; }
 .app-alert-close { border:0; background:transparent; color:#64748b; font-size:26px; line-height:1; cursor:pointer; }
 .app-alert-actions { grid-column: 1 / -1; display:flex; justify-content:flex-end; margin-top:4px; }
+.btn-action.is-loading { cursor: wait; opacity: .78; }
+.button-spinner { width: 15px; height: 15px; display: inline-block; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: button-spin .65s linear infinite; }
+@keyframes button-spin { to { transform: rotate(360deg); } }
 
 .attachment-picker-card { width: min(440px, calc(100vw - 32px)); }
 .attachment-picker-guide { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
