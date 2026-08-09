@@ -210,9 +210,9 @@ module.exports = async (request, response) => {
     if (request.method === 'PUT' && resource === 'companySettings') {
       if (user.role !== 'admin') return response.status(403).json({ error: '관리자만 회사 정보를 변경할 수 있습니다.' });
       const input = body(request);
-      requireFields(input, ['name', 'shortName', 'intranetName', 'contactEmail']);
+      requireFields(input, ['name', 'shortName', 'contactEmail']);
       const rows = await sql.query(`INSERT INTO public.company_settings (id,name,short_name,intranet_name,contact_email,updated_at)
-        VALUES ('global',$1,$2,$3,$4,now()) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name,short_name=EXCLUDED.short_name,intranet_name=EXCLUDED.intranet_name,contact_email=EXCLUDED.contact_email,updated_at=now() RETURNING *`, [input.name.trim(), input.shortName.trim(), input.intranetName.trim(), input.contactEmail.trim()]);
+        VALUES ('global',$1,$2,$2,$3,now()) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name,short_name=EXCLUDED.short_name,intranet_name=EXCLUDED.short_name,contact_email=EXCLUDED.contact_email,updated_at=now() RETURNING *`, [input.name.trim(), input.shortName.trim(), input.contactEmail.trim()]);
       return response.status(200).json({ resource, record: rows[0] });
     }
     if (request.method === 'POST' && resource === 'timesheetClosures') {

@@ -2,23 +2,21 @@
 window.COMPANY_CONFIG = {
   name: '토담산업개발주식회사',
   shortName: '토담',
-  intranetName: '토담',
   contactEmail: 'contact@todam.com'
 };
 
 function applyCompanyConfig(config) {
   const previous = window.COMPANY_CONFIG || {};
   window.COMPANY_CONFIG = { ...window.COMPANY_CONFIG, ...config };
-  const { name, shortName, intranetName, contactEmail } = window.COMPANY_CONFIG;
+  const { name, shortName, contactEmail } = window.COMPANY_CONFIG;
   const replacements = [
     // 현재 배포 HTML이 동기화되기 전에도 기존 고객사명이 노출되지 않게 한다.
     ['(주)그룹환경종합건축사사무소', name],
     ['㈜그룹환경종합건축사사무소', name],
-    ['AEG HK', intranetName],
+    ['AEG HK', shortName],
     ['그룹환경', shortName],
     [previous.name, name],
-    [previous.shortName, shortName],
-    [previous.intranetName, intranetName]
+    [previous.shortName, shortName]
   ].filter(([from, to]) => from && from !== to);
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes = [];
@@ -47,6 +45,6 @@ window.addEventListener('DOMContentLoaded', () => {
   applyCompanyConfig(window.COMPANY_CONFIG);
   fetch('/api/intranet-data?resource=companySettings', { cache: 'no-store' })
     .then(response => response.ok ? response.json() : null)
-    .then(data => { if (data?.record) applyCompanyConfig({ name:data.record.name, shortName:data.record.short_name, intranetName:data.record.intranet_name, contactEmail:data.record.contact_email }); })
+    .then(data => { if (data?.record) applyCompanyConfig({ name:data.record.name, shortName:data.record.short_name, contactEmail:data.record.contact_email }); })
     .catch(() => null);
 });

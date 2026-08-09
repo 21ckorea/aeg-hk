@@ -1274,7 +1274,7 @@ async function renderAdminPanel() {
   if (!countEl || !approvalEl || !listEl || !pendingListEl) return;
 
   const company = window.COMPANY_CONFIG || {};
-  const companyFields = [['company-name', company.name], ['company-short-name', company.shortName], ['company-intranet-name', company.intranetName], ['company-contact-email', company.contactEmail]];
+  const companyFields = [['company-name', company.name], ['company-short-name', company.shortName], ['company-contact-email', company.contactEmail]];
   companyFields.forEach(([id, value]) => { const field = document.getElementById(id); if (field) field.value = value || ''; });
 
   let users = [];
@@ -1331,13 +1331,12 @@ async function saveCompanySettings(event) {
   const payload = {
     name: document.getElementById('company-name').value,
     shortName: document.getElementById('company-short-name').value,
-    intranetName: document.getElementById('company-intranet-name').value,
     contactEmail: document.getElementById('company-contact-email').value
   };
   const response = await fetch('/api/intranet-data?resource=companySettings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   const data = await response.json();
   if (!response.ok) return alert(data.error || '회사 정보를 저장하지 못했습니다.');
-  applyCompanyConfig({ name: data.record.name, shortName: data.record.short_name, intranetName: data.record.intranet_name, contactEmail: data.record.contact_email });
+  applyCompanyConfig({ name: data.record.name, shortName: data.record.short_name, contactEmail: data.record.contact_email });
   alert('회사 표시 정보를 저장했습니다. 현재 화면에 즉시 반영되었습니다.');
 }
 

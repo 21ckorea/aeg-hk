@@ -12,7 +12,6 @@ const escapeHtml = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 
 const name = readConfigValue('name');
 const shortName = readConfigValue('shortName');
-const intranetName = readConfigValue('intranetName');
 const escapedName = escapeHtml(name);
 const description = `${name}의 건축 프로젝트와 사내 업무를 연결하는 통합 홈페이지입니다.`;
 const shortDescription = '건축 프로젝트와 사내 업무를 연결하는 통합 홈페이지';
@@ -23,7 +22,6 @@ let html = fs.readFileSync(indexPath, 'utf8');
 // 다시 실행해도, 이전 고객사명이 새 고객사명으로 안전하게 바뀐다.
 const existingFullName = html.match(/<span class="brand-full">([^<]+)<\/span>/)?.[1]?.trim();
 const existingShortName = html.match(/<span class="brand-short">([^<]+)<\/span>/)?.[1]?.trim();
-const existingIntranetName = html.match(/<h3>([^<]+) 인트라넷 인증<\/h3>/)?.[1]?.trim();
 html = html
   .replace(/<title>[^<]*<\/title>/, `<title>${escapedName} | 건축·프로젝트 통합 관리</title>`)
   .replace(/(<meta name="description" content=")[^"]*(">)/, `$1${escapeHtml(description)}$2`)
@@ -39,11 +37,10 @@ html = html
 const textReplacements = [
   [existingFullName, name],
   [existingShortName, shortName],
-  [existingIntranetName, intranetName],
   ['(주)그룹환경종합건축사사무소', name],
   ['㈜그룹환경종합건축사사무소', name],
   ['그룹환경', shortName],
-  ['AEG HK', intranetName]
+  ['AEG HK', shortName]
 ].filter(([from]) => from).sort((a, b) => b[0].length - a[0].length);
 for (const [from, to] of textReplacements) html = html.split(from).join(to);
 fs.writeFileSync(indexPath, html);
