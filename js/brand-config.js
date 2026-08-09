@@ -10,11 +10,7 @@ function applyCompanyConfig(config) {
   window.COMPANY_CONFIG = { ...window.COMPANY_CONFIG, ...config };
   const { name, shortName, contactEmail } = window.COMPANY_CONFIG;
   const replacements = [
-    // 현재 배포 HTML이 동기화되기 전에도 기존 고객사명이 노출되지 않게 한다.
-    ['(주)그룹환경종합건축사사무소', name],
-    ['㈜그룹환경종합건축사사무소', name],
-    ['AEG HK', shortName],
-    ['그룹환경', shortName],
+    // 기본값 또는 직전에 적용된 회사명만 현재 설정으로 교체한다.
     [previous.name, name],
     [previous.shortName, shortName]
   ].filter(([from, to]) => from && from !== to);
