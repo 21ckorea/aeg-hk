@@ -3364,3 +3364,40 @@ body { background: radial-gradient(circle at 80% -10%, #e7e9ff 0, transparent 30
   .dash-panel, .timesheet-header-area, .timesheet-mobile-editor { border-radius: 14px; }
   .btn-action { border-radius: 9px; }
 }
+
+/* 2026 architectural studio refresh: 밝은 갤러리 여백과 정교한 유리 질감 */
+.pub-header { position: sticky; top: var(--dev-bar-height); z-index: 25; background: rgba(255,255,255,.84); backdrop-filter: blur(18px) saturate(1.25); }
+.hero-slider::after { background: linear-gradient(105deg, rgba(9,15,29,.76) 0%, rgba(12,20,35,.42) 52%, rgba(26,31,48,.18) 100%); }
+.slide-content { max-width: 630px; padding: 30px 34px; border: 1px solid rgba(255,255,255,.18); border-radius: 24px; background: rgba(15,23,42,.20); backdrop-filter: blur(7px); box-shadow: 0 20px 55px rgba(0,0,0,.16); }
+.slide-content h1 { letter-spacing: -.065em; line-height: 1.06; }
+.slide-content p { max-width: 44ch; line-height: 1.75; }
+.section-container { max-width: 1280px; }
+.section-header { margin-bottom: 44px; }
+.section-header h2 { letter-spacing: -.065em; font-size: clamp(30px, 4vw, 48px); }
+.category-card, .project-card, .teaser-card { border: 1px solid rgba(203,213,225,.7); border-radius: 18px; overflow: hidden; box-shadow: 0 12px 34px rgba(30,41,59,.06); }
+.category-card { background: linear-gradient(145deg, #fff 0%, #f8f9ff 100%); }
+.category-card:hover, .project-card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px rgba(42,47,99,.15); }
+.category-card .icon-box { border-radius: 14px; background: linear-gradient(135deg, #ecebff, #e6f4ff); }
+.project-image { filter: saturate(.92) contrast(1.04); }
+.pub-footer { background: linear-gradient(145deg, #111827, #202b43); }
+
+.intra-content { background-image: radial-gradient(circle at 100% 0%, rgba(119,109,255,.11), transparent 30%); }
+.intra-header { box-shadow: 0 10px 26px rgba(15,23,42,.035); }
+.intra-header h2::after { content: ''; display: block; width: 32px; height: 3px; margin-top: 5px; border-radius: 3px; background: linear-gradient(90deg, #746aff, #25c49a); }
+.dash-panel, .timesheet-header-area, .timesheet-container-wrapper { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.dash-panel:hover { border-color: #d7d4ff; box-shadow: 0 16px 34px rgba(24,32,50,.08); }
+.panel-header h3 { display:flex; align-items:center; gap:8px; }
+.panel-header h3::before { content:''; width:7px; height:7px; border-radius:50%; background:#6d63ff; box-shadow: 0 0 0 4px rgba(109,99,255,.1); }
+.data-table th { text-transform: none; }
+.data-table tbody tr:hover td:first-child { color: #5146e5; }
+.timesheet-header-area { background: linear-gradient(120deg, rgba(255,255,255,.98), rgba(246,247,255,.98)); }
+.timesheet-container-wrapper { background: rgba(255,255,255,.95); }
+.auth-modal { border: 1px solid rgba(255,255,255,.8); background: linear-gradient(155deg, #fff, #fafaff); }
+.auth-header h3 { letter-spacing: -.06em; }
+
+@media (max-width: 768px) {
+  .slide-content { margin: 0 16px; padding: 24px 22px; border-radius: 20px; }
+  .section-header { margin-bottom: 28px; }
+  .intra-header h2::after { display:none; }
+  .dash-panel:hover { transform:none; }
+}
