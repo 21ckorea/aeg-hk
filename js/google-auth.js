@@ -110,19 +110,24 @@ async function handleGoogleCredential(response) {
     jobRank: document.getElementById('signup-rank')?.value.trim() || '',
     jobTitle: document.getElementById('signup-title')?.value.trim() || ''
   } : undefined;
-  const result = await fetch('/api/auth-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: response.credential, profile }) });
-  const data = await result.json();
-  if (data.pending) return setAuthMessage(data.message, 'success');
-  if (data.code === 'PROFILE_REQUIRED') return switchAuthMode('signup'), setAuthMessage(data.error, 'info');
-  if (!result.ok) return setAuthMessage(data.error || '승인되지 않은 계정입니다.', 'error');
-  // 로그인 성공 직후 기본 상태를 먼저 보여주면 데이터가 없는 화면이 잠깐 나타난다.
-  // 인증 창 안에서 데이터를 준비한 뒤 완성된 인트라넷 화면으로 전환한다.
-  applyAuthenticatedUser({ ...data.user, avatar: data.user.picture }, { navigateToIntranet: false });
-  setAuthMessage('업무 데이터를 불러오는 중입니다…', 'info');
-  window.workflowHydrationPromise = null;
-  await window.ensureWorkflowHydrated?.();
-  hideAuthModal();
-  switchMainView('intranet');
+  setAuthMessage(isSignup ? '가입 요청을 보내고 있습니다…' : '로그인 정보를 확인하고 있습니다…', 'info');
+  try {
+    const result = await fetch('/api/auth-google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: response.credential, profile }) });
+    const data = await result.json().catch(() => ({}));
+    if (data.pending) return setAuthMessage('가입 요청이 접수되었습니다. 관리자 승인 후 로그인할 수 있습니다.', 'success');
+    if (data.code === 'PROFILE_REQUIRED') return switchAuthMode('signup'), setAuthMessage(data.error, 'info');
+    if (!result.ok) return setAuthMessage(data.error || '승인되지 않은 계정입니다.', 'error');
+    // 로그인 성공 직후 기본 상태를 먼저 보여주면 데이터가 없는 화면이 잠깐 나타난다.
+    // 인증 창 안에서 데이터를 준비한 뒤 완성된 인트라넷 화면으로 전환한다.
+    applyAuthenticatedUser({ ...data.user, avatar: data.user.picture }, { navigateToIntranet: false });
+    setAuthMessage('업무 데이터를 불러오는 중입니다…', 'info');
+    window.workflowHydrationPromise = null;
+    await window.ensureWorkflowHydrated?.();
+    hideAuthModal();
+    switchMainView('intranet');
+  } catch (_) {
+    setAuthMessage('가입 요청을 보내지 못했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.', 'error');
+  }
 }
 
 window.getGoogleSession = async () => {

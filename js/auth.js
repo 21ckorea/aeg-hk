@@ -25,7 +25,7 @@ function openAuthModal(mode = 'login') {
     : '가입된 Google 계정으로 로그인하세요.';
   if (googleNote) googleNote.textContent = mode === 'signup' ? 'Google 계정으로 회원가입' : 'Google 계정으로 로그인';
   window.setTimeout(() => { void window.renderGoogleButton?.(); }, 0);
-  setAuthMessage('');
+  setAuthMessage(mode === 'signup' ? '이름을 입력한 뒤 아래 Google 계정을 선택하면 가입 요청이 접수됩니다.' : '');
 }
 
 function hideAuthModal() {
